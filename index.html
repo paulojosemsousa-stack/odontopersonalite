@@ -3,318 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OdontoControl Cloud v2.0</title>
+    <title>Odonto Personalité | Gestão Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
-        .kanban-column { min-height: 500px; transition: background-color 0.2s; }
-        .kanban-ghost { opacity: 0.3; background: #cbd5e1; border: 2px dashed #64748b; }
-        .nav-active { background-color: #2563eb; color: white; shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8f0; }
+        .nav-active { background-color: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+        .kanban-column { min-height: 400px; border-radius: 1.5rem; background: #e2e8f0; padding: 1rem; }
+        .card { transition: transform 0.2s, box-shadow 0.2s; cursor: grab; }
+        .card:active { cursor: grabbing; transform: scale(1.02); }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <nav class="glass sticky top-0 z-50 p-4">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-400 rounded-xl flex items-center justify-center text-white shadow-lg">
                     <i class="fas fa-tooth text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="font-extrabold text-lg leading-tight">Odonto<span class="text-blue-600">Cloud</span></h1>
-                    <div id="sync-status" class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                        <i class="fas fa-circle text-[6px]"></i> <span>Offline</span>
+                    <h1 class="font-extrabold text-lg text-slate-800">Odonto<span class="text-blue-600">Personalité</span></h1>
+                    <div id="sync-status" class="text-[9px] font-black uppercase tracking-tighter text-slate-400 flex items-center gap-1">
+                        <i class="fas fa-circle text-[6px]"></i> <span>Desconectado</span>
                     </div>
                 </div>
             </div>
 
-            <div class="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
-                <button onclick="switchTab('manager')" id="tab-manager" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all">GERENTE</button>
-                <button onclick="switchTab('dentist')" id="tab-dentist" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all">DENTISTA</button>
+            <div class="flex bg-slate-200/50 p-1 rounded-2xl border border-slate-200">
                 <button onclick="switchTab('client')" id="tab-client" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all">CLIENTE</button>
-                <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all"><i class="fas fa-cog"></i></button>
+                <button onclick="switchTab('manager')" id="tab-manager" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all">GERENTE</button>
+                <button onclick="switchTab('dentist-login')" id="tab-dentist-login" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all">DENTISTA</button>
+                <button onclick="openSettings()" id="tab-settings" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all"><i class="fas fa-lock"></i></button>
             </div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto p-4 md:p-8">
 
-        <section id="view-settings" class="max-w-xl mx-auto space-y-6">
-            <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
-                <h2 class="text-xl font-black mb-6 flex items-center gap-2"><i class="fab fa-github text-blue-600"></i> Banco de Dados Cloud</h2>
+        <section id="view-client" class="max-w-lg mx-auto py-10 space-y-6">
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-blue-50">
+                <h2 class="text-3xl font-black text-slate-800 text-center mb-8">Marque sua <span class="text-blue-600">Consulta</span></h2>
                 <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Usuário GitHub</label>
-                            <input type="text" id="db-user" placeholder="ex: joaosilva" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Repositório</label>
-                            <input type="text" id="db-repo" placeholder="minha-clinica-dados" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
                     <div>
-                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Personal Access Token (PAT)</label>
-                        <input type="password" id="db-token" placeholder="ghp_xxxxxxxxxxxx" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase ml-2">Especialista</label>
+                        <select id="c-dentist" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-none focus:border-blue-500"></select>
                     </div>
-                    <button onclick="connectDB()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black shadow-lg hover:bg-blue-700 transition-all">CONECTAR SISTEMA</button>
-                </div>
-            </div>
-
-            <div id="admin-setup" class="bg-white p-8 rounded-3xl shadow-md border border-slate-100 hidden animate-fade-in">
-                <h3 class="font-bold mb-4">Corpo Clínico e Contatos</h3>
-                <div class="space-y-4">
-                    <div class="flex gap-2">
-                        <input type="text" id="new-dentist-name" placeholder="Nome do Dentista" class="flex-1 p-3 border rounded-xl outline-none">
-                        <select id="new-dentist-spec" class="p-3 border rounded-xl outline-none bg-slate-50">
-                            <option>Clínico Geral</option>
-                            <option>Ortodontia</option>
-                            <option>Implantodontia</option>
-                        </select>
-                        <button onclick="addDentist()" class="bg-slate-900 text-white px-4 rounded-xl font-bold">+</button>
-                    </div>
-                    <div id="dentist-list" class="flex flex-wrap gap-2 py-2"></div>
-                    <hr>
-                    <input type="text" id="wa-manager" placeholder="WhatsApp Gerente (ex: 5511999999999)" class="w-full p-3 border rounded-xl outline-none">
-                    <button onclick="saveGlobalConfigs()" class="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest">Salvar Parâmetros</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-client" class="hidden max-w-lg mx-auto py-6">
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100 space-y-6">
-                <div class="text-center space-y-2">
-                    <h2 class="text-3xl font-black">Agende Agora</h2>
-                    <p class="text-slate-400 text-sm">Escolha o especialista e receba confirmação no WhatsApp.</p>
-                </div>
-                
-                <div class="space-y-4">
-                    <select id="client-dentist" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-none focus:border-blue-500"></select>
                     <div class="grid grid-cols-2 gap-4">
-                        <input type="date" id="client-date" class="p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-none">
-                        <select id="client-period" class="p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-none">
+                        <input type="date" id="c-date" class="p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-none">
+                        <select id="c-period" class="p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-none">
                             <option value="Manhã">Manhã</option>
                             <option value="Tarde">Tarde</option>
                         </select>
                     </div>
-                    <button onclick="createAppointment()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-blue-700 active:scale-95 transition-all">
-                        SOLICITAR AGENDAMENTO
-                    </button>
+                    <button onclick="makeBooking()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-blue-700 transition-all active:scale-95">SOLICITAR VIA WHATSAPP</button>
                 </div>
             </div>
         </section>
 
         <section id="view-manager" class="hidden space-y-8">
-            <div class="flex justify-between items-end">
-                <div>
-                    <h2 class="text-3xl font-black">Gestão da Clínica</h2>
-                    <p class="text-slate-400 font-medium">Controle o fluxo de pacientes em tempo real.</p>
-                </div>
-                <div class="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-black text-sm">
-                    Total: <span id="stat-total">0</span>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-yellow-400 rounded-full"></span> Pendentes
-                    </h4>
-                    <div id="list-pending" class="kanban-column flex flex-col gap-3"></div>
+                <div class="kanban-column">
+                    <h3 class="text-xs font-black uppercase text-slate-500 mb-4 px-2">Pendentes</h3>
+                    <div id="list-pending" class="space-y-3 min-h-[100px]"></div>
                 </div>
-
-                <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Em Cadeira
-                    </h4>
-                    <div id="list-active" class="kanban-column flex flex-col gap-3"></div>
+                <div class="kanban-column">
+                    <h3 class="text-xs font-black uppercase text-slate-500 mb-4 px-2">Em Atendimento</h3>
+                    <div id="list-active" class="space-y-3 min-h-[100px]"></div>
                 </div>
-
-                <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Concluídos
-                    </h4>
-                    <div id="list-done" class="kanban-column flex flex-col gap-3"></div>
+                <div class="kanban-column">
+                    <h3 class="text-xs font-black uppercase text-slate-500 mb-4 px-2">Concluídos</h3>
+                    <div id="list-done" class="space-y-3 min-h-[100px]"></div>
                 </div>
             </div>
         </section>
 
-        <section id="view-dentist" class="hidden py-20 text-center">
-            <i class="fas fa-calendar-check text-6xl text-slate-200 mb-4"></i>
-            <h2 class="text-2xl font-black text-slate-800">Sua Agenda de Hoje</h2>
-            <div id="dentist-agenda-list" class="max-w-md mx-auto mt-8 space-y-4"></div>
+        <section id="view-dentist-login" class="hidden max-w-sm mx-auto py-20">
+            <div class="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
+                <i class="fas fa-user-md text-4xl text-blue-600 mb-4"></i>
+                <h3 class="text-xl font-black mb-6">Acesso do Profissional</h3>
+                <input type="text" id="d-user" placeholder="Usuário" class="w-full p-3 border rounded-xl mb-3 outline-none">
+                <input type="password" id="d-pass" placeholder="Senha" class="w-full p-3 border rounded-xl mb-4 outline-none">
+                <button onclick="loginDentist()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Entrar na Agenda</button>
+            </div>
+        </section>
+
+        <section id="view-settings" class="hidden max-w-4xl mx-auto space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-3xl border border-slate-200">
+                    <h3 class="font-black mb-4"><i class="fab fa-github"></i> Sincronização Cloud</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="db-user" value="paulojosemsousa-stack" class="w-full p-3 bg-slate-100 border rounded-xl text-sm" readonly>
+                        <input type="text" id="db-repo" value="odontopersonalite" class="w-full p-3 bg-slate-100 border rounded-xl text-sm" readonly>
+                        <input type="password" id="db-token" value="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" class="w-full p-3 bg-slate-100 border rounded-xl text-sm">
+                        <button onclick="syncDB()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Sincronizar Agora</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl border border-slate-200">
+                    <h3 class="font-black mb-4"><i class="fas fa-user-plus"></i> Novo Profissional</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="new-d-name" placeholder="Nome Completo" class="w-full p-3 border rounded-xl text-sm outline-none">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="new-d-user" placeholder="Usuário" class="p-3 border rounded-xl text-sm outline-none">
+                            <input type="text" id="new-d-pass" placeholder="Senha" class="p-3 border rounded-xl text-sm outline-none">
+                        </div>
+                        <button onclick="addDentistCloud()" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold">Cadastrar</button>
+                    </div>
+                    <div id="list-dentists-config" class="mt-4 space-y-2"></div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-3xl border border-slate-200">
+                <h3 class="font-black mb-4">Configurações Gerais</h3>
+                <input type="text" id="cfg-manager-wa" placeholder="WhatsApp do Gerente (55119...)" class="w-full p-3 border rounded-xl outline-none">
+                <button onclick="saveGeneralConfigs()" class="mt-3 bg-emerald-500 text-white px-6 py-2 rounded-xl font-bold">Salvar Parâmetros</button>
+            </div>
         </section>
 
     </main>
 
     <script>
-        // --- ESTADO GLOBAL ---
         let db = { dentists: [], appointments: [], config: { waManager: "" } };
         let currentSha = null;
 
-        // --- LÓGICA DE SINCRONIZAÇÃO GITHUB ---
-        async function fetchFromGitHub() {
+        // --- SEGURANÇA ---
+        function openSettings() {
+            const pass = prompt("Digite a senha de administrador:");
+            if (pass === "JJPJ") {
+                switchTab('settings');
+            } else {
+                alert("Senha incorreta!");
+            }
+        }
+
+        // --- COMUNICAÇÃO GITHUB ---
+        async function syncDB() {
             const user = document.getElementById('db-user').value;
             const repo = document.getElementById('db-repo').value;
             const token = document.getElementById('db-token').value;
-
-            if (!user || !repo || !token) return false;
 
             try {
                 const res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/db.json`, {
                     headers: { Authorization: `token ${token}` }
                 });
-                if (!res.ok) throw new Error();
                 const data = await res.json();
                 currentSha = data.sha;
                 db = JSON.parse(decodeURIComponent(escape(atob(data.content))));
-                updateUIStatus(true, "Conectado");
-                renderAll();
-                return true;
+                updateStatus(true, "Online");
+                render();
             } catch (e) {
-                updateUIStatus(false, "Erro de Conexão");
-                return false;
+                updateStatus(false, "Erro");
             }
         }
 
-        async function pushToGitHub() {
+        async function pushDB() {
             const user = document.getElementById('db-user').value;
             const repo = document.getElementById('db-repo').value;
             const token = document.getElementById('db-token').value;
-
-            updateUIStatus(true, "Salvando...");
 
             try {
                 const res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/db.json`, {
                     method: 'PUT',
                     headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: "Auto-sync OdontoCloud",
+                        message: "Sync OdontoPersonalite",
                         content: btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2)))),
                         sha: currentSha
                     })
                 });
                 const data = await res.json();
                 currentSha = data.content.sha;
-                updateUIStatus(true, "Sincronizado");
-            } catch (e) {
-                updateUIStatus(false, "Falha ao gravar");
-            }
+                updateStatus(true, "Salvo");
+            } catch (e) { console.error(e); }
         }
 
-        // --- FUNÇÕES DE NEGÓCIO ---
-        function connectDB() {
-            fetchFromGitHub().then(success => {
-                if(success) {
-                    document.getElementById('admin-setup').classList.remove('hidden');
-                    switchTab('manager');
-                } else {
-                    alert("Verifique os dados do GitHub (Usuário, Repo e Token PAT).");
-                }
-            });
-        }
-
-        function addDentist() {
-            const name = document.getElementById('new-dentist-name').value;
-            const spec = document.getElementById('new-dentist-spec').value;
-            if(name) {
-                db.dentists.push({ id: Date.now(), name, spec });
-                document.getElementById('new-dentist-name').value = '';
+        // --- NEGÓCIO ---
+        function addDentistCloud() {
+            const name = document.getElementById('new-d-name').value;
+            const user = document.getElementById('new-d-user').value;
+            const pass = document.getElementById('new-d-pass').value;
+            if (name && user && pass) {
+                db.dentists.push({ id: Date.now(), name, user, pass });
+                document.getElementById('new-d-name').value = '';
+                document.getElementById('new-d-user').value = '';
+                document.getElementById('new-d-pass').value = '';
                 saveAndRender();
             }
         }
 
-        function saveGlobalConfigs() {
-            db.config.waManager = document.getElementById('wa-manager').value;
+        function saveGeneralConfigs() {
+            db.config.waManager = document.getElementById('cfg-manager-wa').value;
             saveAndRender();
         }
 
-        function createAppointment() {
-            const dentist = document.getElementById('client-dentist').value;
-            const date = document.getElementById('client-date').value;
-            const period = document.getElementById('client-period').value;
+        function makeBooking() {
+            const dentist = document.getElementById('c-dentist').value;
+            const date = document.getElementById('c-date').value;
+            const period = document.getElementById('c-period').value;
 
-            if(!date || !dentist) return alert("Preencha todos os campos!");
+            if(!date || !db.config.waManager) return alert("Preencha a data e verifique o WhatsApp nas configurações!");
 
-            const newApp = { id: Date.now(), dentist, date, period, status: 'pending' };
-            db.appointments.push(newApp);
+            db.appointments.push({ id: Date.now(), dentist, date, period, status: 'pending' });
+            saveAndRender();
 
-            // WhatsApp link
-            const wa = db.config.waManager;
             const msg = `🦷 *NOVO AGENDAMENTO*%0A*Dentista:* ${dentist}%0A*Data:* ${date}%0A*Período:* ${period}`;
-            
-            saveAndRender();
-            window.open(`https://wa.me/${wa.replace(/\D/g,'')}?text=${msg}`, '_blank');
+            window.open(`https://wa.me/${db.config.waManager.replace(/\D/g,'')}?text=${msg}`, '_blank');
         }
 
-        function saveAndRender() {
-            renderAll();
-            pushToGitHub();
+        function loginDentist() {
+            const user = document.getElementById('d-user').value;
+            const pass = document.getElementById('d-pass').value;
+            const prof = db.dentists.find(d => d.user === user && d.pass === pass);
+
+            if (prof) {
+                alert(`Bem-vindo, Dr(a). ${prof.name}! Exibindo sua agenda...`);
+                // Aqui você pode filtrar o Kanban apenas para este dentista se desejar
+                switchTab('manager');
+            } else {
+                alert("Usuário ou senha inválidos.");
+            }
         }
 
-        // --- RENDERIZAÇÃO ---
-        function renderAll() {
-            // Dropdowns e Listas
-            document.getElementById('client-dentist').innerHTML = db.dentists.map(d => `<option value="${d.name}">${d.name} (${d.spec})</option>`).join('');
-            document.getElementById('dentist-list').innerHTML = db.dentists.map(d => `<span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black border border-blue-100 uppercase">${d.name}</span>`).join('');
-            document.getElementById('wa-manager').value = db.config.waManager || "";
-            document.getElementById('stat-total').innerText = db.appointments.length;
+        // --- UI ---
+        function saveAndRender() { render(); pushDB(); }
 
-            // Kanban
-            const renderCard = (a) => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 cursor-grab active:cursor-grabbing hover:shadow-md transition-all" data-id="${a.id}">
+        function render() {
+            document.getElementById('c-dentist').innerHTML = db.dentists.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+            document.getElementById('list-dentists-config').innerHTML = db.dentists.map(d => `
+                <div class="flex justify-between items-center p-3 bg-slate-50 border rounded-xl text-xs font-bold">
+                    <span>${d.name} (${d.user})</span>
+                    <button onclick="removeD(${d.id})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+            document.getElementById('cfg-manager-wa').value = db.config.waManager || "";
+
+            const card = (a) => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 card" data-id="${a.id}">
                     <p class="font-black text-sm">${a.dentist}</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">${a.date} • ${a.period}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">${a.date} | ${a.period}</p>
                 </div>
             `;
-
-            document.getElementById('list-pending').innerHTML = db.appointments.filter(a => a.status === 'pending').map(renderCard).join('');
-            document.getElementById('list-active').innerHTML = db.appointments.filter(a => a.status === 'active').map(renderCard).join('');
-            document.getElementById('list-done').innerHTML = db.appointments.filter(a => a.status === 'done').map(renderCard).join('');
+            document.getElementById('list-pending').innerHTML = db.appointments.filter(a => a.status === 'pending').map(card).join('');
+            document.getElementById('list-active').innerHTML = db.appointments.filter(a => a.status === 'active').map(card).join('');
+            document.getElementById('list-done').innerHTML = db.appointments.filter(a => a.status === 'done').map(card).join('');
         }
 
-        // --- UI AUX ---
-        function switchTab(tabId) {
+        function removeD(id) { db.dentists = db.dentists.filter(d => d.id !== id); saveAndRender(); }
+
+        function switchTab(id) {
             document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('view-' + tabId).classList.remove('hidden');
-            
+            document.getElementById('view-' + id).classList.remove('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            document.getElementById('tab-' + tabId).classList.add('nav-active');
-
-            if(tabId === 'manager') initKanban();
+            document.getElementById('tab-' + id).classList.add('nav-active');
+            if (id === 'manager') initSortable();
         }
 
-        function updateUIStatus(online, text) {
-            const el = document.getElementById('sync-status');
-            el.className = `flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest ${online ? 'text-emerald-500' : 'text-rose-500'}`;
-            el.querySelector('span').innerText = text;
+        function updateStatus(on, txt) {
+            const s = document.getElementById('sync-status');
+            s.className = `text-[9px] font-black uppercase tracking-tighter flex items-center gap-1 ${on ? 'text-emerald-500' : 'text-rose-500'}`;
+            s.querySelector('span').innerText = txt;
         }
 
-        function initKanban() {
-            const containers = ['list-pending', 'list-active', 'list-done'];
-            containers.forEach(cid => {
+        function initSortable() {
+            ['list-pending', 'list-active', 'list-done'].forEach(cid => {
                 new Sortable(document.getElementById(cid), {
-                    group: 'appointments',
+                    group: 'tasks',
                     animation: 150,
-                    ghostClass: 'kanban-ghost',
                     onEnd: (evt) => {
-                        const appId = evt.item.dataset.id;
-                        const newStatus = evt.to.id.replace('list-', '');
-                        const index = db.appointments.findIndex(a => a.id == appId);
-                        db.appointments[index].status = newStatus;
-                        pushToGitHub();
+                        const id = evt.item.dataset.id;
+                        const status = evt.to.id.replace('list-', '');
+                        const idx = db.appointments.findIndex(a => a.id == id);
+                        db.appointments[idx].status = status;
+                        pushDB();
                     }
                 });
             });
         }
 
-        // Inicializar na aba de configurações para login
-        switchTab('settings');
+        // Início automático
+        syncDB();
+        switchTab('client');
     </script>
 </body>
 </html>
