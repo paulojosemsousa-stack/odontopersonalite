@@ -1,1 +1,10 @@
 
+{
+  "dentists": [],
+  "appointments": [],
+  "specs": ["Clínico Geral", "Ortodontia", "Implantodontia"],
+  "config": {
+    "waManager": "",
+    "waOwner": ""
+  }
+}
