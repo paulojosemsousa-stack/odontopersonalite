@@ -3,238 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OdontoControl Pro | Agenda Inteligente</title>
+    <title>OdontoControl ERP Cloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
-        .nav-active { background-color: #2563eb; color: white; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); }
-        
-        /* Customização do Calendário para ficar Moderno */
-        .fc { background: white; padding: 20px; border-radius: 24px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .fc-toolbar-title { font-weight: 800 !important; text-transform: capitalize; color: #1e293b; }
-        .fc-button-primary { background-color: #2563eb !important; border: none !important; border-radius: 12px !important; font-weight: bold !important; text-transform: uppercase !important; font-size: 10px !important; }
-        .fc-event { border: none !important; padding: 4px 8px !important; border-radius: 8px !important; cursor: pointer; }
-        .fc-daygrid-day-number { font-weight: 700; color: #64748b; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #e2e8f0; }
+        .nav-active { background-color: #2563eb; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+        .fc { background: white; padding: 15px; border-radius: 1.5rem; border: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .fc-toolbar-title { font-size: 1.2rem !important; font-weight: 800 !important; text-transform: capitalize; }
+        .hidden { display: none !important; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-    <nav class="glass sticky top-0 z-50 p-4">
-        <div class="max-w-7xl mx-auto flex flex-col md:row justify-between items-center gap-4">
+    <div id="view-login" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full space-y-6">
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center text-white shadow-lg mb-4">
+                    <i class="fas fa-tooth text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-black text-slate-800">Odonto<span class="text-blue-600">Cloud</span></h1>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Acesso ao Sistema</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Tipo de Acesso</label>
+                    <select id="login-role" class="w-full p-3 bg-slate-50 border rounded-xl outline-none text-sm font-bold">
+                        <option value="client">Sou Cliente / Paciente</option>
+                        <option value="dentist">Sou Dentista</option>
+                        <option value="staff">Gerente / Dono</option>
+                    </select>
+                </div>
+                <input type="text" id="login-user" placeholder="CPF, Usuário ou Email" class="w-full p-3 border rounded-xl outline-none">
+                <input type="password" id="login-pass" placeholder="Senha (Para cliente: 5 prim. dig. do CPF)" class="w-full p-3 border rounded-xl outline-none">
+                <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-sm uppercase shadow-lg hover:bg-blue-700 transition-all">ENTRAR</button>
+            </div>
+            
+            <div class="pt-4 border-t border-slate-100 text-center">
+                <p class="text-[10px] text-slate-400 mb-2">Primeiro acesso do gestor (Sem DB)?</p>
+                <button onclick="bypassLoginAdmin()" class="text-xs font-bold text-blue-600 underline">Forçar Entrada (Configurar Sistema)</button>
+            </div>
+        </div>
+    </div>
+
+    <nav id="main-nav" class="glass sticky top-0 z-50 p-4 hidden">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                     <i class="fas fa-tooth text-xl"></i>
                 </div>
                 <div>
                     <h1 class="font-extrabold text-lg leading-tight">Odonto<span class="text-blue-600">Cloud</span></h1>
                     <div id="sync-indicator" class="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                        <i class="fas fa-circle text-[6px]"></i> <span>Sincronizando...</span>
+                        <i class="fas fa-circle text-[6px]"></i> <span>Offline</span>
                     </div>
                 </div>
             </div>
 
-            <div class="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
-                <button onclick="switchTab('manager')" id="tab-manager" class="nav-btn px-5 py-2 rounded-xl text-xs font-bold transition-all">GERENTE</button>
-                <button onclick="switchTab('dentist')" id="tab-dentist" class="nav-btn px-5 py-2 rounded-xl text-xs font-bold transition-all">AGENDA DENTISTA</button>
-                <button onclick="switchTab('client')" id="tab-client" class="nav-btn px-5 py-2 rounded-xl text-xs font-bold transition-all">CLIENTE</button>
-                <button onclick="openSettings()" id="tab-settings" class="nav-btn px-5 py-2 rounded-xl text-xs font-bold transition-all"><i class="fas fa-cog"></i></button>
-            </div>
+            <div id="menu-container" class="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 overflow-x-auto w-full md:w-auto">
+                </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-4 md:p-8">
+    <main id="main-content" class="max-w-7xl mx-auto p-4 md:p-8 flex-1 hidden">
 
-        <section id="view-dentist" class="hidden space-y-6">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <section id="view-dashboard" class="hidden space-y-6">
+            <div class="flex justify-between items-end">
                 <div>
-                    <h2 class="text-3xl font-black text-slate-800">Minha Agenda</h2>
-                    <p class="text-slate-400 font-medium">Visualize seus atendimentos semanais e mensais.</p>
-                </div>
-                <div class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border">
-                    <i class="fas fa-filter text-blue-600"></i>
-                    <select id="calendar-filter" onchange="refreshCalendar()" class="bg-transparent font-bold text-sm outline-none">
-                        <option value="all">Ver Todos os Dentistas</option>
-                    </select>
+                    <h2 class="text-3xl font-black text-slate-800">Visão Geral</h2>
+                    <p class="text-slate-500 text-sm font-medium">Desempenho e Satisfação (NPS)</p>
                 </div>
             </div>
 
-            <div id="calendar-container" class="animate-fade-in">
-                <div id="calendar"></div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Total Pacientes</h3><p id="dash-tot-pacientes" class="text-3xl font-black text-blue-600">0</p></div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Agendamentos Hoje</h3><p id="dash-tot-hoje" class="text-3xl font-black text-slate-800">0</p></div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Concluídos (Mês)</h3><p id="dash-tot-concluidos" class="text-3xl font-black text-emerald-500">0</p></div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-slate-400 text-xs font-bold uppercase mb-1">NPS Geral (Clínica)</h3><p id="dash-nps-geral" class="text-3xl font-black text-indigo-600">0%</p></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-700 mb-4">Status dos Agendamentos</h3>
+                    <canvas id="chart-status"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-slate-700 mb-4">NPS Médio por Dentista</h3>
+                    <canvas id="chart-nps"></canvas>
+                </div>
             </div>
         </section>
 
-        <section id="view-manager" class="hidden space-y-8">
+        <section id="view-manager" class="hidden space-y-6">
+            <h2 class="text-3xl font-black text-slate-800">Fluxo de Atendimento</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2"><span class="w-2 h-2 bg-yellow-400 rounded-full"></span> Pendentes</h4>
+                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest"><span class="text-yellow-500">●</span> Pendentes</h4>
                     <div id="list-pending" class="min-h-[400px] flex flex-col gap-3"></div>
                 </div>
                 <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2"><span class="w-2 h-2 bg-blue-500 rounded-full"></span> Em Atendimento</h4>
+                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest"><span class="text-blue-500">●</span> Em Cadeira</h4>
                     <div id="list-active" class="min-h-[400px] flex flex-col gap-3"></div>
                 </div>
                 <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Finalizados</h4>
+                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest"><span class="text-emerald-500">●</span> Finalizados / NPS</h4>
                     <div id="list-done" class="min-h-[400px] flex flex-col gap-3"></div>
                 </div>
             </div>
         </section>
 
+        <section id="view-dentist" class="hidden space-y-6">
+            <h2 class="text-3xl font-black text-slate-800">Minha Agenda</h2>
+            <div id="calendar-container" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-2"><div id="calendar"></div></div>
+        </section>
+
         <section id="view-client" class="hidden max-w-lg mx-auto py-10">
-            <div class="bg-white p-10 rounded-[3rem] shadow-2xl border border-blue-50 text-center space-y-8">
-                <h2 class="text-3xl font-black">Reserve seu Horário</h2>
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 text-center space-y-6">
+                <h2 class="text-2xl font-black">Olá, <span id="client-name-display" class="text-blue-600">Cliente</span>!</h2>
+                <p class="text-sm text-slate-500">Agende sua próxima consulta abaixo.</p>
+                
                 <div class="space-y-4 text-left">
-                    <select id="c-dentist" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold outline-none focus:border-blue-500"></select>
-                    <input type="date" id="c-date" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold outline-none focus:border-blue-500">
-                    <select id="c-period" class="w-full p-4 bg-slate-50 border-2 rounded-2xl font-bold outline-none focus:border-blue-500">
+                    <select id="c-dentist" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none"></select>
+                    <input type="date" id="c-date" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none">
+                    <select id="c-period" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none">
                         <option value="Manhã">Manhã (08h - 12h)</option>
                         <option value="Tarde">Tarde (13h - 18h)</option>
                     </select>
-                    <button onclick="createBooking()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:scale-[1.02] transition-all">AGENDAR AGORA</button>
+                    <button onclick="createBooking()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black shadow-md hover:bg-blue-700">SOLICITAR AGENDAMENTO</button>
                 </div>
             </div>
         </section>
 
-        <section id="view-settings" class="hidden max-w-4xl mx-auto space-y-6">
+        <section id="view-settings" class="hidden space-y-6">
+            <div class="bg-red-50 border border-red-200 p-4 rounded-2xl text-red-700 text-sm mb-6 flex gap-3 items-center">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                <div>
+                    <strong>Atenção ao Token do GitHub:</strong> Se a sincronização falhar, seu Token (PAT) expirou ou foi revogado por segurança. Gere um novo no GitHub e cole abaixo.
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
-                    <h3 class="font-black text-blue-600 uppercase text-xs tracking-widest">Sincronização Cloud</h3>
-                    <input type="text" id="db-user" value="paulojosemsousa-stack" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold" readonly>
-                    <input type="text" id="db-repo" value="odontopersonalite" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold" readonly>
-                    <input type="password" id="db-token" value="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" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold">
-                    <button onclick="forceSync()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">SINCRONIZAR MANUAL</button>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <h3 class="font-black flex items-center gap-2"><i class="fab fa-github"></i> Banco Cloud</h3>
+                    <input type="text" id="db-user" value="paulojosemsousa-stack" class="w-full p-3 bg-slate-50 border rounded-xl text-sm" placeholder="Usuário">
+                    <input type="text" id="db-repo" value="odontopersonalite" class="w-full p-3 bg-slate-50 border rounded-xl text-sm" placeholder="Repositório">
+                    <input type="password" id="db-token" placeholder="Cole o NOVO Token (ghp_...)" class="w-full p-3 bg-slate-50 border rounded-xl text-sm">
+                    <button onclick="manualSync()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-xs uppercase">Conectar</button>
                 </div>
 
-                <div class="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
-                    <h3 class="font-black text-emerald-600 uppercase text-xs tracking-widest">Novo Profissional</h3>
-                    <input type="text" id="new-d-name" placeholder="Nome do Dentista" class="w-full p-3 border rounded-xl text-sm outline-none">
-                    <select id="new-d-spec" class="w-full p-3 border rounded-xl text-sm outline-none bg-slate-50">
-                        <option>Clínico Geral</option>
-                        <option>Ortodontia</option>
-                        <option>Implantodontia</option>
-                        <option>Estética</option>
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <h3 class="font-black flex items-center gap-2"><i class="fab fa-whatsapp text-emerald-500"></i> Integração WhatsApp API</h3>
+                    <select id="cfg-wa-mode" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold">
+                        <option value="browser">Aba do Navegador (Padrão/Grátis)</option>
+                        <option value="api">API Externa (Z-API, Evolution, etc)</option>
                     </select>
-                    <button onclick="addDentist()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold uppercase text-xs">Adicionar ao Corpo Clínico</button>
+                    <input type="text" id="cfg-wa-url" placeholder="URL da API Externa" class="w-full p-3 border rounded-xl text-sm">
+                    <input type="password" id="cfg-wa-token" placeholder="Token da API Externa" class="w-full p-3 border rounded-xl text-sm">
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <h3 class="font-black text-blue-600 flex items-center gap-2"><i class="fas fa-users"></i> Cadastrar Paciente</h3>
+                    <input type="text" id="new-c-name" placeholder="Nome Completo" class="w-full p-3 border rounded-xl text-sm">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="new-c-cpf" placeholder="CPF (Somente números)" class="p-3 border rounded-xl text-sm">
+                        <input type="text" id="new-c-phone" placeholder="WhatsApp (5511...)" class="p-3 border rounded-xl text-sm">
+                    </div>
+                    <button onclick="addClient()" class="w-full bg-blue-100 text-blue-700 py-3 rounded-xl font-bold text-xs uppercase">Salvar Paciente</button>
+                    <p class="text-[10px] text-slate-400 text-center">Senha gerada: 5 primeiros dígitos do CPF</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <h3 class="font-black flex items-center gap-2"><i class="fas fa-user-md"></i> Equipe (Dono/Gerente/Dentista)</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="new-s-name" placeholder="Nome" class="p-3 border rounded-xl text-sm">
+                        <select id="new-s-role" class="p-3 border rounded-xl text-sm bg-slate-50">
+                            <option value="dentist">Dentista</option>
+                            <option value="manager">Gerente</option>
+                            <option value="owner">Dono da Clínica</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="new-s-user" placeholder="Usuário" class="p-3 border rounded-xl text-sm">
+                        <input type="password" id="new-s-pass" placeholder="Senha" class="p-3 border rounded-xl text-sm">
+                    </div>
+                    <button onclick="addStaff()" class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-xs uppercase">Salvar Membro</button>
                 </div>
             </div>
             
-            <div class="bg-white p-6 rounded-3xl border shadow-sm">
-                <h3 class="font-black mb-4">Configurações de Contato</h3>
-                <input type="text" id="cfg-wa" placeholder="WhatsApp Gerente (Ex: 5562998078187)" class="w-full p-4 border rounded-2xl font-bold outline-none">
-                <button onclick="saveConfigs()" class="mt-4 bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">SALVAR TUDO</button>
-            </div>
+            <button onclick="saveAllSettings()" class="w-full bg-emerald-500 text-white py-4 rounded-xl font-black mt-4 shadow-lg">SALVAR TODAS AS CONFIGURAÇÕES</button>
         </section>
 
     </main>
 
-    <script>
-        let db = { dentists: [], appointments: [], config: { wa: "" } };
-        let currentSha = null;
-        let calendar = null;
+    <div id="modal-nps" class="fixed inset-0 bg-black/50 z-[200] hidden items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full space-y-4 text-center">
+            <h3 class="font-black text-xl">Registrar NPS</h3>
+            <p class="text-xs text-slate-500">Qual nota (0 a 10) o paciente deu após a consulta?</p>
+            <input type="number" id="nps-score" min="0" max="10" placeholder="Nota 0-10" class="w-full p-4 border-2 rounded-xl text-center text-2xl font-black text-blue-600">
+            <div class="flex gap-2">
+                <button onclick="closeNpsModal()" class="flex-1 bg-slate-200 p-3 rounded-xl font-bold text-sm">Cancelar</button>
+                <button onclick="saveNPS()" class="flex-1 bg-emerald-500 text-white p-3 rounded-xl font-bold text-sm">Salvar Nota</button>
+            </div>
+        </div>
+    </div>
 
-        // --- SEGURANÇA ---
-        function openSettings() {
-            if(prompt("Senha Administrativa:") === "JJPJ") switchTab('settings');
+    <script>
+        // --- ESTRUTURA DB ROBUSTA ---
+        let db = { 
+            clients: [], // {id, name, cpf, phone}
+            staff: [], // {id, name, role, user, pass}
+            appointments: [], // {id, clientId, clientName, dentist, date, period, status, nps}
+            config: { waMode: 'browser', waUrl: '', waToken: '' } 
+        };
+        
+        let currentSha = null;
+        let currentUser = null; // Guarda quem está logado
+        let calendar = null;
+        let charts = { status: null, nps: null };
+        let currentAppIdForNps = null;
+
+        // --- SISTEMA DE LOGIN ---
+        function doLogin() {
+            const roleType = document.getElementById('login-role').value;
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
+
+            if(!u || !p) return alert("Preencha todos os campos!");
+
+            // Mock admin check se o DB falhar e o cara for o dono
+            if (u === 'admin' && p === 'admin') { bypassLoginAdmin(); return; }
+
+            if (roleType === 'client') {
+                const client = db.clients.find(c => c.cpf === u && c.cpf.substring(0, 5) === p);
+                if (client) {
+                    currentUser = { ...client, role: 'client' };
+                    document.getElementById('client-name-display').innerText = client.name;
+                    initApp();
+                } else alert("CPF ou Senha (5 primeiros digitos do CPF) incorretos!");
+            } else {
+                // Dentist ou Staff
+                const staff = db.staff.find(s => s.user === u && s.pass === p);
+                if (staff) {
+                    currentUser = staff;
+                    initApp();
+                } else alert("Usuário ou senha incorretos!");
+            }
         }
 
-        // --- GITHUB CLOUD ---
-        async function sync() {
-            const user = "paulojosemsousa-stack";
-            const repo = "odontopersonalite";
+        function bypassLoginAdmin() {
+            currentUser = { name: 'Super Admin', role: 'owner' };
+            initApp();
+        }
+
+        function initApp() {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('main-nav').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            buildMenu();
+            renderAll();
+        }
+
+        // --- GESTÃO DE MENU POR NÍVEL (RBAC) ---
+        function buildMenu() {
+            const c = document.getElementById('menu-container');
+            c.innerHTML = '';
+            const btn = (id, text, icon='') => `<button onclick="switchTab('${id}')" id="tab-${id}" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap">${icon} ${text}</button>`;
+            
+            if (currentUser.role === 'owner' || currentUser.role === 'manager') {
+                c.innerHTML += btn('dashboard', 'DASHBOARD', '<i class="fas fa-chart-pie mr-1"></i>');
+                c.innerHTML += btn('manager', 'KANBAN GERAL');
+                c.innerHTML += btn('settings', '', '<i class="fas fa-cog"></i>');
+                switchTab('dashboard');
+            } 
+            else if (currentUser.role === 'dentist') {
+                c.innerHTML += btn('dentist', 'MINHA AGENDA', '<i class="far fa-calendar-alt mr-1"></i>');
+                switchTab('dentist');
+            }
+            else if (currentUser.role === 'client') {
+                c.innerHTML += btn('client', 'NOVO AGENDAMENTO');
+                switchTab('client');
+            }
+        }
+
+        // --- GITHUB CLOUD (Com Tratamento de Erro de Token) ---
+        async function manualSync() {
+            const user = document.getElementById('db-user').value;
+            const repo = document.getElementById('db-repo').value;
             const token = document.getElementById('db-token').value;
             
             try {
                 const res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/db.json`, {
                     headers: { Authorization: `token ${token}` }
                 });
+                
+                if (res.status === 401 || res.status === 403 || res.status === 404) {
+                    alert("⚠️ ERRO GITHUB: Token inválido, expirado ou revogado! Gere um novo Token PAT no GitHub e tente novamente.");
+                    updateUI(false, "Token Error");
+                    return;
+                }
+
                 const data = await res.json();
                 currentSha = data.sha;
-                db = JSON.parse(decodeURIComponent(escape(atob(data.content))));
-                updateStatus(true, "Online");
-                render();
+                const parsedDb = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                // Mesclar DB (caso esteja zerado no git)
+                if(parsedDb.staff) db = parsedDb; 
+                
+                updateUI(true, "Conectado");
+                renderAll();
             } catch (e) {
-                updateStatus(false, "Erro de Sincronia");
+                updateUI(false, "Erro Conexão");
             }
         }
 
-        async function push() {
-            const user = "paulojosemsousa-stack";
-            const repo = "odontopersonalite";
+        async function pushDB() {
             const token = document.getElementById('db-token').value;
+            if(!token) return;
+
             try {
-                const res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/db.json`, {
+                const res = await fetch(`https://api.github.com/repos/paulojosemsousa-stack/odontopersonalite/contents/db.json`, {
                     method: 'PUT',
                     headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: "Update OdontoCloud Pro",
+                        message: "Auto-save Odonto ERP",
                         content: btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2)))),
                         sha: currentSha
                     })
                 });
                 const data = await res.json();
                 currentSha = data.content.sha;
-                updateStatus(true, "Salvo");
-            } catch (e) { updateStatus(false, "Falha ao Salvar"); }
+                updateUI(true, "Salvo");
+            } catch (e) { console.error(e); }
         }
 
-        // --- CALENDÁRIO ---
-        function initCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'pt-br',
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek'
-                },
-                buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana' },
-                events: getCalendarEvents(),
-                eventClick: (info) => {
-                    alert(`Paciente: ${info.event.title}\nDentista: ${info.event.extendedProps.dentist}`);
-                }
-            });
-            calendar.render();
+        // --- NEGÓCIO (CRUD) ---
+        function addClient() {
+            const name = document.getElementById('new-c-name').value;
+            const cpf = document.getElementById('new-c-cpf').value.replace(/\D/g, '');
+            const phone = document.getElementById('new-c-phone').value;
+            if(name && cpf.length >= 11) {
+                db.clients.push({ id: Date.now(), name, cpf, phone });
+                alert(`Paciente Salvo! Senha de acesso: ${cpf.substring(0,5)}`);
+                saveAndRender();
+            } else alert("Preencha nome e CPF válido!");
         }
 
-        function getCalendarEvents() {
-            const filter = document.getElementById('calendar-filter').value;
-            let apps = db.appointments;
-            
-            if(filter !== 'all') {
-                apps = apps.filter(a => a.dentist === filter);
-            }
-
-            return apps.map(a => ({
-                title: `Consulta: ${a.dentist}`,
-                start: a.date,
-                backgroundColor: a.status === 'done' ? '#10b981' : (a.status === 'active' ? '#2563eb' : '#f59e0b'),
-                extendedProps: { dentist: a.dentist }
-            }));
-        }
-
-        function refreshCalendar() {
-            if(calendar) {
-                calendar.removeAllEvents();
-                calendar.addEventSource(getCalendarEvents());
-            }
-        }
-
-        // --- NEGÓCIO ---
-        function addDentist() {
-            const name = document.getElementById('new-d-name').value;
-            const spec = document.getElementById('new-d-spec').value;
-            if(name) {
-                db.dentists.push({ name, spec });
-                document.getElementById('new-d-name').value = '';
+        function addStaff() {
+            const name = document.getElementById('new-s-name').value;
+            const role = document.getElementById('new-s-role').value;
+            const user = document.getElementById('new-s-user').value;
+            const pass = document.getElementById('new-s-pass').value;
+            if(name && user && pass) {
+                db.staff.push({ id: Date.now(), name, role, user, pass });
+                alert("Membro da equipe salvo!");
                 saveAndRender();
             }
+        }
+
+        function saveAllSettings() {
+            db.config.waMode = document.getElementById('cfg-wa-mode').value;
+            db.config.waUrl = document.getElementById('cfg-wa-url').value;
+            db.config.waToken = document.getElementById('cfg-wa-token').value;
+            saveAndRender();
+            alert("Configurações salvas!");
         }
 
         function createBooking() {
@@ -243,41 +380,94 @@
             const period = document.getElementById('c-period').value;
             if(!date) return alert("Escolha a data!");
 
-            db.appointments.push({ id: Date.now(), dentist, date, period, status: 'pending' });
+            db.appointments.push({ 
+                id: Date.now(), 
+                clientId: currentUser.id, 
+                clientName: currentUser.name,
+                dentist, date, period, status: 'pending', nps: null 
+            });
+            
             saveAndRender();
-
-            const msg = `🦷 *ODONTO PERSONALITÉ*%0AOlá! Novo agendamento solicitado:%0A*Dentista:* ${dentist}%0A*Data:* ${date}%0A*Período:* ${period}`;
-            window.open(`https://wa.me/${db.config.wa.replace(/\D/g,'')}?text=${msg}`, '_blank');
+            alert("Agendamento criado com sucesso!");
         }
 
-        // --- UI & RENDER ---
-        function switchTab(id) {
-            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('view-' + id).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            document.getElementById('tab-' + id).classList.add('nav-active');
+        // --- SISTEMA WHATSAPP API & NPS ---
+        async function triggerNPSWhatsApp(appId) {
+            const app = db.appointments.find(a => a.id == appId);
+            const client = db.clients.find(c => c.id == app.clientId);
+            if(!client || !client.phone) return alert("Cliente sem telefone. Avalie manualmente na tela.");
+
+            const msg = `🦷 *ODONTO PERSONALITÉ*%0AOlá ${client.name}! Sua consulta com ${app.dentist} terminou.%0ADe 0 a 10, que nota você dá para nosso atendimento? Responda aqui mesmo!`;
             
-            if(id === 'manager') initKanban();
-            if(id === 'dentist') {
+            if(db.config.waMode === 'api' && db.config.waUrl) {
+                // Envio via API Invisível
+                try {
+                    await fetch(db.config.waUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': db.config.waToken },
+                        body: JSON.stringify({ phone: client.phone, message: decodeURIComponent(msg) })
+                    });
+                    alert("Pesquisa de NPS disparada via API Invisível!");
+                } catch(e) { alert("Erro na API WA."); }
+            } else {
+                // Envio padrão via Navegador
+                window.open(`https://wa.me/${client.phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+            }
+            
+            // Abre modal para o gerente digitar o que o cliente respondeu no Zap
+            currentAppIdForNps = appId;
+            document.getElementById('modal-nps').classList.remove('hidden');
+            document.getElementById('modal-nps').classList.add('flex');
+        }
+
+        function saveNPS() {
+            const score = document.getElementById('nps-score').value;
+            if(score === '' || score < 0 || score > 10) return;
+            
+            const idx = db.appointments.findIndex(a => a.id == currentAppIdForNps);
+            if(idx > -1) {
+                db.appointments[idx].nps = parseInt(score);
+                saveAndRender();
+                closeNpsModal();
+            }
+        }
+        function closeNpsModal() { 
+            document.getElementById('modal-nps').classList.add('hidden');
+            document.getElementById('modal-nps').classList.remove('flex');
+        }
+
+        // --- RENDER & BI (Dashboard) ---
+        function saveAndRender() { renderAll(); pushDB(); }
+
+        function renderAll() {
+            if(!currentUser) return;
+
+            // Forms update
+            const dentists = db.staff.filter(s => s.role === 'dentist');
+            document.getElementById('c-dentist').innerHTML = dentists.map(d => `<option value="${d.name}">Dr(a). ${d.name}</option>`).join('');
+            
+            document.getElementById('cfg-wa-mode').value = db.config.waMode || 'browser';
+            document.getElementById('cfg-wa-url').value = db.config.waUrl || '';
+            document.getElementById('cfg-wa-token').value = db.config.waToken || '';
+
+            // Render Views based on role
+            if (currentUser.role === 'owner' || currentUser.role === 'manager') {
+                renderKanban();
+                renderDashboard();
+            } else if (currentUser.role === 'dentist') {
                 if(!calendar) initCalendar();
-                else {
-                    setTimeout(() => { calendar.render(); refreshCalendar(); }, 100);
-                }
+                else calendar.removeAllEvents(), calendar.addEventSource(getCalendarEvents());
             }
         }
 
-        function saveAndRender() { render(); push(); }
-
-        function render() {
-            const dOptions = db.dentists.map(d => `<option value="${d.name}">${d.name} (${d.spec})</option>`).join('');
-            document.getElementById('c-dentist').innerHTML = dOptions;
-            document.getElementById('calendar-filter').innerHTML = `<option value="all">Todos os Dentistas</option>` + dOptions;
-            document.getElementById('cfg-wa').value = db.config.wa || "";
-
+        function renderKanban() {
             const card = (a) => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 card cursor-grab" data-id="${a.id}">
-                    <p class="font-black text-sm">${a.dentist}</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">${a.date} | ${a.period}</p>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 cursor-grab" data-id="${a.id}">
+                    <p class="font-black text-sm">${a.clientName || 'Paciente'}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-2">Com: ${a.dentist} • ${a.date}</p>
+                    ${a.status === 'done' ? 
+                        (a.nps !== null ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg text-xs font-black">NPS: ${a.nps}/10</span>` : `<button onclick="triggerNPSWhatsApp(${a.id})" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold hover:bg-emerald-200">Pesquisar NPS</button>`) 
+                        : ''}
                 </div>`;
             
             document.getElementById('list-pending').innerHTML = db.appointments.filter(a => a.status === 'pending').map(card).join('');
@@ -285,34 +475,109 @@
             document.getElementById('list-done').innerHTML = db.appointments.filter(a => a.status === 'done').map(card).join('');
         }
 
+        function renderDashboard() {
+            // Stats Básicos
+            document.getElementById('dash-tot-pacientes').innerText = db.clients.length;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dash-tot-hoje').innerText = db.appointments.filter(a => a.date === today).length;
+            
+            const doneApps = db.appointments.filter(a => a.status === 'done');
+            document.getElementById('dash-tot-concluidos').innerText = doneApps.length;
+
+            // Calculo NPS Geral (Promotores(9-10) - Detratores(0-6)) / Total Respondido
+            const npsApps = doneApps.filter(a => a.nps !== null);
+            if(npsApps.length > 0) {
+                const promotores = npsApps.filter(a => a.nps >= 9).length;
+                const detratores = npsApps.filter(a => a.nps <= 6).length;
+                const npsCalc = ((promotores - detratores) / npsApps.length) * 100;
+                document.getElementById('dash-nps-geral').innerText = npsCalc.toFixed(0) + '%';
+            }
+
+            // Gráfico Status (Donut)
+            const stData = {
+                pend: db.appointments.filter(a => a.status === 'pending').length,
+                act: db.appointments.filter(a => a.status === 'active').length,
+                done: doneApps.length
+            };
+            if(charts.status) charts.status.destroy();
+            charts.status = new Chart(document.getElementById('chart-status'), {
+                type: 'doughnut',
+                data: { labels: ['Pendentes', 'Em Cadeira', 'Finalizados'], datasets: [{ data: [stData.pend, stData.act, stData.done], backgroundColor: ['#fbbf24', '#3b82f6', '#10b981'] }] },
+                options: { responsive: true, cutout: '70%' }
+            });
+
+            // Gráfico NPS por Dentista (Bar)
+            const dentists = [...new Set(npsApps.map(a => a.dentist))];
+            const avgNpsPerDentist = dentists.map(d => {
+                const dApps = npsApps.filter(a => a.dentist === d);
+                const sum = dApps.reduce((acc, curr) => acc + curr.nps, 0);
+                return sum / dApps.length;
+            });
+
+            if(charts.nps) charts.nps.destroy();
+            charts.nps = new Chart(document.getElementById('chart-nps'), {
+                type: 'bar',
+                data: { labels: dentists, datasets: [{ label: 'NPS Médio (0-10)', data: avgNpsPerDentist, backgroundColor: '#6366f1', borderRadius: 8 }] },
+                options: { responsive: true, scales: { y: { beginAtZero: true, max: 10 } } }
+            });
+        }
+
+        // --- UTILIDADES ---
         function initKanban() {
             ['list-pending', 'list-active', 'list-done'].forEach(cid => {
                 new Sortable(document.getElementById(cid), {
-                    group: 'tasks',
-                    animation: 150,
+                    group: 'tasks', animation: 150,
                     onEnd: (evt) => {
                         const id = evt.item.dataset.id;
                         const status = evt.to.id.replace('list-', '');
                         const idx = db.appointments.findIndex(a => a.id == id);
                         db.appointments[idx].status = status;
-                        push();
+                        
+                        // Disparar NPS se foi para "Done"
+                        if(status === 'done' && db.appointments[idx].nps === null) {
+                            triggerNPSWhatsApp(id);
+                        } else {
+                            saveAndRender();
+                        }
                     }
                 });
             });
         }
 
-        function updateStatus(on, txt) {
+        function initCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek', locale: 'pt-br',
+                headerToolbar: { left: 'prev,next', center: 'title', right: 'timeGridWeek,timeGridDay' },
+                events: getCalendarEvents()
+            });
+            calendar.render();
+        }
+
+        function getCalendarEvents() {
+            // Filtra só os eventos do dentista logado
+            let apps = db.appointments.filter(a => a.dentist === currentUser.name);
+            return apps.map(a => ({ title: a.clientName, start: a.date, backgroundColor: '#2563eb' }));
+        }
+
+        function switchTab(id) {
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('view-' + id).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
+            if(document.getElementById('tab-' + id)) document.getElementById('tab-' + id).classList.add('nav-active');
+            
+            if(id === 'manager') setTimeout(initKanban, 100);
+            if(id === 'dentist' && calendar) setTimeout(() => calendar.render(), 100);
+            if(id === 'dashboard') renderDashboard();
+        }
+
+        function updateUI(on, txt) {
             const s = document.getElementById('sync-indicator');
             s.className = `flex items-center gap-1 text-[9px] font-black uppercase tracking-widest ${on ? 'text-emerald-500' : 'text-rose-500'}`;
             s.querySelector('span').innerText = txt;
         }
 
-        function saveConfigs() { db.config.wa = document.getElementById('cfg-wa').value; saveAndRender(); }
-        function forceSync() { sync(); }
-
-        // Inicialização
-        sync();
-        switchTab('client');
+        // Tenta sincronizar se tiver dados em cache/hardcoded (Removi o auto-sync para evitar lock por token quebrado)
     </script>
 </body>
 </html>
