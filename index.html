@@ -3,581 +3,592 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OdontoControl ERP Cloud</title>
+    <title>OdontoPersonalité v4.3 | Pro Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
-        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid #e2e8f0; }
-        .nav-active { background-color: #2563eb; color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
-        .fc { background: white; padding: 15px; border-radius: 1.5rem; border: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .fc-toolbar-title { font-size: 1.2rem !important; font-weight: 800 !important; text-transform: capitalize; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8f0; }
+        .nav-active { color: #2563eb; font-weight: 800; border-bottom: 3px solid #2563eb; }
+        .input-gray { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 0.8rem 1rem; outline: none; width: 100%; font-weight: 600; }
+        .input-gray:focus { border-color: #2563eb; background: white; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
         .hidden { display: none !important; }
+        .fc { background: white; padding: 20px; border-radius: 2rem; border: none; }
+        .fc-event { cursor: pointer; }
+        .blocked-slot { background-color: #ef4444 !important; border-color: #dc2626 !important; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-    <div id="view-login" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full space-y-6">
-            <div class="text-center space-y-2">
-                <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center text-white shadow-lg mb-4">
-                    <i class="fas fa-tooth text-3xl"></i>
-                </div>
-                <h1 class="text-2xl font-black text-slate-800">Odonto<span class="text-blue-600">Cloud</span></h1>
-                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Acesso ao Sistema</p>
-            </div>
-            
+<!-- TELA DE LOGIN -->
+<div id="view-login" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center p-4">
+    <div class="bg-white p-10 rounded-[3rem] shadow-2xl max-w-sm w-full space-y-6">
+        <div class="text-center">
+            <h1 class="text-2xl font-black">Odonto<span class="text-blue-600">Personalité</span></h1>
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Enterprise Solution v4.3</p>
+        </div>
+        <div class="space-y-4">
+            <input type="text" id="login-user" placeholder="Usuário" class="input-gray">
+            <input type="password" id="login-pass" placeholder="Senha" class="input-gray">
+            <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg hover:scale-95 transition-all">ACESSAR</button>
+        </div>
+        <div class="text-center text-[9px] text-slate-400">
+            <p>Teste: admin / JJPJ | dentista / 12345 | gerente / 12345</p>
+        </div>
+    </div>
+</div>
+
+<!-- NAVEGAÇÃO PRINCIPAL -->
+<nav id="main-nav" class="glass sticky top-0 z-50 px-8 py-4 hidden flex justify-between items-center">
+    <div class="flex items-center gap-3">
+        <span class="font-black text-xl">Odonto<span class="text-blue-600">Personalité</span></span>
+        <div id="sync-status" class="flex items-center gap-1 text-[8px] font-black text-rose-500 uppercase italic"><i class="fas fa-circle text-[6px]"></i> <span>Desconectado</span></div>
+    </div>
+    <div class="flex bg-slate-100 rounded-2xl p-1 gap-1">
+        <button onclick="switchTab('client')" id="tab-client" class="px-5 py-2 text-[10px] font-black uppercase transition-all">Cliente</button>
+        <button onclick="switchTab('manager')" id="tab-manager" class="px-5 py-2 text-[10px] font-black uppercase transition-all">Fluxo</button>
+        <button onclick="switchTab('dentist')" id="tab-dentist" class="px-5 py-2 text-[10px] font-black uppercase transition-all">Agenda</button>
+        <button onclick="switchTab('nps')" id="tab-nps" class="px-5 py-2 text-[10px] font-black uppercase transition-all">NPS</button>
+        <button onclick="switchTab('settings')" id="tab-settings" class="px-5 py-2 text-slate-400"><i class="fas fa-cog"></i></button>
+    </div>
+</nav>
+
+<main id="main-content" class="max-w-7xl mx-auto p-6 hidden">
+    <!-- ABA CLIENTE -->
+    <section id="view-client" class="hidden space-y-8 animate-fade-in">
+        <div class="bg-white p-10 rounded-[3rem] shadow-xl border grid grid-cols-1 md:grid-cols-2 gap-10">
             <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Tipo de Acesso</label>
-                    <select id="login-role" class="w-full p-3 bg-slate-50 border rounded-xl outline-none text-sm font-bold">
-                        <option value="client">Sou Cliente / Paciente</option>
-                        <option value="dentist">Sou Dentista</option>
-                        <option value="staff">Gerente / Dono</option>
-                    </select>
-                </div>
-                <input type="text" id="login-user" placeholder="CPF, Usuário ou Email" class="w-full p-3 border rounded-xl outline-none">
-                <input type="password" id="login-pass" placeholder="Senha (Para cliente: 5 prim. dig. do CPF)" class="w-full p-3 border rounded-xl outline-none">
-                <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-sm uppercase shadow-lg hover:bg-blue-700 transition-all">ENTRAR</button>
+                <h2 class="text-2xl font-black">1. Escolha o Dentista e Data</h2>
+                <select id="c-dentist" class="input-gray" onchange="initClientCalendar()"></select>
+                <div id="client-mini-calendar" class="mt-4 border rounded-3xl p-4 bg-slate-50"></div>
             </div>
-            
-            <div class="pt-4 border-t border-slate-100 text-center">
-                <p class="text-[10px] text-slate-400 mb-2">Primeiro acesso do gestor (Sem DB)?</p>
-                <button onclick="bypassLoginAdmin()" class="text-xs font-bold text-blue-600 underline">Forçar Entrada (Configurar Sistema)</button>
+            <div class="space-y-4">
+                <h2 class="text-2xl font-black">2. Escolha o Horário</h2>
+                <div id="time-slots" class="grid grid-cols-2 gap-2"></div>
+                <button onclick="confirmBooking()" id="btn-confirm-booking" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl opacity-50 cursor-not-allowed" disabled>CONFIRMAR AGENDAMENTO</button>
             </div>
         </div>
-    </div>
+    </section>
 
-    <nav id="main-nav" class="glass sticky top-0 z-50 p-4 hidden">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <i class="fas fa-tooth text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-lg leading-tight">Odonto<span class="text-blue-600">Cloud</span></h1>
-                    <div id="sync-indicator" class="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                        <i class="fas fa-circle text-[6px]"></i> <span>Offline</span>
-                    </div>
-                </div>
-            </div>
-
-            <div id="menu-container" class="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 overflow-x-auto w-full md:w-auto">
-                </div>
+    <!-- ABA FLUXO (KANBAN) -->
+    <section id="view-manager" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-slate-200/50 p-6 rounded-[2.5rem] space-y-4">
+            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 italic">Aguardando</h4>
+            <div id="list-pending" class="min-h-[500px] space-y-3"></div>
         </div>
-    </nav>
+        <div class="bg-slate-200/50 p-6 rounded-[2.5rem] space-y-4">
+            <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-2">Em Atendimento</h4>
+            <div id="list-active" class="min-h-[500px] space-y-3"></div>
+        </div>
+        <div class="bg-slate-200/50 p-6 rounded-[2.5rem] space-y-4">
+            <h4 class="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-2">Finalizados</h4>
+            <div id="list-done" class="min-h-[500px] space-y-3"></div>
+        </div>
+    </section>
 
-    <main id="main-content" class="max-w-7xl mx-auto p-4 md:p-8 flex-1 hidden">
-
-        <section id="view-dashboard" class="hidden space-y-6">
-            <div class="flex justify-between items-end">
-                <div>
-                    <h2 class="text-3xl font-black text-slate-800">Visão Geral</h2>
-                    <p class="text-slate-500 text-sm font-medium">Desempenho e Satisfação (NPS)</p>
-                </div>
+    <!-- ABA AGENDA (DENTISTA) -->
+    <section id="view-dentist" class="hidden space-y-6">
+        <div class="flex flex-wrap justify-between items-center gap-4">
+            <div class="flex gap-4 items-center">
+                <h2 class="text-2xl font-black">Agenda Profissional</h2>
+                <select id="dentist-select" class="input-gray w-auto" onchange="loadDentistCalendar()">
+                    <option value="">Selecione um dentista</option>
+                </select>
             </div>
+            <button onclick="toggleBlockMode()" id="btn-block-mode" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase">Modo Bloqueio: OFF</button>
+        </div>
+        <div id="dentist-calendar"></div>
+        <div id="block-info" class="text-xs text-slate-500 italic">Clique em um horário no calendário para bloquear/desbloquear (Modo Bloqueio ativado).</div>
+    </section>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Total Pacientes</h3><p id="dash-tot-pacientes" class="text-3xl font-black text-blue-600">0</p></div>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Agendamentos Hoje</h3><p id="dash-tot-hoje" class="text-3xl font-black text-slate-800">0</p></div>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Concluídos (Mês)</h3><p id="dash-tot-concluidos" class="text-3xl font-black text-emerald-500">0</p></div>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"><h3 class="text-slate-400 text-xs font-bold uppercase mb-1">NPS Geral (Clínica)</h3><p id="dash-nps-geral" class="text-3xl font-black text-indigo-600">0%</p></div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                    <h3 class="font-bold text-slate-700 mb-4">Status dos Agendamentos</h3>
-                    <canvas id="chart-status"></canvas>
-                </div>
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                    <h3 class="font-bold text-slate-700 mb-4">NPS Médio por Dentista</h3>
-                    <canvas id="chart-nps"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-manager" class="hidden space-y-6">
-            <h2 class="text-3xl font-black text-slate-800">Fluxo de Atendimento</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest"><span class="text-yellow-500">●</span> Pendentes</h4>
-                    <div id="list-pending" class="min-h-[400px] flex flex-col gap-3"></div>
-                </div>
-                <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest"><span class="text-blue-500">●</span> Em Cadeira</h4>
-                    <div id="list-active" class="min-h-[400px] flex flex-col gap-3"></div>
-                </div>
-                <div class="bg-slate-200/50 p-4 rounded-[2rem] flex flex-col gap-4">
-                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest"><span class="text-emerald-500">●</span> Finalizados / NPS</h4>
-                    <div id="list-done" class="min-h-[400px] flex flex-col gap-3"></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-dentist" class="hidden space-y-6">
-            <h2 class="text-3xl font-black text-slate-800">Minha Agenda</h2>
-            <div id="calendar-container" class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-2"><div id="calendar"></div></div>
-        </section>
-
-        <section id="view-client" class="hidden max-w-lg mx-auto py-10">
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 text-center space-y-6">
-                <h2 class="text-2xl font-black">Olá, <span id="client-name-display" class="text-blue-600">Cliente</span>!</h2>
-                <p class="text-sm text-slate-500">Agende sua próxima consulta abaixo.</p>
-                
-                <div class="space-y-4 text-left">
-                    <select id="c-dentist" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none"></select>
-                    <input type="date" id="c-date" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none">
-                    <select id="c-period" class="w-full p-4 bg-slate-50 border rounded-xl font-bold outline-none">
-                        <option value="Manhã">Manhã (08h - 12h)</option>
-                        <option value="Tarde">Tarde (13h - 18h)</option>
-                    </select>
-                    <button onclick="createBooking()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black shadow-md hover:bg-blue-700">SOLICITAR AGENDAMENTO</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-settings" class="hidden space-y-6">
-            <div class="bg-red-50 border border-red-200 p-4 rounded-2xl text-red-700 text-sm mb-6 flex gap-3 items-center">
-                <i class="fas fa-exclamation-triangle text-2xl"></i>
-                <div>
-                    <strong>Atenção ao Token do GitHub:</strong> Se a sincronização falhar, seu Token (PAT) expirou ou foi revogado por segurança. Gere um novo no GitHub e cole abaixo.
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                    <h3 class="font-black flex items-center gap-2"><i class="fab fa-github"></i> Banco Cloud</h3>
-                    <input type="text" id="db-user" value="paulojosemsousa-stack" class="w-full p-3 bg-slate-50 border rounded-xl text-sm" placeholder="Usuário">
-                    <input type="text" id="db-repo" value="odontopersonalite" class="w-full p-3 bg-slate-50 border rounded-xl text-sm" placeholder="Repositório">
-                    <input type="password" id="db-token" placeholder="Cole o NOVO Token (ghp_...)" class="w-full p-3 bg-slate-50 border rounded-xl text-sm">
-                    <button onclick="manualSync()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-xs uppercase">Conectar</button>
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                    <h3 class="font-black flex items-center gap-2"><i class="fab fa-whatsapp text-emerald-500"></i> Integração WhatsApp API</h3>
-                    <select id="cfg-wa-mode" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold">
-                        <option value="browser">Aba do Navegador (Padrão/Grátis)</option>
-                        <option value="api">API Externa (Z-API, Evolution, etc)</option>
-                    </select>
-                    <input type="text" id="cfg-wa-url" placeholder="URL da API Externa" class="w-full p-3 border rounded-xl text-sm">
-                    <input type="password" id="cfg-wa-token" placeholder="Token da API Externa" class="w-full p-3 border rounded-xl text-sm">
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                    <h3 class="font-black text-blue-600 flex items-center gap-2"><i class="fas fa-users"></i> Cadastrar Paciente</h3>
-                    <input type="text" id="new-c-name" placeholder="Nome Completo" class="w-full p-3 border rounded-xl text-sm">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="new-c-cpf" placeholder="CPF (Somente números)" class="p-3 border rounded-xl text-sm">
-                        <input type="text" id="new-c-phone" placeholder="WhatsApp (5511...)" class="p-3 border rounded-xl text-sm">
-                    </div>
-                    <button onclick="addClient()" class="w-full bg-blue-100 text-blue-700 py-3 rounded-xl font-bold text-xs uppercase">Salvar Paciente</button>
-                    <p class="text-[10px] text-slate-400 text-center">Senha gerada: 5 primeiros dígitos do CPF</p>
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                    <h3 class="font-black flex items-center gap-2"><i class="fas fa-user-md"></i> Equipe (Dono/Gerente/Dentista)</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="new-s-name" placeholder="Nome" class="p-3 border rounded-xl text-sm">
-                        <select id="new-s-role" class="p-3 border rounded-xl text-sm bg-slate-50">
-                            <option value="dentist">Dentista</option>
-                            <option value="manager">Gerente</option>
-                            <option value="owner">Dono da Clínica</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="new-s-user" placeholder="Usuário" class="p-3 border rounded-xl text-sm">
-                        <input type="password" id="new-s-pass" placeholder="Senha" class="p-3 border rounded-xl text-sm">
-                    </div>
-                    <button onclick="addStaff()" class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-xs uppercase">Salvar Membro</button>
-                </div>
-            </div>
-            
-            <button onclick="saveAllSettings()" class="w-full bg-emerald-500 text-white py-4 rounded-xl font-black mt-4 shadow-lg">SALVAR TODAS AS CONFIGURAÇÕES</button>
-        </section>
-
-    </main>
-
-    <div id="modal-nps" class="fixed inset-0 bg-black/50 z-[200] hidden items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-sm w-full space-y-4 text-center">
-            <h3 class="font-black text-xl">Registrar NPS</h3>
-            <p class="text-xs text-slate-500">Qual nota (0 a 10) o paciente deu após a consulta?</p>
-            <input type="number" id="nps-score" min="0" max="10" placeholder="Nota 0-10" class="w-full p-4 border-2 rounded-xl text-center text-2xl font-black text-blue-600">
-            <div class="flex gap-2">
-                <button onclick="closeNpsModal()" class="flex-1 bg-slate-200 p-3 rounded-xl font-bold text-sm">Cancelar</button>
-                <button onclick="saveNPS()" class="flex-1 bg-emerald-500 text-white p-3 rounded-xl font-bold text-sm">Salvar Nota</button>
+    <!-- ABA NPS -->
+    <section id="view-nps" class="hidden space-y-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-6 rounded-3xl border text-center">
+                <span class="text-[10px] font-black text-slate-400 uppercase">NPS Score</span>
+                <p class="text-4xl font-black text-blue-600">9.2</p>
             </div>
         </div>
-    </div>
+        <div class="bg-white p-8 rounded-[2.5rem] border"><canvas id="chart-nps"></canvas></div>
+    </section>
 
-    <script>
-        // --- ESTRUTURA DB ROBUSTA ---
-        let db = { 
-            clients: [], // {id, name, cpf, phone}
-            staff: [], // {id, name, role, user, pass}
-            appointments: [], // {id, clientId, clientName, dentist, date, period, status, nps}
-            config: { waMode: 'browser', waUrl: '', waToken: '' } 
-        };
-        
-        let currentSha = null;
-        let currentUser = null; // Guarda quem está logado
-        let calendar = null;
-        let charts = { status: null, nps: null };
-        let currentAppIdForNps = null;
+    <!-- ABA CONFIGURAÇÕES -->
+    <section id="view-settings" class="hidden space-y-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- BLOCO GITHUB -->
+            <div class="bg-white p-8 rounded-[2.5rem] border space-y-4 shadow-sm">
+                <h3 class="font-black flex items-center gap-2"><i class="fab fa-github"></i> Banco Cloud</h3>
+                <input type="text" id="db-user" value="paulojosemsousa-stack" class="input-gray" readonly>
+                <input type="text" id="db-repo" value="odontopersonalite" class="input-gray" readonly>
+                <input type="password" id="db-token" placeholder="Cole o token ghp_..." class="input-gray">
+                <button onclick="syncCloud()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all">Conectar Agora</button>
+            </div>
 
-        // --- SISTEMA DE LOGIN ---
-        function doLogin() {
-            const roleType = document.getElementById('login-role').value;
-            const u = document.getElementById('login-user').value.trim();
-            const p = document.getElementById('login-pass').value.trim();
+            <!-- BLOCO WHATSAPP -->
+            <div class="bg-white p-8 rounded-[2.5rem] border space-y-4 shadow-sm">
+                <h3 class="font-black flex items-center gap-2"><i class="fab fa-whatsapp text-green-600"></i> Integração WhatsApp</h3>
+                <input type="text" id="wa-instance" placeholder="ID da Instância (ex: 123456)" class="input-gray">
+                <input type="text" id="wa-token" placeholder="Token da API" class="input-gray">
+                <input type="text" id="wa-number" placeholder="Número do dentista (ex: 5511999999999)" class="input-gray">
+                <button onclick="testWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-green-700 transition-all">Testar Conexão</button>
+                <div id="wa-status" class="text-[9px] font-bold text-slate-400"></div>
+            </div>
 
-            if(!u || !p) return alert("Preencha todos os campos!");
+            <!-- GESTÃO DE USUÁRIOS -->
+            <div class="bg-white p-8 rounded-[2.5rem] border space-y-4 shadow-sm col-span-1 lg:col-span-2">
+                <h3 id="form-title" class="font-black flex items-center gap-2"><i class="fas fa-user-plus text-blue-600"></i> Novo Profissional</h3>
+                <input type="hidden" id="reg-id">
+                <input type="text" id="reg-name" placeholder="Nome Completo" class="input-gray">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="reg-cpf" placeholder="CPF (Só números)" class="input-gray">
+                    <select id="reg-role" class="input-gray">
+                        <option value="dentist">Dentista</option>
+                        <option value="manager">Gerente</option>
+                        <option value="client">Paciente</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="handleSaveUser()" id="btn-save-user" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black">SALVAR</button>
+                    <button onclick="resetUserForm()" id="btn-cancel-edit" class="hidden px-6 bg-slate-100 text-slate-400 py-4 rounded-2xl font-black uppercase text-[10px]">Cancelar</button>
+                </div>
+            </div>
+        </div>
 
-            // Mock admin check se o DB falhar e o cara for o dono
-            if (u === 'admin' && p === 'admin') { bypassLoginAdmin(); return; }
+        <!-- TABELA DE USUÁRIOS -->
+        <div class="bg-white rounded-[2.5rem] border overflow-hidden shadow-sm">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
+                    <tr><th class="p-5">Nome</th><th class="p-5">Tipo</th><th class="p-5">Login</th><th class="p-5">Ações</th></tr>
+                </thead>
+                <tbody id="user-table-body" class="divide-y divide-slate-100"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
 
-            if (roleType === 'client') {
-                const client = db.clients.find(c => c.cpf === u && c.cpf.substring(0, 5) === p);
-                if (client) {
-                    currentUser = { ...client, role: 'client' };
-                    document.getElementById('client-name-display').innerText = client.name;
-                    initApp();
-                } else alert("CPF ou Senha (5 primeiros digitos do CPF) incorretos!");
-            } else {
-                // Dentist ou Staff
-                const staff = db.staff.find(s => s.user === u && s.pass === p);
-                if (staff) {
-                    currentUser = staff;
-                    initApp();
-                } else alert("Usuário ou senha incorretos!");
-            }
+<script>
+    // ======================== ESTRUTURA GLOBAL ========================
+    let db = { users: [], appointments: [], blocks: [], config: {} };
+    let currentSha = null, currentUser = null, selectedDate = null, selectedTime = null, isBlockMode = false;
+    let dentistCalendar = null;  // instância do FullCalendar da agenda
+
+    // --- Funções auxiliares UTF-8 / Base64 ---
+    function utf8ToBase64(str) {
+        return btoa(unescape(encodeURIComponent(str)));
+    }
+    function base64ToUtf8(base64) {
+        return decodeURIComponent(escape(atob(base64)));
+    }
+
+    // --- Garantir que o db sempre tenha as estruturas mínimas ---
+    function ensureDbStructure() {
+        if (!db.users) db.users = [];
+        if (!db.appointments) db.appointments = [];
+        if (!db.blocks) db.blocks = [];
+        if (!db.config) db.config = {};
+        // Se não houver usuários, criar padrões
+        if (db.users.length === 0) {
+            db.users = [
+                { id: 1, name: "Admin Master", cpf: "00000000000", role: "owner", login: "admin", pass: "JJPJ" },
+                { id: 2, name: "Dr. João Silva", cpf: "11111111111", role: "dentist", login: "joao.silva", pass: "12345" },
+                { id: 3, name: "Gerente Carla", cpf: "22222222222", role: "manager", login: "gerente", pass: "12345" }
+            ];
         }
+    }
 
-        function bypassLoginAdmin() {
-            currentUser = { name: 'Super Admin', role: 'owner' };
-            initApp();
+    // ======================== AUTENTICAÇÃO ========================
+    function doLogin() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value.trim();
+        const found = db.users.find(x => x.login === u && x.pass === p);
+        if (found) {
+            currentUser = found;
+            start();
+        } else {
+            alert("Usuário ou senha inválidos.");
         }
+    }
 
-        function initApp() {
-            document.getElementById('view-login').classList.add('hidden');
-            document.getElementById('main-nav').classList.remove('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            buildMenu();
-            renderAll();
-        }
+    function start() {
+        document.getElementById('view-login').classList.add('hidden');
+        document.getElementById('main-nav').classList.remove('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+        renderAll();
+        // Direciona para a aba adequada conforme perfil
+        if (currentUser.role === 'owner') switchTab('manager');
+        else if (currentUser.role === 'dentist') switchTab('dentist');
+        else if (currentUser.role === 'manager') switchTab('manager');
+        else switchTab('client');
+    }
 
-        // --- GESTÃO DE MENU POR NÍVEL (RBAC) ---
-        function buildMenu() {
-            const c = document.getElementById('menu-container');
-            c.innerHTML = '';
-            const btn = (id, text, icon='') => `<button onclick="switchTab('${id}')" id="tab-${id}" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap">${icon} ${text}</button>`;
-            
-            if (currentUser.role === 'owner' || currentUser.role === 'manager') {
-                c.innerHTML += btn('dashboard', 'DASHBOARD', '<i class="fas fa-chart-pie mr-1"></i>');
-                c.innerHTML += btn('manager', 'KANBAN GERAL');
-                c.innerHTML += btn('settings', '', '<i class="fas fa-cog"></i>');
-                switchTab('dashboard');
-            } 
-            else if (currentUser.role === 'dentist') {
-                c.innerHTML += btn('dentist', 'MINHA AGENDA', '<i class="far fa-calendar-alt mr-1"></i>');
-                switchTab('dentist');
-            }
-            else if (currentUser.role === 'client') {
-                c.innerHTML += btn('client', 'NOVO AGENDAMENTO');
-                switchTab('client');
-            }
-        }
+    // ======================== SINCRONIZAÇÃO GITHUB ========================
+    async function syncCloud() {
+        const token = document.getElementById('db-token').value.trim();
+        if (!token) return alert("Insira o Token do GitHub.");
+        updateStatus(false, "Conectando...");
+        const repoUser = document.getElementById('db-user').value;
+        const repoName = document.getElementById('db-repo').value;
+        const apiUrl = `https://api.github.com/repos/${repoUser}/${repoName}/contents/db.json`;
 
-        // --- GITHUB CLOUD (Com Tratamento de Erro de Token) ---
-        async function manualSync() {
-            const user = document.getElementById('db-user').value;
-            const repo = document.getElementById('db-repo').value;
-            const token = document.getElementById('db-token').value;
-            
-            try {
-                const res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/db.json`, {
-                    headers: { Authorization: `token ${token}` }
-                });
-                
-                if (res.status === 401 || res.status === 403 || res.status === 404) {
-                    alert("⚠️ ERRO GITHUB: Token inválido, expirado ou revogado! Gere um novo Token PAT no GitHub e tente novamente.");
-                    updateUI(false, "Token Error");
-                    return;
-                }
-
-                const data = await res.json();
-                currentSha = data.sha;
-                const parsedDb = JSON.parse(decodeURIComponent(escape(atob(data.content))));
-                // Mesclar DB (caso esteja zerado no git)
-                if(parsedDb.staff) db = parsedDb; 
-                
-                updateUI(true, "Conectado");
-                renderAll();
-            } catch (e) {
-                updateUI(false, "Erro Conexão");
-            }
-        }
-
-        async function pushDB() {
-            const token = document.getElementById('db-token').value;
-            if(!token) return;
-
-            try {
-                const res = await fetch(`https://api.github.com/repos/paulojosemsousa-stack/odontopersonalite/contents/db.json`, {
+        try {
+            let res = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+            if (res.status === 404) {
+                // Criar arquivo padrão
+                const defaultDb = { users: [], appointments: [], blocks: [], config: {} };
+                const content = utf8ToBase64(JSON.stringify(defaultDb, null, 2));
+                const putRes = await fetch(apiUrl, {
                     method: 'PUT',
-                    headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: "Auto-save Odonto ERP",
-                        content: btoa(unescape(encodeURIComponent(JSON.stringify(db, null, 2)))),
-                        sha: currentSha
-                    })
+                    headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: "Inicializar db.json", content: content })
                 });
-                const data = await res.json();
-                currentSha = data.content.sha;
-                updateUI(true, "Salvo");
-            } catch (e) { console.error(e); }
-        }
-
-        // --- NEGÓCIO (CRUD) ---
-        function addClient() {
-            const name = document.getElementById('new-c-name').value;
-            const cpf = document.getElementById('new-c-cpf').value.replace(/\D/g, '');
-            const phone = document.getElementById('new-c-phone').value;
-            if(name && cpf.length >= 11) {
-                db.clients.push({ id: Date.now(), name, cpf, phone });
-                alert(`Paciente Salvo! Senha de acesso: ${cpf.substring(0,5)}`);
-                saveAndRender();
-            } else alert("Preencha nome e CPF válido!");
-        }
-
-        function addStaff() {
-            const name = document.getElementById('new-s-name').value;
-            const role = document.getElementById('new-s-role').value;
-            const user = document.getElementById('new-s-user').value;
-            const pass = document.getElementById('new-s-pass').value;
-            if(name && user && pass) {
-                db.staff.push({ id: Date.now(), name, role, user, pass });
-                alert("Membro da equipe salvo!");
-                saveAndRender();
+                if (!putRes.ok) throw new Error(`Erro ao criar: ${putRes.status}`);
+                const putData = await putRes.json();
+                currentSha = putData.content.sha;
+                db = defaultDb;
+                ensureDbStructure();
+                updateStatus(true, "Conectado (novo)");
+                alert("Arquivo criado! Sincronização OK.");
+                renderAll();
+                return;
             }
+            if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
+            const data = await res.json();
+            currentSha = data.sha;
+            const decoded = base64ToUtf8(data.content);
+            db = JSON.parse(decoded);
+            ensureDbStructure();
+            updateStatus(true, "Conectado");
+            alert("Dados carregados do GitHub!");
+            renderAll();
+        } catch (e) {
+            console.error(e);
+            updateStatus(false, "Erro");
+            alert("Falha na conexão: " + e.message);
+        }
+    }
+
+    async function saveAndPush() {
+        const token = document.getElementById('db-token').value.trim();
+        const repoUser = document.getElementById('db-user').value;
+        const repoName = document.getElementById('db-repo').value;
+        const apiUrl = `https://api.github.com/repos/${repoUser}/${repoName}/contents/db.json`;
+
+        if (!token || !currentSha) {
+            localStorage.setItem('odonto_v43', JSON.stringify(db));
+            updateStatus(false, "Offline (local)");
+            return;
         }
 
-        function saveAllSettings() {
-            db.config.waMode = document.getElementById('cfg-wa-mode').value;
-            db.config.waUrl = document.getElementById('cfg-wa-url').value;
-            db.config.waToken = document.getElementById('cfg-wa-token').value;
-            saveAndRender();
-            alert("Configurações salvas!");
-        }
-
-        function createBooking() {
-            const dentist = document.getElementById('c-dentist').value;
-            const date = document.getElementById('c-date').value;
-            const period = document.getElementById('c-period').value;
-            if(!date) return alert("Escolha a data!");
-
-            db.appointments.push({ 
-                id: Date.now(), 
-                clientId: currentUser.id, 
-                clientName: currentUser.name,
-                dentist, date, period, status: 'pending', nps: null 
+        try {
+            const content = utf8ToBase64(JSON.stringify(db, null, 2));
+            const res = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ message: "Update v4.3", content: content, sha: currentSha })
             });
-            
-            saveAndRender();
-            alert("Agendamento criado com sucesso!");
+            if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+            const data = await res.json();
+            currentSha = data.content.sha;
+            updateStatus(true, "Salvo");
+        } catch (e) {
+            console.error(e);
+            updateStatus(false, "Erro ao salvar");
+            localStorage.setItem('odonto_v43', JSON.stringify(db));
         }
+    }
 
-        // --- SISTEMA WHATSAPP API & NPS ---
-        async function triggerNPSWhatsApp(appId) {
-            const app = db.appointments.find(a => a.id == appId);
-            const client = db.clients.find(c => c.id == app.clientId);
-            if(!client || !client.phone) return alert("Cliente sem telefone. Avalie manualmente na tela.");
+    // ======================== GESTÃO DE USUÁRIOS ========================
+    function handleSaveUser() {
+        const id = document.getElementById('reg-id').value;
+        const name = document.getElementById('reg-name').value;
+        const cpf = document.getElementById('reg-cpf').value.replace(/\D/g, '');
+        const role = document.getElementById('reg-role').value;
+        if (!name || cpf.length < 5) return alert("Dados incompletos.");
+        if (id) {
+            const idx = db.users.findIndex(u => u.id == id);
+            db.users[idx] = { ...db.users[idx], name, cpf, role };
+        } else {
+            const login = name.toLowerCase().split(' ')[0] + '.' + (name.toLowerCase().split(' ').pop());
+            db.users.push({ id: Date.now(), name, cpf, role, login, pass: cpf.substring(0, 5) });
+        }
+        resetUserForm();
+        renderAll();
+        saveAndPush();
+        if (currentUser.role === 'dentist' && role === 'dentist') loadDentistCalendar(); // recarrega select da agenda
+    }
 
-            const msg = `🦷 *ODONTO PERSONALITÉ*%0AOlá ${client.name}! Sua consulta com ${app.dentist} terminou.%0ADe 0 a 10, que nota você dá para nosso atendimento? Responda aqui mesmo!`;
-            
-            if(db.config.waMode === 'api' && db.config.waUrl) {
-                // Envio via API Invisível
-                try {
-                    await fetch(db.config.waUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': db.config.waToken },
-                        body: JSON.stringify({ phone: client.phone, message: decodeURIComponent(msg) })
-                    });
-                    alert("Pesquisa de NPS disparada via API Invisível!");
-                } catch(e) { alert("Erro na API WA."); }
+    function editUser(id) {
+        const u = db.users.find(x => x.id == id);
+        document.getElementById('reg-id').value = u.id;
+        document.getElementById('reg-name').value = u.name;
+        document.getElementById('reg-cpf').value = u.cpf;
+        document.getElementById('reg-role').value = u.role;
+        document.getElementById('form-title').innerHTML = `<i class="fas fa-edit text-blue-600"></i> Alterar Cadastro`;
+        document.getElementById('btn-cancel-edit').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetUserForm() {
+        document.getElementById('reg-id').value = '';
+        document.getElementById('reg-name').value = '';
+        document.getElementById('reg-cpf').value = '';
+        document.getElementById('form-title').innerHTML = `<i class="fas fa-user-plus text-blue-600"></i> Novo Profissional`;
+        document.getElementById('btn-cancel-edit').classList.add('hidden');
+    }
+
+    function deleteUser(id) {
+        if (confirm("Excluir usuário?")) {
+            db.users = db.users.filter(u => u.id != id);
+            renderAll();
+            saveAndPush();
+            if (currentUser.role === 'dentist') loadDentistCalendar();
+        }
+    }
+
+    // ======================== RENDERIZAÇÃO GERAL ========================
+    function renderAll() {
+        ensureDbStructure();
+
+        // Tabela de usuários
+        document.getElementById('user-table-body').innerHTML = db.users.map(u => `
+            <tr class="hover:bg-slate-50 transition-all">
+                <td class="p-5 font-bold text-slate-700">${u.name}</td>
+                <td class="p-5"><span class="px-3 py-1 bg-slate-100 rounded-full text-[9px] font-black uppercase">${u.role}</span></td>
+                <td class="p-5 font-mono text-blue-600">${u.login}</td>
+                <td class="p-5 flex gap-4">
+                    <button onclick="editUser(${u.id})" class="text-blue-500 font-bold text-xs uppercase hover:underline">Alterar</button>
+                    <button onclick="deleteUser(${u.id})" class="text-rose-300 hover:text-rose-600"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+
+        // Select do cliente
+        const dts = db.users.filter(u => u.role === 'dentist');
+        document.getElementById('c-dentist').innerHTML = dts.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+
+        // Select da agenda (dentista)
+        const dentistSelect = document.getElementById('dentist-select');
+        if (dentistSelect) {
+            let options = '<option value="">Selecione um dentista</option>';
+            dts.forEach(d => { options += `<option value="${d.name}">${d.name}</option>`; });
+            dentistSelect.innerHTML = options;
+            if (currentUser.role === 'dentist') {
+                dentistSelect.value = currentUser.name;
+                dentistSelect.disabled = true;
             } else {
-                // Envio padrão via Navegador
-                window.open(`https://wa.me/${client.phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
-            }
-            
-            // Abre modal para o gerente digitar o que o cliente respondeu no Zap
-            currentAppIdForNps = appId;
-            document.getElementById('modal-nps').classList.remove('hidden');
-            document.getElementById('modal-nps').classList.add('flex');
-        }
-
-        function saveNPS() {
-            const score = document.getElementById('nps-score').value;
-            if(score === '' || score < 0 || score > 10) return;
-            
-            const idx = db.appointments.findIndex(a => a.id == currentAppIdForNps);
-            if(idx > -1) {
-                db.appointments[idx].nps = parseInt(score);
-                saveAndRender();
-                closeNpsModal();
-            }
-        }
-        function closeNpsModal() { 
-            document.getElementById('modal-nps').classList.add('hidden');
-            document.getElementById('modal-nps').classList.remove('flex');
-        }
-
-        // --- RENDER & BI (Dashboard) ---
-        function saveAndRender() { renderAll(); pushDB(); }
-
-        function renderAll() {
-            if(!currentUser) return;
-
-            // Forms update
-            const dentists = db.staff.filter(s => s.role === 'dentist');
-            document.getElementById('c-dentist').innerHTML = dentists.map(d => `<option value="${d.name}">Dr(a). ${d.name}</option>`).join('');
-            
-            document.getElementById('cfg-wa-mode').value = db.config.waMode || 'browser';
-            document.getElementById('cfg-wa-url').value = db.config.waUrl || '';
-            document.getElementById('cfg-wa-token').value = db.config.waToken || '';
-
-            // Render Views based on role
-            if (currentUser.role === 'owner' || currentUser.role === 'manager') {
-                renderKanban();
-                renderDashboard();
-            } else if (currentUser.role === 'dentist') {
-                if(!calendar) initCalendar();
-                else calendar.removeAllEvents(), calendar.addEventSource(getCalendarEvents());
+                dentistSelect.disabled = false;
             }
         }
 
-        function renderKanban() {
-            const card = (a) => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 cursor-grab" data-id="${a.id}">
-                    <p class="font-black text-sm">${a.clientName || 'Paciente'}</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-2">Com: ${a.dentist} • ${a.date}</p>
-                    ${a.status === 'done' ? 
-                        (a.nps !== null ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg text-xs font-black">NPS: ${a.nps}/10</span>` : `<button onclick="triggerNPSWhatsApp(${a.id})" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold hover:bg-emerald-200">Pesquisar NPS</button>`) 
-                        : ''}
-                </div>`;
-            
-            document.getElementById('list-pending').innerHTML = db.appointments.filter(a => a.status === 'pending').map(card).join('');
-            document.getElementById('list-active').innerHTML = db.appointments.filter(a => a.status === 'active').map(card).join('');
-            document.getElementById('list-done').innerHTML = db.appointments.filter(a => a.status === 'done').map(card).join('');
+        // Kanban
+        const card = (a) => `<div class="bg-white p-4 rounded-2xl shadow-sm border card" data-id="${a.id}"><p class="font-black text-xs">${a.dentist}</p><p class="text-[9px] text-slate-400 font-bold uppercase mt-1">${a.date} @ ${a.time}</p></div>`;
+        document.getElementById('list-pending').innerHTML = db.appointments.filter(a => a.status === 'pending').map(card).join('');
+        document.getElementById('list-active').innerHTML = db.appointments.filter(a => a.status === 'active').map(card).join('');
+        document.getElementById('list-done').innerHTML = db.appointments.filter(a => a.status === 'done').map(card).join('');
+    }
+
+    function switchTab(id) {
+        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+        document.getElementById('view-' + id).classList.remove('hidden');
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
+        document.getElementById('tab-' + id).classList.add('nav-active');
+        if (id === 'manager') initKanban();
+        if (id === 'client') initClientCalendar();
+        if (id === 'dentist') loadDentistCalendar();
+    }
+
+    function updateStatus(on, txt) {
+        const s = document.getElementById('sync-status');
+        s.className = `flex items-center gap-1 text-[8px] font-black uppercase tracking-widest ${on ? 'text-emerald-500' : 'text-rose-500'}`;
+        s.querySelector('span').innerText = txt;
+    }
+
+    // ======================== KANBAN ========================
+    function initKanban() {
+        ['list-pending', 'list-active', 'list-done'].forEach(id => {
+            new Sortable(document.getElementById(id), { group: 'tasks', animation: 150, onEnd: (evt) => {
+                const appId = evt.item.dataset.id;
+                const status = evt.to.id.replace('list-', '');
+                const appointment = db.appointments.find(a => a.id == appId);
+                if (appointment) appointment.status = status;
+                saveAndPush();
+            }});
+        });
+    }
+
+    // ======================== CLIENTE (AGENDAMENTO) ========================
+    function initClientCalendar() {
+        const el = document.getElementById('client-mini-calendar');
+        new FullCalendar.Calendar(el, {
+            initialView: 'dayGridMonth', locale: 'pt-br', height: 350,
+            dateClick: (info) => { selectedDate = info.dateStr; renderTimeSlots(); }
+        }).render();
+    }
+
+    function renderTimeSlots() {
+        if (!selectedDate) return;
+        const container = document.getElementById('time-slots');
+        const times = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+        const dentist = document.getElementById('c-dentist').value;
+        // Verificar horários já ocupados ou bloqueados
+        const occupied = db.appointments.filter(a => a.dentist === dentist && a.date === selectedDate).map(a => a.time);
+        const blocked = db.blocks.filter(b => b.dentist === dentist && b.date === selectedDate).map(b => b.time);
+        const unavailable = [...occupied, ...blocked];
+        container.innerHTML = times.map(t => {
+            const isUnavail = unavailable.includes(t);
+            return `<button onclick="selectTime('${t}')" class="p-3 rounded-xl font-bold text-xs ${isUnavail ? 'bg-red-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 hover:bg-blue-600 hover:text-white'} transition-all" ${isUnavail ? 'disabled' : ''}>${t}</button>`;
+        }).join('');
+    }
+
+    function selectTime(t) {
+        selectedTime = t;
+        document.getElementById('btn-confirm-booking').classList.remove('opacity-50', 'cursor-not-allowed');
+        document.getElementById('btn-confirm-booking').disabled = false;
+    }
+
+    function confirmBooking() {
+        if (!selectedDate || !selectedTime) return alert("Selecione data e horário.");
+        const dentist = document.getElementById('c-dentist').value;
+        const already = db.appointments.find(a => a.dentist === dentist && a.date === selectedDate && a.time === selectedTime);
+        if (already) return alert("Horário já agendado.");
+        const blocked = db.blocks.find(b => b.dentist === dentist && b.date === selectedDate && b.time === selectedTime);
+        if (blocked) return alert("Horário bloqueado pelo dentista.");
+        db.appointments.push({ id: Date.now(), dentist, date: selectedDate, time: selectedTime, status: 'pending' });
+        saveAndPush();
+        alert("Agendado com sucesso!");
+        renderTimeSlots(); // recarrega slots
+    }
+
+    // ======================== AGENDA DO DENTISTA (COM BLOQUEIOS) ========================
+    function loadDentistCalendar() {
+        const dentistName = document.getElementById('dentist-select').value;
+        if (!dentistName) {
+            if (dentistCalendar) dentistCalendar.destroy();
+            document.getElementById('dentist-calendar').innerHTML = '<div class="p-10 text-center text-slate-400">Selecione um dentista para visualizar a agenda.</div>';
+            return;
         }
-
-        function renderDashboard() {
-            // Stats Básicos
-            document.getElementById('dash-tot-pacientes').innerText = db.clients.length;
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('dash-tot-hoje').innerText = db.appointments.filter(a => a.date === today).length;
-            
-            const doneApps = db.appointments.filter(a => a.status === 'done');
-            document.getElementById('dash-tot-concluidos').innerText = doneApps.length;
-
-            // Calculo NPS Geral (Promotores(9-10) - Detratores(0-6)) / Total Respondido
-            const npsApps = doneApps.filter(a => a.nps !== null);
-            if(npsApps.length > 0) {
-                const promotores = npsApps.filter(a => a.nps >= 9).length;
-                const detratores = npsApps.filter(a => a.nps <= 6).length;
-                const npsCalc = ((promotores - detratores) / npsApps.length) * 100;
-                document.getElementById('dash-nps-geral').innerText = npsCalc.toFixed(0) + '%';
-            }
-
-            // Gráfico Status (Donut)
-            const stData = {
-                pend: db.appointments.filter(a => a.status === 'pending').length,
-                act: db.appointments.filter(a => a.status === 'active').length,
-                done: doneApps.length
-            };
-            if(charts.status) charts.status.destroy();
-            charts.status = new Chart(document.getElementById('chart-status'), {
-                type: 'doughnut',
-                data: { labels: ['Pendentes', 'Em Cadeira', 'Finalizados'], datasets: [{ data: [stData.pend, stData.act, stData.done], backgroundColor: ['#fbbf24', '#3b82f6', '#10b981'] }] },
-                options: { responsive: true, cutout: '70%' }
-            });
-
-            // Gráfico NPS por Dentista (Bar)
-            const dentists = [...new Set(npsApps.map(a => a.dentist))];
-            const avgNpsPerDentist = dentists.map(d => {
-                const dApps = npsApps.filter(a => a.dentist === d);
-                const sum = dApps.reduce((acc, curr) => acc + curr.nps, 0);
-                return sum / dApps.length;
-            });
-
-            if(charts.nps) charts.nps.destroy();
-            charts.nps = new Chart(document.getElementById('chart-nps'), {
-                type: 'bar',
-                data: { labels: dentists, datasets: [{ label: 'NPS Médio (0-10)', data: avgNpsPerDentist, backgroundColor: '#6366f1', borderRadius: 8 }] },
-                options: { responsive: true, scales: { y: { beginAtZero: true, max: 10 } } }
-            });
-        }
-
-        // --- UTILIDADES ---
-        function initKanban() {
-            ['list-pending', 'list-active', 'list-done'].forEach(cid => {
-                new Sortable(document.getElementById(cid), {
-                    group: 'tasks', animation: 150,
-                    onEnd: (evt) => {
-                        const id = evt.item.dataset.id;
-                        const status = evt.to.id.replace('list-', '');
-                        const idx = db.appointments.findIndex(a => a.id == id);
-                        db.appointments[idx].status = status;
-                        
-                        // Disparar NPS se foi para "Done"
-                        if(status === 'done' && db.appointments[idx].nps === null) {
-                            triggerNPSWhatsApp(id);
-                        } else {
-                            saveAndRender();
-                        }
+        const calendarEl = document.getElementById('dentist-calendar');
+        if (dentistCalendar) dentistCalendar.destroy();
+        dentistCalendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            locale: 'pt-br',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
+            slotMinTime: '08:00:00',
+            slotMaxTime: '18:00:00',
+            allDaySlot: false,
+            events: function(fetchInfo, successCallback, failureCallback) {
+                const events = [];
+                // Agendamentos
+                db.appointments.forEach(app => {
+                    if (app.dentist === dentistName) {
+                        events.push({
+                            id: 'app-' + app.id,
+                            title: `Paciente`,
+                            start: `${app.date}T${app.time}:00`,
+                            end: `${app.date}T${app.time}:00`,
+                            color: '#3b82f6',
+                            extendedProps: { type: 'appointment', original: app }
+                        });
                     }
                 });
-            });
-        }
+                // Bloqueios
+                db.blocks.forEach(block => {
+                    if (block.dentist === dentistName) {
+                        events.push({
+                            id: 'block-' + block.id,
+                            title: 'BLOQUEADO',
+                            start: `${block.date}T${block.time}:00`,
+                            end: `${block.date}T${block.time}:00`,
+                            color: '#ef4444',
+                            classNames: ['blocked-slot'],
+                            extendedProps: { type: 'block', original: block }
+                        });
+                    }
+                });
+                successCallback(events);
+            },
+            dateClick: (info) => {
+                if (!isBlockMode) return;
+                const clickedDate = info.dateStr.split('T')[0];
+                const clickedTime = info.dateStr.split('T')[1].substring(0,5);
+                const dentist = document.getElementById('dentist-select').value;
+                if (!dentist) return;
+                // Verificar se já existe bloqueio
+                const existingBlock = db.blocks.find(b => b.dentist === dentist && b.date === clickedDate && b.time === clickedTime);
+                if (existingBlock) {
+                    if (confirm("Remover bloqueio deste horário?")) {
+                        db.blocks = db.blocks.filter(b => b.id !== existingBlock.id);
+                        saveAndPush();
+                        dentistCalendar.refetchEvents();
+                    }
+                } else {
+                    if (confirm(`Bloquear horário ${clickedTime} do dia ${clickedDate} para o Dr(a). ${dentist}?`)) {
+                        db.blocks.push({ id: Date.now(), dentist, date: clickedDate, time: clickedTime });
+                        saveAndPush();
+                        dentistCalendar.refetchEvents();
+                    }
+                }
+            },
+            eventClick: (info) => {
+                if (info.event.extendedProps.type === 'block' && isBlockMode) {
+                    if (confirm("Remover bloqueio?")) {
+                        const blockId = info.event.extendedProps.original.id;
+                        db.blocks = db.blocks.filter(b => b.id !== blockId);
+                        saveAndPush();
+                        dentistCalendar.refetchEvents();
+                    }
+                }
+            }
+        });
+        dentistCalendar.render();
+    }
 
-        function initCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'timeGridWeek', locale: 'pt-br',
-                headerToolbar: { left: 'prev,next', center: 'title', right: 'timeGridWeek,timeGridDay' },
-                events: getCalendarEvents()
-            });
-            calendar.render();
-        }
+    function toggleBlockMode() {
+        isBlockMode = !isBlockMode;
+        const btn = document.getElementById('btn-block-mode');
+        btn.innerText = `Modo Bloqueio: ${isBlockMode ? 'ON' : 'OFF'}`;
+        btn.classList.toggle('bg-red-600', isBlockMode);
+        btn.classList.toggle('bg-slate-900', !isBlockMode);
+        if (dentistCalendar) dentistCalendar.refetchEvents();
+    }
 
-        function getCalendarEvents() {
-            // Filtra só os eventos do dentista logado
-            let apps = db.appointments.filter(a => a.dentist === currentUser.name);
-            return apps.map(a => ({ title: a.clientName, start: a.date, backgroundColor: '#2563eb' }));
+    // ======================== WHATSAPP (MOCK) ========================
+    function testWhatsApp() {
+        const instance = document.getElementById('wa-instance').value.trim();
+        const token = document.getElementById('wa-token').value.trim();
+        const number = document.getElementById('wa-number').value.trim();
+        const statusDiv = document.getElementById('wa-status');
+        if (!instance || !token || !number) {
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Preencha todos os campos';
+            statusDiv.classList.add('text-red-500');
+            return;
         }
+        // Simulação de conexão (aqui você integraria com a API real, ex: Evolution API)
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando conexão...';
+        setTimeout(() => {
+            // Simulação de sucesso
+            statusDiv.innerHTML = '<i class="fab fa-whatsapp"></i> Conexão bem-sucedida! Enviar mensagens em breve.';
+            statusDiv.classList.remove('text-red-500');
+            statusDiv.classList.add('text-green-600');
+            // Salvar configuração
+            db.config.whatsapp = { instance, token, number };
+            saveAndPush();
+        }, 1500);
+    }
 
-        function switchTab(id) {
-            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('view-' + id).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
-            if(document.getElementById('tab-' + id)) document.getElementById('tab-' + id).classList.add('nav-active');
-            
-            if(id === 'manager') setTimeout(initKanban, 100);
-            if(id === 'dentist' && calendar) setTimeout(() => calendar.render(), 100);
-            if(id === 'dashboard') renderDashboard();
-        }
-
-        function updateUI(on, txt) {
-            const s = document.getElementById('sync-indicator');
-            s.className = `flex items-center gap-1 text-[9px] font-black uppercase tracking-widest ${on ? 'text-emerald-500' : 'text-rose-500'}`;
-            s.querySelector('span').innerText = txt;
-        }
-
-        // Tenta sincronizar se tiver dados em cache/hardcoded (Removi o auto-sync para evitar lock por token quebrado)
-    </script>
+    // ======================== INICIALIZAÇÃO ========================
+    // Carregar dados do localStorage se existirem
+    if (localStorage.getItem('odonto_v43')) {
+        try {
+            db = JSON.parse(localStorage.getItem('odonto_v43'));
+        } catch(e) {}
+    }
+    ensureDbStructure();
+    renderAll();
+</script>
 </body>
 </html>

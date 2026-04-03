@@ -1,46 +1,12 @@
 {
-  "dentists": [
-    {
-      "id": 1775168103713,
-      "name": "Fernanda Diniz",
-      "spec": "Clínico Geral"
-    },
-    {
-      "id": 1775168357575,
-      "name": "João Paulo",
-      "spec": "Ortodontia"
-    }
-  ],
+  "users": [ ... ],
   "appointments": [
-    {
-      "id": 1775168113762,
-      "dentist": "Fernanda Diniz",
-      "date": "2026-04-02",
-      "period": "Tarde",
-      "status": "pending"
-    },
-    {
-      "id": 1775168283561,
-      "dentist": "Fernanda Diniz",
-      "date": "2026-04-23",
-      "period": "Manhã",
-      "status": "pending"
-    },
-    {
-      "id": 1775168368244,
-      "dentist": "João Paulo",
-      "date": "2026-04-23",
-      "period": "Tarde",
-      "status": "pending"
-    }
+    { "id": 123, "dentist": "Dr. João Silva", "date": "2025-04-10", "time": "09:00", "status": "pending" }
   ],
-  "specs": [
-    "Clínico Geral",
-    "Ortodontia",
-    "Implantodontia"
+  "blocks": [
+    { "id": 456, "dentist": "Dr. João Silva", "date": "2025-04-10", "time": "12:00" }
   ],
   "config": {
-    "waManager": "5562992527804",
-    "waOwner": ""
+    "whatsapp": { "instance": "...", "token": "...", "number": "..." }
   }
 }
