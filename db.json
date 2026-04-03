@@ -1,0 +1,60 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin Master",
+      "cpf": "00000000000",
+      "role": "owner",
+      "login": "admin",
+      "pass": "JJPJ"
+    },
+    {
+      "id": 2,
+      "name": "Dr. João Silva",
+      "cpf": "11111111111",
+      "role": "dentist",
+      "login": "joao.silva",
+      "pass": "12345"
+    },
+    {
+      "id": 3,
+      "name": "Gerente Carla",
+      "cpf": "22222222222",
+      "role": "manager",
+      "login": "gerente",
+      "pass": "12345"
+    },
+    {
+      "id": 4,
+      "name": "Paciente Teste",
+      "cpf": "33333333333",
+      "role": "client",
+      "login": "paciente.teste",
+      "pass": "12345"
+    }
+  ],
+  "appointments": [
+    {
+      "id": 1712345678901,
+      "dentist": "Dr. João Silva",
+      "date": "2026-04-10",
+      "time": "09:00",
+      "status": "pending"
+    }
+  ],
+  "blocks": [
+    {
+      "id": 1712345678902,
+      "dentist": "Dr. João Silva",
+      "date": "2026-04-11",
+      "time": "12:00"
+    }
+  ],
+  "config": {
+    "whatsapp": {
+      "instance": "",
+      "token": "",
+      "number": ""
+    }
+  }
+}
