@@ -37,7 +37,7 @@
             <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg hover:scale-95 transition-all">ACESSAR</button>
         </div>
         <div class="text-center text-[9px] text-slate-400">
-            <p>Teste: admin / JJPJ | dentista / 12345 | gerente / 12345</p>
+            <p>Teste: admin / JJPJ | dentista / 12345 | gerente / 12345 | paciente.teste / 12345</p>
         </div>
     </div>
 </div>
@@ -138,7 +138,7 @@
                 <div id="wa-status" class="text-[9px] font-bold text-slate-400"></div>
             </div>
 
-            <!-- GESTÃO DE USUÁRIOS -->
+            <!-- GESTÃO DE USUÁRIOS (com login/senha editáveis) -->
             <div class="bg-white p-8 rounded-[2.5rem] border space-y-4 shadow-sm col-span-1 lg:col-span-2">
                 <h3 id="form-title" class="font-black flex items-center gap-2"><i class="fas fa-user-plus text-blue-600"></i> Novo Profissional</h3>
                 <input type="hidden" id="reg-id">
@@ -151,6 +151,10 @@
                         <option value="client">Paciente</option>
                     </select>
                 </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="reg-login" placeholder="Login (ex: joao.silva)" class="input-gray">
+                    <input type="text" id="reg-pass" placeholder="Senha" class="input-gray">
+                </div>
                 <div class="flex gap-2">
                     <button onclick="handleSaveUser()" id="btn-save-user" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black">SALVAR</button>
                     <button onclick="resetUserForm()" id="btn-cancel-edit" class="hidden px-6 bg-slate-100 text-slate-400 py-4 rounded-2xl font-black uppercase text-[10px]">Cancelar</button>
@@ -162,7 +166,7 @@
         <div class="bg-white rounded-[2.5rem] border overflow-hidden shadow-sm">
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
-                    <tr><th class="p-5">Nome</th><th class="p-5">Tipo</th><th class="p-5">Login</th><th class="p-5">Ações</th></tr>
+                    <tr><th class="p-5">Nome</th><th class="p-5">Tipo</th><th class="p-5">Login</th><th class="p-5">Senha</th><th class="p-5">Ações</th></tr>
                 </thead>
                 <tbody id="user-table-body" class="divide-y divide-slate-100"></tbody>
             </table>
@@ -174,14 +178,22 @@
     // ======================== ESTRUTURA GLOBAL ========================
     let db = { users: [], appointments: [], blocks: [], config: {} };
     let currentSha = null, currentUser = null, selectedDate = null, selectedTime = null, isBlockMode = false;
-    let dentistCalendar = null;  // instância do FullCalendar da agenda
+    let dentistCalendar = null;
 
-    // --- Funções auxiliares UTF-8 / Base64 ---
+    // --- Funções auxiliares UTF-8 / Base64 (CORRIGIDAS para remover BOM)---
     function utf8ToBase64(str) {
         return btoa(unescape(encodeURIComponent(str)));
     }
     function base64ToUtf8(base64) {
-        return decodeURIComponent(escape(atob(base64)));
+        try {
+            let decoded = atob(base64);
+            // Remove possíveis BOM (\uFEFF) ou caracteres de controle no início
+            decoded = decoded.replace(/^\uFEFF/, '');
+            return decodeURIComponent(escape(decoded));
+        } catch(e) {
+            console.warn("Erro na decodificação base64", e);
+            return "";
+        }
     }
 
     // --- Garantir que o db sempre tenha as estruturas mínimas ---
@@ -190,12 +202,13 @@
         if (!db.appointments) db.appointments = [];
         if (!db.blocks) db.blocks = [];
         if (!db.config) db.config = {};
-        // Se não houver usuários, criar padrões
+        // Se não houver usuários, criar padrões (incluindo paciente)
         if (db.users.length === 0) {
             db.users = [
                 { id: 1, name: "Admin Master", cpf: "00000000000", role: "owner", login: "admin", pass: "JJPJ" },
                 { id: 2, name: "Dr. João Silva", cpf: "11111111111", role: "dentist", login: "joao.silva", pass: "12345" },
-                { id: 3, name: "Gerente Carla", cpf: "22222222222", role: "manager", login: "gerente", pass: "12345" }
+                { id: 3, name: "Gerente Carla", cpf: "22222222222", role: "manager", login: "gerente", pass: "12345" },
+                { id: 4, name: "Paciente Teste", cpf: "33333333333", role: "client", login: "paciente.teste", pass: "12345" }
             ];
         }
     }
@@ -218,14 +231,13 @@
         document.getElementById('main-nav').classList.remove('hidden');
         document.getElementById('main-content').classList.remove('hidden');
         renderAll();
-        // Direciona para a aba adequada conforme perfil
         if (currentUser.role === 'owner') switchTab('manager');
         else if (currentUser.role === 'dentist') switchTab('dentist');
         else if (currentUser.role === 'manager') switchTab('manager');
         else switchTab('client');
     }
 
-    // ======================== SINCRONIZAÇÃO GITHUB ========================
+    // ======================== SINCRONIZAÇÃO GITHUB (JSON CORRIGIDO) ========================
     async function syncCloud() {
         const token = document.getElementById('db-token').value.trim();
         if (!token) return alert("Insira o Token do GitHub.");
@@ -258,7 +270,16 @@
             if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
             const data = await res.json();
             currentSha = data.sha;
-            const decoded = base64ToUtf8(data.content);
+            let decoded = base64ToUtf8(data.content);
+            // Tenta limpar possíveis quebras de linha ou caracteres não JSON
+            decoded = decoded.trim();
+            // Verifica se o primeiro caractere é { ou [ (início de JSON)
+            if (!decoded.startsWith('{') && !decoded.startsWith('[')) {
+                // Procura o primeiro '{' ou '['
+                const jsonStart = decoded.indexOf('{');
+                if (jsonStart !== -1) decoded = decoded.substring(jsonStart);
+                else throw new Error("Conteúdo não parece ser JSON válido.");
+            }
             db = JSON.parse(decoded);
             ensureDbStructure();
             updateStatus(true, "Conectado");
@@ -301,24 +322,29 @@
         }
     }
 
-    // ======================== GESTÃO DE USUÁRIOS ========================
+    // ======================== GESTÃO DE USUÁRIOS (COM LOGIN/SENHA) ========================
     function handleSaveUser() {
         const id = document.getElementById('reg-id').value;
         const name = document.getElementById('reg-name').value;
         const cpf = document.getElementById('reg-cpf').value.replace(/\D/g, '');
         const role = document.getElementById('reg-role').value;
+        let login = document.getElementById('reg-login').value.trim();
+        let pass = document.getElementById('reg-pass').value.trim();
+
         if (!name || cpf.length < 5) return alert("Dados incompletos.");
+        if (!login) login = name.toLowerCase().split(' ')[0] + '.' + (name.toLowerCase().split(' ').pop());
+        if (!pass) pass = cpf.substring(0, 5);
+
         if (id) {
             const idx = db.users.findIndex(u => u.id == id);
-            db.users[idx] = { ...db.users[idx], name, cpf, role };
+            db.users[idx] = { ...db.users[idx], name, cpf, role, login, pass };
         } else {
-            const login = name.toLowerCase().split(' ')[0] + '.' + (name.toLowerCase().split(' ').pop());
-            db.users.push({ id: Date.now(), name, cpf, role, login, pass: cpf.substring(0, 5) });
+            db.users.push({ id: Date.now(), name, cpf, role, login, pass });
         }
         resetUserForm();
         renderAll();
         saveAndPush();
-        if (currentUser.role === 'dentist' && role === 'dentist') loadDentistCalendar(); // recarrega select da agenda
+        if (currentUser.role === 'dentist' && role === 'dentist') loadDentistCalendar();
     }
 
     function editUser(id) {
@@ -327,6 +353,8 @@
         document.getElementById('reg-name').value = u.name;
         document.getElementById('reg-cpf').value = u.cpf;
         document.getElementById('reg-role').value = u.role;
+        document.getElementById('reg-login').value = u.login;
+        document.getElementById('reg-pass').value = u.pass;
         document.getElementById('form-title').innerHTML = `<i class="fas fa-edit text-blue-600"></i> Alterar Cadastro`;
         document.getElementById('btn-cancel-edit').classList.remove('hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -336,6 +364,9 @@
         document.getElementById('reg-id').value = '';
         document.getElementById('reg-name').value = '';
         document.getElementById('reg-cpf').value = '';
+        document.getElementById('reg-role').value = 'dentist';
+        document.getElementById('reg-login').value = '';
+        document.getElementById('reg-pass').value = '';
         document.getElementById('form-title').innerHTML = `<i class="fas fa-user-plus text-blue-600"></i> Novo Profissional`;
         document.getElementById('btn-cancel-edit').classList.add('hidden');
     }
@@ -353,12 +384,13 @@
     function renderAll() {
         ensureDbStructure();
 
-        // Tabela de usuários
+        // Tabela de usuários (agora com coluna senha)
         document.getElementById('user-table-body').innerHTML = db.users.map(u => `
             <tr class="hover:bg-slate-50 transition-all">
                 <td class="p-5 font-bold text-slate-700">${u.name}</td>
                 <td class="p-5"><span class="px-3 py-1 bg-slate-100 rounded-full text-[9px] font-black uppercase">${u.role}</span></td>
                 <td class="p-5 font-mono text-blue-600">${u.login}</td>
+                <td class="p-5 font-mono text-slate-500">${u.pass}</td>
                 <td class="p-5 flex gap-4">
                     <button onclick="editUser(${u.id})" class="text-blue-500 font-bold text-xs uppercase hover:underline">Alterar</button>
                     <button onclick="deleteUser(${u.id})" class="text-rose-300 hover:text-rose-600"><i class="fas fa-trash"></i></button>
@@ -376,7 +408,7 @@
             let options = '<option value="">Selecione um dentista</option>';
             dts.forEach(d => { options += `<option value="${d.name}">${d.name}</option>`; });
             dentistSelect.innerHTML = options;
-            if (currentUser.role === 'dentist') {
+            if (currentUser && currentUser.role === 'dentist') {
                 dentistSelect.value = currentUser.name;
                 dentistSelect.disabled = true;
             } else {
@@ -434,7 +466,6 @@
         const container = document.getElementById('time-slots');
         const times = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
         const dentist = document.getElementById('c-dentist').value;
-        // Verificar horários já ocupados ou bloqueados
         const occupied = db.appointments.filter(a => a.dentist === dentist && a.date === selectedDate).map(a => a.time);
         const blocked = db.blocks.filter(b => b.dentist === dentist && b.date === selectedDate).map(b => b.time);
         const unavailable = [...occupied, ...blocked];
@@ -460,7 +491,7 @@
         db.appointments.push({ id: Date.now(), dentist, date: selectedDate, time: selectedTime, status: 'pending' });
         saveAndPush();
         alert("Agendado com sucesso!");
-        renderTimeSlots(); // recarrega slots
+        renderTimeSlots();
     }
 
     // ======================== AGENDA DO DENTISTA (COM BLOQUEIOS) ========================
@@ -482,7 +513,6 @@
             allDaySlot: false,
             events: function(fetchInfo, successCallback, failureCallback) {
                 const events = [];
-                // Agendamentos
                 db.appointments.forEach(app => {
                     if (app.dentist === dentistName) {
                         events.push({
@@ -495,7 +525,6 @@
                         });
                     }
                 });
-                // Bloqueios
                 db.blocks.forEach(block => {
                     if (block.dentist === dentistName) {
                         events.push({
@@ -517,7 +546,6 @@
                 const clickedTime = info.dateStr.split('T')[1].substring(0,5);
                 const dentist = document.getElementById('dentist-select').value;
                 if (!dentist) return;
-                // Verificar se já existe bloqueio
                 const existingBlock = db.blocks.find(b => b.dentist === dentist && b.date === clickedDate && b.time === clickedTime);
                 if (existingBlock) {
                     if (confirm("Remover bloqueio deste horário?")) {
@@ -567,21 +595,17 @@
             statusDiv.classList.add('text-red-500');
             return;
         }
-        // Simulação de conexão (aqui você integraria com a API real, ex: Evolution API)
         statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando conexão...';
         setTimeout(() => {
-            // Simulação de sucesso
             statusDiv.innerHTML = '<i class="fab fa-whatsapp"></i> Conexão bem-sucedida! Enviar mensagens em breve.';
             statusDiv.classList.remove('text-red-500');
             statusDiv.classList.add('text-green-600');
-            // Salvar configuração
             db.config.whatsapp = { instance, token, number };
             saveAndPush();
         }, 1500);
     }
 
     // ======================== INICIALIZAÇÃO ========================
-    // Carregar dados do localStorage se existirem
     if (localStorage.getItem('odonto_v43')) {
         try {
             db = JSON.parse(localStorage.getItem('odonto_v43'));
