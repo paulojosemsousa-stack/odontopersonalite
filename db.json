@@ -1,12 +1,1 @@
-{
-  "users": [ ... ],
-  "appointments": [
-    { "id": 123, "dentist": "Dr. João Silva", "date": "2025-04-10", "time": "09:00", "status": "pending" }
-  ],
-  "blocks": [
-    { "id": 456, "dentist": "Dr. João Silva", "date": "2025-04-10", "time": "12:00" }
-  ],
-  "config": {
-    "whatsapp": { "instance": "...", "token": "...", "number": "..." }
-  }
-}
+
