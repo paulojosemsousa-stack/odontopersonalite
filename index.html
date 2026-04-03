@@ -21,8 +21,6 @@
         .fc { background: white; padding: 20px; border-radius: 2rem; border: none; }
         .blocked-slot { background-color: #ef4444 !important; border-color: #dc2626 !important; }
         .permission-tree { border-left: 2px solid #cbd5e1; margin-left: 1rem; padding-left: 1rem; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
-        .modal-content { background: white; border-radius: 2rem; max-width: 500px; width: 90%; padding: 2rem; }
     </style>
 </head>
 <body>
@@ -40,12 +38,12 @@
             <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg hover:scale-95 transition-all">ACESSAR</button>
         </div>
         <div class="text-center text-[9px] text-slate-400">
-            <p>admin / JJPJ | dentista / 12345 | gerente / 12345 | paciente.teste / 12345</p>
+            <p>admin / JJPJ | joao.silva / 12345 | gerente / 12345 | paciente.teste / 12345</p>
         </div>
     </div>
 </div>
 
-<!-- NAVEGAÇÃO PRINCIPAL (gerada dinamicamente) -->
+<!-- NAVEGAÇÃO PRINCIPAL -->
 <nav id="main-nav" class="glass sticky top-0 z-50 px-8 py-4 hidden flex justify-between items-center">
     <div class="flex items-center gap-3">
         <span class="font-black text-xl">Odonto<span class="text-blue-600">Personalité</span></span>
@@ -91,7 +89,7 @@
         <div class="bg-white p-8 rounded-[2.5rem] border"><canvas id="chart-nps"></canvas></div>
     </section>
 
-    <!-- MÓDULO CONFIGURAÇÕES (apenas para perfis com permissão) -->
+    <!-- MÓDULO CONFIGURAÇÕES -->
     <section id="view-settings" class="hidden space-y-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="bg-white p-8 rounded-[2.5rem] border"><h3><i class="fab fa-github"></i> GitHub Cloud</h3>
@@ -134,6 +132,7 @@
     let db = { users: [], appointments: [], blocks: [], npsResponses: [], config: { whatsapp: {}, permissions: {} } };
     let currentSha = null, currentUser = null, selectedDate = null, selectedTime = null, isBlockMode = false;
     let dentistCalendar = null, npsChart = null;
+    let currentDentistForCalendar = null; // para recarregar eventos
 
     // Módulos e ações para permissões
     const MODULES = {
@@ -225,10 +224,10 @@
         s.querySelector('span').innerText = txt;
     }
 
-    // ========================= WHATSAPP REAL =========================
+    // ========================= WHATSAPP =========================
     async function sendWhatsApp(toNumber, message) {
         const wa = db.config.whatsapp;
-        if (!wa.instance || !wa.token) { console.warn("WhatsApp não configurado, simulação:", message); alert(`[SIMULAÇÃO] WhatsApp para ${toNumber}: ${message}`); return true; }
+        if (!wa.instance || !wa.token) { console.warn("Simulação:", message); alert(`[SIMULAÇÃO] WhatsApp para ${toNumber}: ${message}`); return true; }
         try {
             let url = "", body = {};
             if (wa.provider === "evolution") {
@@ -463,6 +462,14 @@
         document.getElementById('list-active').innerHTML = db.appointments.filter(a=>a.status==='active').map(card).join('');
         document.getElementById('list-done').innerHTML = db.appointments.filter(a=>a.status==='done').map(card).join('');
         updateNPSChart();
+        refreshDentistCalendar(); // Atualiza calendário se estiver visível
+    }
+    
+    // Função para atualizar o calendário do dentista sem recriá-lo
+    function refreshDentistCalendar() {
+        if (dentistCalendar && currentDentistForCalendar) {
+            dentistCalendar.refetchEvents();
+        }
     }
 
     // ========================= KANBAN =========================
@@ -477,7 +484,7 @@
                     await saveAndPush();
                     if(newStatus==='done') await sendNpsSurvey(app);
                     renderAll();
-                    if(dentistCalendar) dentistCalendar.refetchEvents();
+                    refreshDentistCalendar();
                 }
             }});
         });
@@ -509,34 +516,100 @@
         await sendAppointmentConfirmation(newApp);
         alert("Agendado!");
         renderTimeSlots();
+        refreshDentistCalendar(); // Atualiza calendário do dentista imediatamente
     }
 
-    // ========================= AGENDA DENTISTA =========================
+    // ========================= AGENDA DENTISTA (CORRIGIDA) =========================
     function loadDentistCalendar() {
         const dentistName = document.getElementById('dentist-select').value;
-        if(!dentistName) { if(dentistCalendar) dentistCalendar.destroy(); document.getElementById('dentist-calendar').innerHTML='<div class="p-10 text-center">Selecione um dentista</div>'; return; }
+        if (!dentistName) {
+            if (dentistCalendar) dentistCalendar.destroy();
+            document.getElementById('dentist-calendar').innerHTML = '<div class="p-10 text-center">Selecione um dentista</div>';
+            currentDentistForCalendar = null;
+            return;
+        }
+        currentDentistForCalendar = dentistName;
         const calendarEl = document.getElementById('dentist-calendar');
-        if(dentistCalendar) dentistCalendar.destroy();
+        if (dentistCalendar) dentistCalendar.destroy();
+        
         dentistCalendar = new FullCalendar.Calendar(calendarEl, {
-            initialView:'timeGridWeek', locale:'pt-br', slotMinTime:'08:00', slotMaxTime:'18:00', allDaySlot:false,
-            events:()=>{
-                const events=[];
-                db.appointments.forEach(a=>{ if(a.dentist===dentistName) events.push({ id:'a'+a.id, title:`Paciente`, start:`${a.date}T${a.time}:00`, color:'#3b82f6' }); });
-                db.blocks.forEach(b=>{ if(b.dentist===dentistName) events.push({ id:'b'+b.id, title:'BLOQUEADO', start:`${b.date}T${b.time}:00`, color:'#ef4444', classNames:['blocked-slot'] }); });
-                return events;
+            initialView: 'timeGridWeek',
+            locale: 'pt-br',
+            slotMinTime: '08:00:00',
+            slotMaxTime: '18:00:00',
+            allDaySlot: false,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridWeek,dayGridMonth'
             },
-            dateClick: async (info)=>{
-                if(!isBlockMode || !hasPermission('dentist','bloquear_horarios')) return;
+            events: function(fetchInfo, successCallback, failureCallback) {
+                const events = [];
+                const dentist = currentDentistForCalendar;
+                if (!dentist) {
+                    successCallback([]);
+                    return;
+                }
+                // Agendamentos
+                db.appointments.forEach(app => {
+                    if (app.dentist === dentist) {
+                        const patient = db.users.find(u => u.id === app.patientId);
+                        events.push({
+                            id: 'app-' + app.id,
+                            title: patient ? patient.name : 'Paciente',
+                            start: `${app.date}T${app.time}:00`,
+                            color: '#3b82f6',
+                            extendedProps: { type: 'appointment' }
+                        });
+                    }
+                });
+                // Bloqueios
+                db.blocks.forEach(block => {
+                    if (block.dentist === dentist) {
+                        events.push({
+                            id: 'block-' + block.id,
+                            title: 'BLOQUEADO',
+                            start: `${block.date}T${block.time}:00`,
+                            color: '#ef4444',
+                            classNames: ['blocked-slot'],
+                            extendedProps: { type: 'block' }
+                        });
+                    }
+                });
+                successCallback(events);
+            },
+            dateClick: async (info) => {
+                if (!isBlockMode || !hasPermission('dentist', 'bloquear_horarios')) return;
                 const date = info.dateStr.split('T')[0];
-                const time = info.dateStr.split('T')[1].substring(0,5);
-                const existing = db.blocks.find(b=>b.dentist===dentistName && b.date===date && b.time===time);
-                if(existing) { if(confirm("Remover bloqueio?")) { db.blocks = db.blocks.filter(b=>b.id!==existing.id); await saveAndPush(); dentistCalendar.refetchEvents(); } }
-                else { if(confirm(`Bloquear ${time} em ${date}?`)) { db.blocks.push({ id:Date.now(), dentist:dentistName, date, time }); await saveAndPush(); dentistCalendar.refetchEvents(); } }
+                const time = info.dateStr.split('T')[1].substring(0, 5);
+                const dentist = currentDentistForCalendar;
+                const existing = db.blocks.find(b => b.dentist === dentist && b.date === date && b.time === time);
+                if (existing) {
+                    if (confirm("Remover bloqueio?")) {
+                        db.blocks = db.blocks.filter(b => b.id !== existing.id);
+                        await saveAndPush();
+                        dentistCalendar.refetchEvents();
+                    }
+                } else {
+                    if (confirm(`Bloquear ${time} em ${date}?`)) {
+                        db.blocks.push({ id: Date.now(), dentist, date, time });
+                        await saveAndPush();
+                        dentistCalendar.refetchEvents();
+                    }
+                }
             }
         });
         dentistCalendar.render();
     }
-    function toggleBlockMode() { isBlockMode=!isBlockMode; const btn=document.getElementById('btn-block-mode'); btn.innerText=`Modo Bloqueio: ${isBlockMode?'ON':'OFF'}`; btn.classList.toggle('bg-red-600',isBlockMode); btn.classList.toggle('bg-slate-900',!isBlockMode); if(dentistCalendar) dentistCalendar.refetchEvents(); }
+    
+    function toggleBlockMode() {
+        isBlockMode = !isBlockMode;
+        const btn = document.getElementById('btn-block-mode');
+        btn.innerText = `Modo Bloqueio: ${isBlockMode ? 'ON' : 'OFF'}`;
+        btn.classList.toggle('bg-red-600', isBlockMode);
+        btn.classList.toggle('bg-slate-900', !isBlockMode);
+        if (dentistCalendar) dentistCalendar.refetchEvents();
+    }
 
     // ========================= NPS =========================
     function updateNPSChart() {
