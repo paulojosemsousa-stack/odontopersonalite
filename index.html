@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OdontoPersonalité v4.3 | Pro Master</title>
+    <title>OdontoPersonalité v5.0 | RBAC + WhatsApp Completo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
@@ -11,15 +11,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #f1f5f9; color: #1e293b; }
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8f0; }
         .nav-active { color: #2563eb; font-weight: 800; border-bottom: 3px solid #2563eb; }
         .input-gray { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 0.8rem 1rem; outline: none; width: 100%; font-weight: 600; }
         .input-gray:focus { border-color: #2563eb; background: white; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
         .hidden { display: none !important; }
         .fc { background: white; padding: 20px; border-radius: 2rem; border: none; }
-        .fc-event { cursor: pointer; }
         .blocked-slot { background-color: #ef4444 !important; border-color: #dc2626 !important; }
+        .permission-tree { border-left: 2px solid #cbd5e1; margin-left: 1rem; padding-left: 1rem; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; }
+        .modal-content { background: white; border-radius: 2rem; max-width: 500px; width: 90%; padding: 2rem; }
     </style>
 </head>
 <body>
@@ -29,7 +32,7 @@
     <div class="bg-white p-10 rounded-[3rem] shadow-2xl max-w-sm w-full space-y-6">
         <div class="text-center">
             <h1 class="text-2xl font-black">Odonto<span class="text-blue-600">Personalité</span></h1>
-            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Enterprise Solution v4.3</p>
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">v5.0 | RBAC + WhatsApp</p>
         </div>
         <div class="space-y-4">
             <input type="text" id="login-user" placeholder="Usuário" class="input-gray">
@@ -37,582 +40,521 @@
             <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg hover:scale-95 transition-all">ACESSAR</button>
         </div>
         <div class="text-center text-[9px] text-slate-400">
-            <p>Teste: admin / JJPJ | dentista / 12345 | gerente / 12345 | paciente.teste / 12345</p>
+            <p>admin / JJPJ | dentista / 12345 | gerente / 12345 | paciente.teste / 12345</p>
         </div>
     </div>
 </div>
 
-<!-- NAVEGAÇÃO PRINCIPAL -->
+<!-- NAVEGAÇÃO PRINCIPAL (gerada dinamicamente) -->
 <nav id="main-nav" class="glass sticky top-0 z-50 px-8 py-4 hidden flex justify-between items-center">
     <div class="flex items-center gap-3">
         <span class="font-black text-xl">Odonto<span class="text-blue-600">Personalité</span></span>
         <div id="sync-status" class="flex items-center gap-1 text-[8px] font-black text-rose-500 uppercase italic"><i class="fas fa-circle text-[6px]"></i> <span>Desconectado</span></div>
     </div>
-    <div class="flex bg-slate-100 rounded-2xl p-1 gap-1">
-        <button onclick="switchTab('client')" id="tab-client" class="px-5 py-2 text-[10px] font-black uppercase transition-all">Cliente</button>
-        <button onclick="switchTab('manager')" id="tab-manager" class="px-5 py-2 text-[10px] font-black uppercase transition-all">Fluxo</button>
-        <button onclick="switchTab('dentist')" id="tab-dentist" class="px-5 py-2 text-[10px] font-black uppercase transition-all">Agenda</button>
-        <button onclick="switchTab('nps')" id="tab-nps" class="px-5 py-2 text-[10px] font-black uppercase transition-all">NPS</button>
-        <button onclick="switchTab('settings')" id="tab-settings" class="px-5 py-2 text-slate-400"><i class="fas fa-cog"></i></button>
-    </div>
+    <div id="nav-buttons" class="flex bg-slate-100 rounded-2xl p-1 gap-1"></div>
 </nav>
 
 <main id="main-content" class="max-w-7xl mx-auto p-6 hidden">
-    <!-- ABA CLIENTE -->
-    <section id="view-client" class="hidden space-y-8 animate-fade-in">
+    <!-- MÓDULO CLIENTE -->
+    <section id="view-client" class="hidden space-y-8">
         <div class="bg-white p-10 rounded-[3rem] shadow-xl border grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div class="space-y-4">
-                <h2 class="text-2xl font-black">1. Escolha o Dentista e Data</h2>
-                <select id="c-dentist" class="input-gray" onchange="initClientCalendar()"></select>
+            <div><h2 class="text-2xl font-black">1. Escolha o Dentista e Data</h2>
+                <select id="c-dentist" class="input-gray mt-2" onchange="initClientCalendar()"></select>
                 <div id="client-mini-calendar" class="mt-4 border rounded-3xl p-4 bg-slate-50"></div>
             </div>
-            <div class="space-y-4">
-                <h2 class="text-2xl font-black">2. Escolha o Horário</h2>
-                <div id="time-slots" class="grid grid-cols-2 gap-2"></div>
-                <button onclick="confirmBooking()" id="btn-confirm-booking" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl opacity-50 cursor-not-allowed" disabled>CONFIRMAR AGENDAMENTO</button>
+            <div><h2 class="text-2xl font-black">2. Escolha o Horário</h2>
+                <div id="time-slots" class="grid grid-cols-2 gap-2 mt-4"></div>
+                <button onclick="confirmBooking()" id="btn-confirm-booking" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl opacity-50 cursor-not-allowed mt-6" disabled>CONFIRMAR AGENDAMENTO</button>
             </div>
         </div>
     </section>
 
-    <!-- ABA FLUXO (KANBAN) -->
+    <!-- MÓDULO FLUXO (KANBAN) -->
     <section id="view-manager" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-slate-200/50 p-6 rounded-[2.5rem] space-y-4">
-            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 italic">Aguardando</h4>
-            <div id="list-pending" class="min-h-[500px] space-y-3"></div>
-        </div>
-        <div class="bg-slate-200/50 p-6 rounded-[2.5rem] space-y-4">
-            <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-2">Em Atendimento</h4>
-            <div id="list-active" class="min-h-[500px] space-y-3"></div>
-        </div>
-        <div class="bg-slate-200/50 p-6 rounded-[2.5rem] space-y-4">
-            <h4 class="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-2">Finalizados</h4>
-            <div id="list-done" class="min-h-[500px] space-y-3"></div>
-        </div>
+        <div class="bg-slate-200/50 p-6 rounded-[2.5rem]"><h4 class="text-[10px] font-black text-slate-400">AGUARDANDO</h4><div id="list-pending" class="min-h-[500px] space-y-3 mt-3"></div></div>
+        <div class="bg-slate-200/50 p-6 rounded-[2.5rem]"><h4 class="text-[10px] font-black text-blue-600">EM ATENDIMENTO</h4><div id="list-active" class="min-h-[500px] space-y-3 mt-3"></div></div>
+        <div class="bg-slate-200/50 p-6 rounded-[2.5rem]"><h4 class="text-[10px] font-black text-emerald-600">FINALIZADOS</h4><div id="list-done" class="min-h-[500px] space-y-3 mt-3"></div></div>
     </section>
 
-    <!-- ABA AGENDA (DENTISTA) -->
+    <!-- MÓDULO AGENDA DENTISTA -->
     <section id="view-dentist" class="hidden space-y-6">
         <div class="flex flex-wrap justify-between items-center gap-4">
-            <div class="flex gap-4 items-center">
-                <h2 class="text-2xl font-black">Agenda Profissional</h2>
-                <select id="dentist-select" class="input-gray w-auto" onchange="loadDentistCalendar()">
-                    <option value="">Selecione um dentista</option>
-                </select>
-            </div>
+            <div class="flex gap-4 items-center"><h2 class="text-2xl font-black">Agenda</h2><select id="dentist-select" class="input-gray w-auto" onchange="loadDentistCalendar()"></select></div>
             <button onclick="toggleBlockMode()" id="btn-block-mode" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase">Modo Bloqueio: OFF</button>
         </div>
         <div id="dentist-calendar"></div>
-        <div id="block-info" class="text-xs text-slate-500 italic">Clique em um horário no calendário para bloquear/desbloquear (Modo Bloqueio ativado).</div>
     </section>
 
-    <!-- ABA NPS -->
+    <!-- MÓDULO NPS -->
     <section id="view-nps" class="hidden space-y-8">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-white p-6 rounded-3xl border text-center">
-                <span class="text-[10px] font-black text-slate-400 uppercase">NPS Score</span>
-                <p class="text-4xl font-black text-blue-600">9.2</p>
-            </div>
-        </div>
+        <div class="bg-white p-6 rounded-3xl border text-center"><span class="text-[10px] font-black text-slate-400">NPS SCORE</span><p id="nps-score" class="text-4xl font-black text-blue-600">0</p></div>
         <div class="bg-white p-8 rounded-[2.5rem] border"><canvas id="chart-nps"></canvas></div>
     </section>
 
-    <!-- ABA CONFIGURAÇÕES -->
+    <!-- MÓDULO CONFIGURAÇÕES (apenas para perfis com permissão) -->
     <section id="view-settings" class="hidden space-y-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- BLOCO GITHUB -->
-            <div class="bg-white p-8 rounded-[2.5rem] border space-y-4 shadow-sm">
-                <h3 class="font-black flex items-center gap-2"><i class="fab fa-github"></i> Banco Cloud</h3>
-                <input type="text" id="db-user" value="paulojosemsousa-stack" class="input-gray" readonly>
-                <input type="text" id="db-repo" value="odontopersonalite" class="input-gray" readonly>
-                <input type="password" id="db-token" placeholder="Cole o token ghp_..." class="input-gray">
-                <button onclick="syncCloud()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black transition-all">Conectar Agora</button>
+            <div class="bg-white p-8 rounded-[2.5rem] border"><h3><i class="fab fa-github"></i> GitHub Cloud</h3>
+                <input type="text" id="db-user" value="paulojosemsousa-stack" class="input-gray mt-2" readonly>
+                <input type="text" id="db-repo" value="odontopersonalite" class="input-gray mt-2" readonly>
+                <input type="password" id="db-token" placeholder="Token GitHub" class="input-gray mt-2" value="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">
+                <button onclick="syncCloud()" class="w-full bg-slate-900 text-white py-3 rounded-2xl font-black mt-4">Sincronizar</button>
             </div>
-
-            <!-- BLOCO WHATSAPP -->
-            <div class="bg-white p-8 rounded-[2.5rem] border space-y-4 shadow-sm">
-                <h3 class="font-black flex items-center gap-2"><i class="fab fa-whatsapp text-green-600"></i> Integração WhatsApp</h3>
-                <input type="text" id="wa-instance" placeholder="ID da Instância (ex: 123456)" class="input-gray">
-                <input type="text" id="wa-token" placeholder="Token da API" class="input-gray">
-                <input type="text" id="wa-number" placeholder="Número do dentista (ex: 5511999999999)" class="input-gray">
-                <button onclick="testWhatsApp()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-green-700 transition-all">Testar Conexão</button>
-                <div id="wa-status" class="text-[9px] font-bold text-slate-400"></div>
+            <div class="bg-white p-8 rounded-[2.5rem] border"><h3><i class="fab fa-whatsapp text-green-600"></i> WhatsApp API</h3>
+                <select id="wa-provider" class="input-gray mt-2"><option value="evolution">Evolution API (gratuita)</option><option value="zapi">Z-API</option></select>
+                <input type="text" id="wa-instance" placeholder="URL da API / Instância" class="input-gray mt-2">
+                <input type="text" id="wa-token" placeholder="Token de acesso" class="input-gray mt-2">
+                <button onclick="testWhatsApp()" class="w-full bg-green-600 text-white py-3 rounded-2xl font-black mt-4">Testar Conexão</button>
+                <div id="wa-status" class="text-xs mt-2"></div>
             </div>
-
-            <!-- GESTÃO DE USUÁRIOS (com login/senha editáveis) -->
-            <div class="bg-white p-8 rounded-[2.5rem] border space-y-4 shadow-sm col-span-1 lg:col-span-2">
-                <h3 id="form-title" class="font-black flex items-center gap-2"><i class="fas fa-user-plus text-blue-600"></i> Novo Profissional</h3>
-                <input type="hidden" id="reg-id">
-                <input type="text" id="reg-name" placeholder="Nome Completo" class="input-gray">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="reg-cpf" placeholder="CPF (Só números)" class="input-gray">
-                    <select id="reg-role" class="input-gray">
-                        <option value="dentist">Dentista</option>
-                        <option value="manager">Gerente</option>
-                        <option value="client">Paciente</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="reg-login" placeholder="Login (ex: joao.silva)" class="input-gray">
+            <div class="bg-white p-8 rounded-[2.5rem] border col-span-2"><h3><i class="fas fa-users"></i> Usuários</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+                    <input type="text" id="reg-name" placeholder="Nome" class="input-gray">
+                    <input type="text" id="reg-cpf" placeholder="CPF" class="input-gray">
+                    <select id="reg-role" class="input-gray"><option value="owner">Owner</option><option value="manager">Manager</option><option value="dentist">Dentist</option><option value="client">Client</option></select>
+                    <input type="text" id="reg-whatsapp" placeholder="WhatsApp (5511999999999)" class="input-gray">
+                    <input type="text" id="reg-login" placeholder="Login" class="input-gray">
                     <input type="text" id="reg-pass" placeholder="Senha" class="input-gray">
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="handleSaveUser()" id="btn-save-user" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black">SALVAR</button>
-                    <button onclick="resetUserForm()" id="btn-cancel-edit" class="hidden px-6 bg-slate-100 text-slate-400 py-4 rounded-2xl font-black uppercase text-[10px]">Cancelar</button>
-                </div>
+                <input type="hidden" id="reg-id">
+                <div class="flex gap-2 mt-4"><button onclick="saveUser()" class="flex-1 bg-blue-600 text-white py-3 rounded-2xl font-black">Salvar</button><button onclick="resetUserForm()" id="btn-cancel-edit" class="hidden px-6 bg-slate-100 py-3 rounded-2xl">Cancelar</button></div>
+                <div class="overflow-x-auto mt-6"><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="p-2">Nome</th><th>Role</th><th>WhatsApp</th><th>Ações</th></tr></thead><tbody id="user-table"></tbody></table></div>
             </div>
-        </div>
-
-        <!-- TABELA DE USUÁRIOS -->
-        <div class="bg-white rounded-[2.5rem] border overflow-hidden shadow-sm">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
-                    <tr><th class="p-5">Nome</th><th class="p-5">Tipo</th><th class="p-5">Login</th><th class="p-5">Senha</th><th class="p-5">Ações</th></tr>
-                </thead>
-                <tbody id="user-table-body" class="divide-y divide-slate-100"></tbody>
-            </table>
+            <div class="bg-white p-8 rounded-[2.5rem] border col-span-2"><h3><i class="fas fa-key"></i> Árvore de Permissões</h3>
+                <div id="permissions-tree" class="space-y-4 mt-4"></div>
+                <button onclick="savePermissions()" class="w-full bg-emerald-600 text-white py-3 rounded-2xl font-black mt-4">Salvar Permissões</button>
+            </div>
         </div>
     </section>
 </main>
 
 <script>
-    // ======================== ESTRUTURA GLOBAL ========================
-    let db = { users: [], appointments: [], blocks: [], config: {} };
+    // ========================= CONFIGURAÇÃO GLOBAL =========================
+    const GITHUB_TOKEN = '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';
+    let db = { users: [], appointments: [], blocks: [], npsResponses: [], config: { whatsapp: {}, permissions: {} } };
     let currentSha = null, currentUser = null, selectedDate = null, selectedTime = null, isBlockMode = false;
-    let dentistCalendar = null;
+    let dentistCalendar = null, npsChart = null;
 
-    // --- Funções auxiliares UTF-8 / Base64 (CORRIGIDAS para remover BOM)---
-    function utf8ToBase64(str) {
-        return btoa(unescape(encodeURIComponent(str)));
-    }
-    function base64ToUtf8(base64) {
-        try {
-            let decoded = atob(base64);
-            // Remove possíveis BOM (\uFEFF) ou caracteres de controle no início
-            decoded = decoded.replace(/^\uFEFF/, '');
-            return decodeURIComponent(escape(decoded));
-        } catch(e) {
-            console.warn("Erro na decodificação base64", e);
-            return "";
-        }
-    }
+    // Módulos e ações para permissões
+    const MODULES = {
+        client: { name: "Cliente", actions: ["agendar"] },
+        manager: { name: "Fluxo", actions: ["mover_cards"] },
+        dentist: { name: "Agenda", actions: ["ver_agenda", "bloquear_horarios"] },
+        nps: { name: "NPS", actions: ["ver_grafico"] },
+        settings: { name: "Configurações", actions: ["gerenciar_usuarios", "configurar_whatsapp", "configurar_permissoes", "sincronizar_github"] }
+    };
+    const DEFAULT_PERMISSIONS = {
+        owner: { client: true, manager: true, dentist: true, nps: true, settings: true, actions: { agendar: true, mover_cards: true, ver_agenda: true, bloquear_horarios: true, ver_grafico: true, gerenciar_usuarios: true, configurar_whatsapp: true, configurar_permissoes: true, sincronizar_github: true } },
+        manager: { client: false, manager: true, dentist: true, nps: true, settings: true, actions: { agendar: false, mover_cards: true, ver_agenda: true, bloquear_horarios: false, ver_grafico: true, gerenciar_usuarios: true, configurar_whatsapp: true, configurar_permissoes: true, sincronizar_github: true } },
+        dentist: { client: false, manager: false, dentist: true, nps: false, settings: false, actions: { agendar: false, mover_cards: false, ver_agenda: true, bloquear_horarios: true, ver_grafico: false, gerenciar_usuarios: false, configurar_whatsapp: false, configurar_permissoes: false, sincronizar_github: false } },
+        client: { client: true, manager: false, dentist: false, nps: false, settings: false, actions: { agendar: true, mover_cards: false, ver_agenda: false, bloquear_horarios: false, ver_grafico: false, gerenciar_usuarios: false, configurar_whatsapp: false, configurar_permissoes: false, sincronizar_github: false } }
+    };
 
-    // --- Garantir que o db sempre tenha as estruturas mínimas ---
     function ensureDbStructure() {
         if (!db.users) db.users = [];
         if (!db.appointments) db.appointments = [];
         if (!db.blocks) db.blocks = [];
+        if (!db.npsResponses) db.npsResponses = [];
         if (!db.config) db.config = {};
-        // Se não houver usuários, criar padrões (incluindo paciente)
+        if (!db.config.whatsapp) db.config.whatsapp = { provider: "evolution", instance: "", token: "" };
+        if (!db.config.permissions) db.config.permissions = JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
         if (db.users.length === 0) {
             db.users = [
-                { id: 1, name: "Admin Master", cpf: "00000000000", role: "owner", login: "admin", pass: "JJPJ" },
-                { id: 2, name: "Dr. João Silva", cpf: "11111111111", role: "dentist", login: "joao.silva", pass: "12345" },
-                { id: 3, name: "Gerente Carla", cpf: "22222222222", role: "manager", login: "gerente", pass: "12345" },
-                { id: 4, name: "Paciente Teste", cpf: "33333333333", role: "client", login: "paciente.teste", pass: "12345" }
+                { id: 1, name: "Admin Master", cpf: "00000000000", role: "owner", login: "admin", pass: "JJPJ", whatsapp: "" },
+                { id: 2, name: "Dr. João Silva", cpf: "11111111111", role: "dentist", login: "joao.silva", pass: "12345", whatsapp: "5511999999999" },
+                { id: 3, name: "Gerente Carla", cpf: "22222222222", role: "manager", login: "gerente", pass: "12345", whatsapp: "" },
+                { id: 4, name: "Paciente Teste", cpf: "33333333333", role: "client", login: "paciente.teste", pass: "12345", whatsapp: "5511988888888" }
             ];
         }
     }
 
-    // ======================== AUTENTICAÇÃO ========================
+    // ========================= FUNÇÕES AUXILIARES =========================
+    function utf8ToBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
+    function base64ToUtf8(base64) {
+        try { let decoded = atob(base64).replace(/^\uFEFF/, ''); return decodeURIComponent(escape(decoded)); } catch(e) { return ""; }
+    }
+
+    // ========================= GITHUB SYNC =========================
+    async function syncCloud() {
+        updateStatus(false, "Conectando...");
+        const repoUser = document.getElementById('db-user').value;
+        const repoName = document.getElementById('db-repo').value;
+        const apiUrl = `https://api.github.com/repos/${repoUser}/${repoName}/contents/db.json`;
+        try {
+            let res = await fetch(apiUrl, { headers: { Authorization: `token ${GITHUB_TOKEN}` } });
+            if (res.status === 404) {
+                const content = utf8ToBase64(JSON.stringify({ users: [], appointments: [], blocks: [], npsResponses: [], config: {} }, null, 2));
+                const putRes = await fetch(apiUrl, { method: 'PUT', headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ message: "init", content }) });
+                if (!putRes.ok) throw new Error("Erro ao criar");
+                const putData = await putRes.json();
+                currentSha = putData.content.sha;
+                db = { users: [], appointments: [], blocks: [], npsResponses: [], config: {} };
+                ensureDbStructure();
+                updateStatus(true, "Conectado (novo)");
+                renderAll();
+                return;
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            currentSha = data.sha;
+            let decoded = base64ToUtf8(data.content).trim();
+            if (!decoded.startsWith('{')) decoded = decoded.substring(decoded.indexOf('{'));
+            db = JSON.parse(decoded);
+            ensureDbStructure();
+            updateStatus(true, "Conectado");
+            renderAll();
+        } catch(e) { updateStatus(false, "Erro"); alert("Erro: "+e.message); }
+    }
+    async function saveAndPush() {
+        const repoUser = document.getElementById('db-user').value;
+        const repoName = document.getElementById('db-repo').value;
+        const apiUrl = `https://api.github.com/repos/${repoUser}/${repoName}/contents/db.json`;
+        if (!currentSha) { localStorage.setItem('odonto_v50', JSON.stringify(db)); updateStatus(false, "Offline"); return; }
+        try {
+            const content = utf8ToBase64(JSON.stringify(db, null, 2));
+            const res = await fetch(apiUrl, { method: 'PUT', headers: { Authorization: `token ${GITHUB_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ message: "update", content, sha: currentSha }) });
+            if (!res.ok) throw new Error("Erro");
+            const data = await res.json();
+            currentSha = data.content.sha;
+            updateStatus(true, "Salvo");
+        } catch(e) { updateStatus(false, "Erro save"); localStorage.setItem('odonto_v50', JSON.stringify(db)); }
+    }
+    function updateStatus(on, txt) {
+        const s = document.getElementById('sync-status');
+        s.className = `flex items-center gap-1 text-[8px] font-black uppercase ${on ? 'text-emerald-500' : 'text-rose-500'}`;
+        s.querySelector('span').innerText = txt;
+    }
+
+    // ========================= WHATSAPP REAL =========================
+    async function sendWhatsApp(toNumber, message) {
+        const wa = db.config.whatsapp;
+        if (!wa.instance || !wa.token) { console.warn("WhatsApp não configurado, simulação:", message); alert(`[SIMULAÇÃO] WhatsApp para ${toNumber}: ${message}`); return true; }
+        try {
+            let url = "", body = {};
+            if (wa.provider === "evolution") {
+                url = `${wa.instance}/message/sendText/${wa.instance.split('/').pop()}`;
+                body = { number: toNumber, text: message };
+            } else {
+                url = `https://api.z-api.io/instances/${wa.instance}/token/${wa.token}/send-text`;
+                body = { phone: toNumber, message };
+            }
+            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Client-Token': wa.token }, body: JSON.stringify(body) });
+            return res.ok;
+        } catch(e) { console.error(e); return false; }
+    }
+    async function sendAppointmentConfirmation(appointment) {
+        const dentist = db.users.find(u => u.name === appointment.dentist);
+        if (!dentist || !dentist.whatsapp) return;
+        const patient = db.users.find(u => u.id === appointment.patientId);
+        const msg = `🦷 *Novo agendamento*\nPaciente: ${patient ? patient.name : "Cliente"}\nData: ${appointment.date}\nHorário: ${appointment.time}`;
+        await sendWhatsApp(dentist.whatsapp, msg);
+    }
+    async function sendNpsSurvey(appointment) {
+        const patient = db.users.find(u => u.id === appointment.patientId);
+        if (!patient || !patient.whatsapp) return;
+        const msg = `🦷 *OdontoPersonalité*\nSua consulta com ${appointment.dentist} foi finalizada. Responda com uma nota de 0 a 10: como avalia nosso serviço? (responda este número)`;
+        const sent = await sendWhatsApp(patient.whatsapp, msg);
+        if (sent) {
+            const nota = prompt(`Paciente ${patient.name} (${patient.whatsapp})\nDigite a nota (0-10) recebida:`);
+            if (nota !== null && !isNaN(nota) && nota >= 0 && nota <= 10) {
+                if (!db.npsResponses) db.npsResponses = [];
+                db.npsResponses.push({ patientId: patient.id, appointmentId: appointment.id, score: parseInt(nota), date: new Date().toISOString() });
+                await saveAndPush();
+                updateNPSChart();
+                alert(`Nota ${nota} registrada!`);
+            }
+        }
+    }
+    async function testWhatsApp() {
+        const provider = document.getElementById('wa-provider').value;
+        const instance = document.getElementById('wa-instance').value.trim();
+        const token = document.getElementById('wa-token').value.trim();
+        if (!instance || !token) { alert("Preencha todos os campos"); return; }
+        db.config.whatsapp = { provider, instance, token };
+        await saveAndPush();
+        const testNumber = currentUser?.whatsapp || "5511999999999";
+        const ok = await sendWhatsApp(testNumber, "🧪 Teste de conexão do OdontoPersonalité!");
+        document.getElementById('wa-status').innerHTML = ok ? '<span class="text-green-600">✅ Conectado</span>' : '<span class="text-red-600">❌ Falha</span>';
+    }
+
+    // ========================= PERMISSÕES =========================
+    function renderPermissionsTree() {
+        const container = document.getElementById('permissions-tree');
+        container.innerHTML = '';
+        const roles = ['owner', 'manager', 'dentist', 'client'];
+        for (let role of roles) {
+            const perms = db.config.permissions[role] || JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS[role]));
+            const card = document.createElement('div');
+            card.className = 'border rounded-2xl p-4 bg-slate-50 mb-4';
+            card.innerHTML = `<h4 class="font-black uppercase text-sm mb-2">${role.toUpperCase()}</h4>`;
+            for (let mod in MODULES) {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2';
+                const chk = document.createElement('input');
+                chk.type = 'checkbox'; chk.checked = perms[mod] === true;
+                chk.onchange = (e) => { perms[mod] = e.target.checked; };
+                const label = document.createElement('label');
+                label.innerText = MODULES[mod].name;
+                div.appendChild(chk); div.appendChild(label);
+                card.appendChild(div);
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'permission-tree ml-4 text-xs';
+                MODULES[mod].actions.forEach(action => {
+                    const actDiv = document.createElement('div');
+                    const actChk = document.createElement('input');
+                    actChk.type = 'checkbox';
+                    if (!perms.actions) perms.actions = {};
+                    actChk.checked = perms.actions[action] === true;
+                    actChk.onchange = (e) => { perms.actions[action] = e.target.checked; };
+                    const actLabel = document.createElement('label');
+                    actLabel.innerText = action.replace('_', ' ');
+                    actDiv.appendChild(actChk); actDiv.appendChild(actLabel);
+                    actionsDiv.appendChild(actDiv);
+                });
+                card.appendChild(actionsDiv);
+            }
+            container.appendChild(card);
+        }
+    }
+    async function savePermissions() {
+        const roles = ['owner', 'manager', 'dentist', 'client'];
+        const newPerms = {};
+        for (let role of roles) {
+            const card = document.querySelector(`#permissions-tree div:has(h4:contains("${role.toUpperCase()}"))`);
+            if (!card) continue;
+            const rolePerms = {};
+            let modIndex = 0;
+            for (let mod in MODULES) {
+                const chk = card.querySelectorAll('input[type="checkbox"]')[modIndex];
+                rolePerms[mod] = chk.checked;
+                modIndex++;
+            }
+            const actions = {};
+            const actionCheckboxes = card.querySelectorAll('.permission-tree input[type="checkbox"]');
+            MODULES[Object.keys(MODULES)[0]].actions.forEach((act, idx) => { actions[act] = actionCheckboxes[idx]?.checked || false; });
+            rolePerms.actions = actions;
+            newPerms[role] = rolePerms;
+        }
+        db.config.permissions = newPerms;
+        await saveAndPush();
+        alert("Permissões salvas! Recarregue a página.");
+        location.reload();
+    }
+    function hasPermission(module, action = null) {
+        const perms = db.config.permissions[currentUser?.role] || DEFAULT_PERMISSIONS[currentUser?.role];
+        if (!perms) return false;
+        if (action) return perms.actions?.[action] === true;
+        return perms[module] === true;
+    }
+
+    // ========================= AUTENTICAÇÃO E NAVEGAÇÃO =========================
     function doLogin() {
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value.trim();
         const found = db.users.find(x => x.login === u && x.pass === p);
-        if (found) {
-            currentUser = found;
-            start();
-        } else {
-            alert("Usuário ou senha inválidos.");
-        }
+        if (found) { currentUser = found; start(); } else alert("Inválido");
     }
-
     function start() {
         document.getElementById('view-login').classList.add('hidden');
         document.getElementById('main-nav').classList.remove('hidden');
         document.getElementById('main-content').classList.remove('hidden');
         renderAll();
-        if (currentUser.role === 'owner') switchTab('manager');
-        else if (currentUser.role === 'dentist') switchTab('dentist');
-        else if (currentUser.role === 'manager') switchTab('manager');
+        buildNavigation();
+        const firstTab = Object.keys(MODULES).find(mod => hasPermission(mod));
+        if (firstTab) switchTab(firstTab);
         else switchTab('client');
     }
-
-    // ======================== SINCRONIZAÇÃO GITHUB (JSON CORRIGIDO) ========================
-    async function syncCloud() {
-        const token = document.getElementById('db-token').value.trim();
-        if (!token) return alert("Insira o Token do GitHub.");
-        updateStatus(false, "Conectando...");
-        const repoUser = document.getElementById('db-user').value;
-        const repoName = document.getElementById('db-repo').value;
-        const apiUrl = `https://api.github.com/repos/${repoUser}/${repoName}/contents/db.json`;
-
-        try {
-            let res = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
-            if (res.status === 404) {
-                // Criar arquivo padrão
-                const defaultDb = { users: [], appointments: [], blocks: [], config: {} };
-                const content = utf8ToBase64(JSON.stringify(defaultDb, null, 2));
-                const putRes = await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: "Inicializar db.json", content: content })
-                });
-                if (!putRes.ok) throw new Error(`Erro ao criar: ${putRes.status}`);
-                const putData = await putRes.json();
-                currentSha = putData.content.sha;
-                db = defaultDb;
-                ensureDbStructure();
-                updateStatus(true, "Conectado (novo)");
-                alert("Arquivo criado! Sincronização OK.");
-                renderAll();
-                return;
+    function buildNavigation() {
+        const navDiv = document.getElementById('nav-buttons');
+        navDiv.innerHTML = '';
+        for (let mod in MODULES) {
+            if (hasPermission(mod)) {
+                const btn = document.createElement('button');
+                btn.innerText = MODULES[mod].name;
+                btn.className = 'px-5 py-2 text-[10px] font-black uppercase transition-all';
+                btn.onclick = () => switchTab(mod);
+                btn.id = `tab-${mod}`;
+                navDiv.appendChild(btn);
             }
-            if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
-            const data = await res.json();
-            currentSha = data.sha;
-            let decoded = base64ToUtf8(data.content);
-            // Tenta limpar possíveis quebras de linha ou caracteres não JSON
-            decoded = decoded.trim();
-            // Verifica se o primeiro caractere é { ou [ (início de JSON)
-            if (!decoded.startsWith('{') && !decoded.startsWith('[')) {
-                // Procura o primeiro '{' ou '['
-                const jsonStart = decoded.indexOf('{');
-                if (jsonStart !== -1) decoded = decoded.substring(jsonStart);
-                else throw new Error("Conteúdo não parece ser JSON válido.");
-            }
-            db = JSON.parse(decoded);
-            ensureDbStructure();
-            updateStatus(true, "Conectado");
-            alert("Dados carregados do GitHub!");
-            renderAll();
-        } catch (e) {
-            console.error(e);
-            updateStatus(false, "Erro");
-            alert("Falha na conexão: " + e.message);
         }
     }
-
-    async function saveAndPush() {
-        const token = document.getElementById('db-token').value.trim();
-        const repoUser = document.getElementById('db-user').value;
-        const repoName = document.getElementById('db-repo').value;
-        const apiUrl = `https://api.github.com/repos/${repoUser}/${repoName}/contents/db.json`;
-
-        if (!token || !currentSha) {
-            localStorage.setItem('odonto_v43', JSON.stringify(db));
-            updateStatus(false, "Offline (local)");
-            return;
-        }
-
-        try {
-            const content = utf8ToBase64(JSON.stringify(db, null, 2));
-            const res = await fetch(apiUrl, {
-                method: 'PUT',
-                headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ message: "Update v4.3", content: content, sha: currentSha })
-            });
-            if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
-            const data = await res.json();
-            currentSha = data.content.sha;
-            updateStatus(true, "Salvo");
-        } catch (e) {
-            console.error(e);
-            updateStatus(false, "Erro ao salvar");
-            localStorage.setItem('odonto_v43', JSON.stringify(db));
-        }
+    function switchTab(tabId) {
+        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(`view-${tabId}`).classList.remove('hidden');
+        document.querySelectorAll('#nav-buttons button').forEach(b => b.classList.remove('nav-active'));
+        const activeBtn = document.getElementById(`tab-${tabId}`);
+        if (activeBtn) activeBtn.classList.add('nav-active');
+        if (tabId === 'manager') initKanban();
+        if (tabId === 'client') initClientCalendar();
+        if (tabId === 'dentist') loadDentistCalendar();
+        if (tabId === 'nps') updateNPSChart();
+        if (tabId === 'settings') { renderPermissionsTree(); loadUsersTable(); }
+        applyUIPermissions();
+    }
+    function applyUIPermissions() {
+        const blockBtn = document.getElementById('btn-block-mode');
+        if (blockBtn) blockBtn.disabled = !hasPermission('dentist', 'bloquear_horarios');
     }
 
-    // ======================== GESTÃO DE USUÁRIOS (COM LOGIN/SENHA) ========================
-    function handleSaveUser() {
+    // ========================= USUÁRIOS =========================
+    function loadUsersTable() {
+        const tbody = document.getElementById('user-table');
+        tbody.innerHTML = db.users.map(u => `<tr><td class="p-2">${u.name}</td><td>${u.role}</td><td>${u.whatsapp || '-'}</td><td><button onclick="editUser(${u.id})" class="text-blue-500">Editar</button> <button onclick="deleteUser(${u.id})" class="text-rose-500">Excluir</button></td></tr>`).join('');
+    }
+    function saveUser() {
         const id = document.getElementById('reg-id').value;
         const name = document.getElementById('reg-name').value;
-        const cpf = document.getElementById('reg-cpf').value.replace(/\D/g, '');
+        const cpf = document.getElementById('reg-cpf').value.replace(/\D/g,'');
         const role = document.getElementById('reg-role').value;
+        const whatsapp = document.getElementById('reg-whatsapp').value;
         let login = document.getElementById('reg-login').value.trim();
         let pass = document.getElementById('reg-pass').value.trim();
-
-        if (!name || cpf.length < 5) return alert("Dados incompletos.");
-        if (!login) login = name.toLowerCase().split(' ')[0] + '.' + (name.toLowerCase().split(' ').pop());
-        if (!pass) pass = cpf.substring(0, 5);
-
+        if (!name || cpf.length<5) return alert("Incompleto");
+        if (!login) login = name.toLowerCase().split(' ')[0]+'.'+(name.toLowerCase().split(' ').pop());
+        if (!pass) pass = cpf.substring(0,5);
         if (id) {
-            const idx = db.users.findIndex(u => u.id == id);
-            db.users[idx] = { ...db.users[idx], name, cpf, role, login, pass };
+            const idx = db.users.findIndex(u=>u.id==id);
+            db.users[idx] = {...db.users[idx], name, cpf, role, login, pass, whatsapp};
         } else {
-            db.users.push({ id: Date.now(), name, cpf, role, login, pass });
+            db.users.push({ id: Date.now(), name, cpf, role, login, pass, whatsapp });
         }
         resetUserForm();
         renderAll();
         saveAndPush();
-        if (currentUser.role === 'dentist' && role === 'dentist') loadDentistCalendar();
     }
-
     function editUser(id) {
-        const u = db.users.find(x => x.id == id);
+        const u = db.users.find(x=>x.id==id);
         document.getElementById('reg-id').value = u.id;
         document.getElementById('reg-name').value = u.name;
         document.getElementById('reg-cpf').value = u.cpf;
         document.getElementById('reg-role').value = u.role;
+        document.getElementById('reg-whatsapp').value = u.whatsapp || '';
         document.getElementById('reg-login').value = u.login;
         document.getElementById('reg-pass').value = u.pass;
-        document.getElementById('form-title').innerHTML = `<i class="fas fa-edit text-blue-600"></i> Alterar Cadastro`;
         document.getElementById('btn-cancel-edit').classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
     function resetUserForm() {
         document.getElementById('reg-id').value = '';
         document.getElementById('reg-name').value = '';
         document.getElementById('reg-cpf').value = '';
-        document.getElementById('reg-role').value = 'dentist';
+        document.getElementById('reg-whatsapp').value = '';
         document.getElementById('reg-login').value = '';
         document.getElementById('reg-pass').value = '';
-        document.getElementById('form-title').innerHTML = `<i class="fas fa-user-plus text-blue-600"></i> Novo Profissional`;
         document.getElementById('btn-cancel-edit').classList.add('hidden');
     }
-
     function deleteUser(id) {
-        if (confirm("Excluir usuário?")) {
-            db.users = db.users.filter(u => u.id != id);
-            renderAll();
-            saveAndPush();
-            if (currentUser.role === 'dentist') loadDentistCalendar();
-        }
+        if(confirm("Excluir?")) { db.users = db.users.filter(u=>u.id!=id); renderAll(); saveAndPush(); }
     }
 
-    // ======================== RENDERIZAÇÃO GERAL ========================
+    // ========================= RENDER GERAL =========================
     function renderAll() {
         ensureDbStructure();
-
-        // Tabela de usuários (agora com coluna senha)
-        document.getElementById('user-table-body').innerHTML = db.users.map(u => `
-            <tr class="hover:bg-slate-50 transition-all">
-                <td class="p-5 font-bold text-slate-700">${u.name}</td>
-                <td class="p-5"><span class="px-3 py-1 bg-slate-100 rounded-full text-[9px] font-black uppercase">${u.role}</span></td>
-                <td class="p-5 font-mono text-blue-600">${u.login}</td>
-                <td class="p-5 font-mono text-slate-500">${u.pass}</td>
-                <td class="p-5 flex gap-4">
-                    <button onclick="editUser(${u.id})" class="text-blue-500 font-bold text-xs uppercase hover:underline">Alterar</button>
-                    <button onclick="deleteUser(${u.id})" class="text-rose-300 hover:text-rose-600"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-
-        // Select do cliente
-        const dts = db.users.filter(u => u.role === 'dentist');
-        document.getElementById('c-dentist').innerHTML = dts.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
-
-        // Select da agenda (dentista)
+        loadUsersTable();
+        const dts = db.users.filter(u=>u.role==='dentist');
+        document.getElementById('c-dentist').innerHTML = dts.map(d=>`<option value="${d.name}">${d.name}</option>`).join('');
         const dentistSelect = document.getElementById('dentist-select');
-        if (dentistSelect) {
-            let options = '<option value="">Selecione um dentista</option>';
-            dts.forEach(d => { options += `<option value="${d.name}">${d.name}</option>`; });
-            dentistSelect.innerHTML = options;
-            if (currentUser && currentUser.role === 'dentist') {
-                dentistSelect.value = currentUser.name;
-                dentistSelect.disabled = true;
-            } else {
-                dentistSelect.disabled = false;
-            }
+        if(dentistSelect) {
+            dentistSelect.innerHTML = '<option value="">Selecione</option>'+dts.map(d=>`<option value="${d.name}">${d.name}</option>`).join('');
+            if(currentUser?.role==='dentist') { dentistSelect.value = currentUser.name; dentistSelect.disabled=true; }
+            else dentistSelect.disabled=false;
         }
-
-        // Kanban
-        const card = (a) => `<div class="bg-white p-4 rounded-2xl shadow-sm border card" data-id="${a.id}"><p class="font-black text-xs">${a.dentist}</p><p class="text-[9px] text-slate-400 font-bold uppercase mt-1">${a.date} @ ${a.time}</p></div>`;
-        document.getElementById('list-pending').innerHTML = db.appointments.filter(a => a.status === 'pending').map(card).join('');
-        document.getElementById('list-active').innerHTML = db.appointments.filter(a => a.status === 'active').map(card).join('');
-        document.getElementById('list-done').innerHTML = db.appointments.filter(a => a.status === 'done').map(card).join('');
+        const card = (a) => `<div class="bg-white p-4 rounded-2xl shadow-sm border card" data-id="${a.id}"><p class="font-black text-xs">${a.dentist}</p><p class="text-[9px]">${a.date} ${a.time}</p><p class="text-[8px] text-slate-500">Paciente: ${db.users.find(u=>u.id===a.patientId)?.name||'?'}</p></div>`;
+        document.getElementById('list-pending').innerHTML = db.appointments.filter(a=>a.status==='pending').map(card).join('');
+        document.getElementById('list-active').innerHTML = db.appointments.filter(a=>a.status==='active').map(card).join('');
+        document.getElementById('list-done').innerHTML = db.appointments.filter(a=>a.status==='done').map(card).join('');
+        updateNPSChart();
     }
 
-    function switchTab(id) {
-        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-        document.getElementById('view-' + id).classList.remove('hidden');
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
-        document.getElementById('tab-' + id).classList.add('nav-active');
-        if (id === 'manager') initKanban();
-        if (id === 'client') initClientCalendar();
-        if (id === 'dentist') loadDentistCalendar();
-    }
-
-    function updateStatus(on, txt) {
-        const s = document.getElementById('sync-status');
-        s.className = `flex items-center gap-1 text-[8px] font-black uppercase tracking-widest ${on ? 'text-emerald-500' : 'text-rose-500'}`;
-        s.querySelector('span').innerText = txt;
-    }
-
-    // ======================== KANBAN ========================
+    // ========================= KANBAN =========================
     function initKanban() {
-        ['list-pending', 'list-active', 'list-done'].forEach(id => {
-            new Sortable(document.getElementById(id), { group: 'tasks', animation: 150, onEnd: (evt) => {
+        ['list-pending','list-active','list-done'].forEach(id=>{
+            new Sortable(document.getElementById(id), { group: 'tasks', animation:150, onEnd: async (evt)=>{
                 const appId = evt.item.dataset.id;
-                const status = evt.to.id.replace('list-', '');
-                const appointment = db.appointments.find(a => a.id == appId);
-                if (appointment) appointment.status = status;
-                saveAndPush();
+                const newStatus = evt.to.id.replace('list-','');
+                const app = db.appointments.find(a=>a.id==appId);
+                if(app && app.status!==newStatus) {
+                    app.status = newStatus;
+                    await saveAndPush();
+                    if(newStatus==='done') await sendNpsSurvey(app);
+                    renderAll();
+                    if(dentistCalendar) dentistCalendar.refetchEvents();
+                }
             }});
         });
     }
 
-    // ======================== CLIENTE (AGENDAMENTO) ========================
+    // ========================= CLIENTE =========================
     function initClientCalendar() {
         const el = document.getElementById('client-mini-calendar');
-        new FullCalendar.Calendar(el, {
-            initialView: 'dayGridMonth', locale: 'pt-br', height: 350,
-            dateClick: (info) => { selectedDate = info.dateStr; renderTimeSlots(); }
-        }).render();
+        new FullCalendar.Calendar(el, { initialView:'dayGridMonth', locale:'pt-br', dateClick:(info)=>{ selectedDate=info.dateStr; renderTimeSlots(); } }).render();
     }
-
     function renderTimeSlots() {
-        if (!selectedDate) return;
-        const container = document.getElementById('time-slots');
-        const times = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+        if(!selectedDate) return;
+        const times = ["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00"];
         const dentist = document.getElementById('c-dentist').value;
-        const occupied = db.appointments.filter(a => a.dentist === dentist && a.date === selectedDate).map(a => a.time);
-        const blocked = db.blocks.filter(b => b.dentist === dentist && b.date === selectedDate).map(b => b.time);
+        const occupied = db.appointments.filter(a=>a.dentist===dentist && a.date===selectedDate).map(a=>a.time);
+        const blocked = db.blocks.filter(b=>b.dentist===dentist && b.date===selectedDate).map(b=>b.time);
         const unavailable = [...occupied, ...blocked];
-        container.innerHTML = times.map(t => {
-            const isUnavail = unavailable.includes(t);
-            return `<button onclick="selectTime('${t}')" class="p-3 rounded-xl font-bold text-xs ${isUnavail ? 'bg-red-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 hover:bg-blue-600 hover:text-white'} transition-all" ${isUnavail ? 'disabled' : ''}>${t}</button>`;
-        }).join('');
+        document.getElementById('time-slots').innerHTML = times.map(t=>`<button onclick="selectTime('${t}')" class="p-3 rounded-xl font-bold text-xs ${unavailable.includes(t)?'bg-red-200 cursor-not-allowed':'bg-slate-50 hover:bg-blue-600 hover:text-white'}" ${unavailable.includes(t)?'disabled':''}>${t}</button>`).join('');
     }
-
-    function selectTime(t) {
-        selectedTime = t;
-        document.getElementById('btn-confirm-booking').classList.remove('opacity-50', 'cursor-not-allowed');
-        document.getElementById('btn-confirm-booking').disabled = false;
-    }
-
-    function confirmBooking() {
-        if (!selectedDate || !selectedTime) return alert("Selecione data e horário.");
+    function selectTime(t) { selectedTime=t; const btn=document.getElementById('btn-confirm-booking'); btn.classList.remove('opacity-50','cursor-not-allowed'); btn.disabled=false; }
+    async function confirmBooking() {
+        if(!selectedDate||!selectedTime) return alert("Selecione data/horário");
         const dentist = document.getElementById('c-dentist').value;
-        const already = db.appointments.find(a => a.dentist === dentist && a.date === selectedDate && a.time === selectedTime);
-        if (already) return alert("Horário já agendado.");
-        const blocked = db.blocks.find(b => b.dentist === dentist && b.date === selectedDate && b.time === selectedTime);
-        if (blocked) return alert("Horário bloqueado pelo dentista.");
-        db.appointments.push({ id: Date.now(), dentist, date: selectedDate, time: selectedTime, status: 'pending' });
-        saveAndPush();
-        alert("Agendado com sucesso!");
+        if(db.appointments.find(a=>a.dentist===dentist && a.date===selectedDate && a.time===selectedTime)) return alert("Já agendado");
+        if(db.blocks.find(b=>b.dentist===dentist && b.date===selectedDate && b.time===selectedTime)) return alert("Bloqueado");
+        const newApp = { id:Date.now(), dentist, date:selectedDate, time:selectedTime, status:'pending', patientId:currentUser.id };
+        db.appointments.push(newApp);
+        await saveAndPush();
+        await sendAppointmentConfirmation(newApp);
+        alert("Agendado!");
         renderTimeSlots();
     }
 
-    // ======================== AGENDA DO DENTISTA (COM BLOQUEIOS) ========================
+    // ========================= AGENDA DENTISTA =========================
     function loadDentistCalendar() {
         const dentistName = document.getElementById('dentist-select').value;
-        if (!dentistName) {
-            if (dentistCalendar) dentistCalendar.destroy();
-            document.getElementById('dentist-calendar').innerHTML = '<div class="p-10 text-center text-slate-400">Selecione um dentista para visualizar a agenda.</div>';
-            return;
-        }
+        if(!dentistName) { if(dentistCalendar) dentistCalendar.destroy(); document.getElementById('dentist-calendar').innerHTML='<div class="p-10 text-center">Selecione um dentista</div>'; return; }
         const calendarEl = document.getElementById('dentist-calendar');
-        if (dentistCalendar) dentistCalendar.destroy();
+        if(dentistCalendar) dentistCalendar.destroy();
         dentistCalendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'timeGridWeek',
-            locale: 'pt-br',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
-            slotMinTime: '08:00:00',
-            slotMaxTime: '18:00:00',
-            allDaySlot: false,
-            events: function(fetchInfo, successCallback, failureCallback) {
-                const events = [];
-                db.appointments.forEach(app => {
-                    if (app.dentist === dentistName) {
-                        events.push({
-                            id: 'app-' + app.id,
-                            title: `Paciente`,
-                            start: `${app.date}T${app.time}:00`,
-                            end: `${app.date}T${app.time}:00`,
-                            color: '#3b82f6',
-                            extendedProps: { type: 'appointment', original: app }
-                        });
-                    }
-                });
-                db.blocks.forEach(block => {
-                    if (block.dentist === dentistName) {
-                        events.push({
-                            id: 'block-' + block.id,
-                            title: 'BLOQUEADO',
-                            start: `${block.date}T${block.time}:00`,
-                            end: `${block.date}T${block.time}:00`,
-                            color: '#ef4444',
-                            classNames: ['blocked-slot'],
-                            extendedProps: { type: 'block', original: block }
-                        });
-                    }
-                });
-                successCallback(events);
+            initialView:'timeGridWeek', locale:'pt-br', slotMinTime:'08:00', slotMaxTime:'18:00', allDaySlot:false,
+            events:()=>{
+                const events=[];
+                db.appointments.forEach(a=>{ if(a.dentist===dentistName) events.push({ id:'a'+a.id, title:`Paciente`, start:`${a.date}T${a.time}:00`, color:'#3b82f6' }); });
+                db.blocks.forEach(b=>{ if(b.dentist===dentistName) events.push({ id:'b'+b.id, title:'BLOQUEADO', start:`${b.date}T${b.time}:00`, color:'#ef4444', classNames:['blocked-slot'] }); });
+                return events;
             },
-            dateClick: (info) => {
-                if (!isBlockMode) return;
-                const clickedDate = info.dateStr.split('T')[0];
-                const clickedTime = info.dateStr.split('T')[1].substring(0,5);
-                const dentist = document.getElementById('dentist-select').value;
-                if (!dentist) return;
-                const existingBlock = db.blocks.find(b => b.dentist === dentist && b.date === clickedDate && b.time === clickedTime);
-                if (existingBlock) {
-                    if (confirm("Remover bloqueio deste horário?")) {
-                        db.blocks = db.blocks.filter(b => b.id !== existingBlock.id);
-                        saveAndPush();
-                        dentistCalendar.refetchEvents();
-                    }
-                } else {
-                    if (confirm(`Bloquear horário ${clickedTime} do dia ${clickedDate} para o Dr(a). ${dentist}?`)) {
-                        db.blocks.push({ id: Date.now(), dentist, date: clickedDate, time: clickedTime });
-                        saveAndPush();
-                        dentistCalendar.refetchEvents();
-                    }
-                }
-            },
-            eventClick: (info) => {
-                if (info.event.extendedProps.type === 'block' && isBlockMode) {
-                    if (confirm("Remover bloqueio?")) {
-                        const blockId = info.event.extendedProps.original.id;
-                        db.blocks = db.blocks.filter(b => b.id !== blockId);
-                        saveAndPush();
-                        dentistCalendar.refetchEvents();
-                    }
-                }
+            dateClick: async (info)=>{
+                if(!isBlockMode || !hasPermission('dentist','bloquear_horarios')) return;
+                const date = info.dateStr.split('T')[0];
+                const time = info.dateStr.split('T')[1].substring(0,5);
+                const existing = db.blocks.find(b=>b.dentist===dentistName && b.date===date && b.time===time);
+                if(existing) { if(confirm("Remover bloqueio?")) { db.blocks = db.blocks.filter(b=>b.id!==existing.id); await saveAndPush(); dentistCalendar.refetchEvents(); } }
+                else { if(confirm(`Bloquear ${time} em ${date}?`)) { db.blocks.push({ id:Date.now(), dentist:dentistName, date, time }); await saveAndPush(); dentistCalendar.refetchEvents(); } }
             }
         });
         dentistCalendar.render();
     }
+    function toggleBlockMode() { isBlockMode=!isBlockMode; const btn=document.getElementById('btn-block-mode'); btn.innerText=`Modo Bloqueio: ${isBlockMode?'ON':'OFF'}`; btn.classList.toggle('bg-red-600',isBlockMode); btn.classList.toggle('bg-slate-900',!isBlockMode); if(dentistCalendar) dentistCalendar.refetchEvents(); }
 
-    function toggleBlockMode() {
-        isBlockMode = !isBlockMode;
-        const btn = document.getElementById('btn-block-mode');
-        btn.innerText = `Modo Bloqueio: ${isBlockMode ? 'ON' : 'OFF'}`;
-        btn.classList.toggle('bg-red-600', isBlockMode);
-        btn.classList.toggle('bg-slate-900', !isBlockMode);
-        if (dentistCalendar) dentistCalendar.refetchEvents();
+    // ========================= NPS =========================
+    function updateNPSChart() {
+        const responses = db.npsResponses || [];
+        const avg = responses.length ? (responses.reduce((a,b)=>a+b.score,0)/responses.length).toFixed(1) : 0;
+        document.getElementById('nps-score').innerText = avg;
+        const counts = [0,0,0];
+        responses.forEach(r=>{ if(r.score<=6) counts[0]++; else if(r.score<=8) counts[1]++; else counts[2]++; });
+        const ctx = document.getElementById('chart-nps').getContext('2d');
+        if(npsChart) npsChart.destroy();
+        npsChart = new Chart(ctx, { type:'bar', data:{ labels:['Detratores (0-6)','Neutros (7-8)','Promotores (9-10)'], datasets:[{ label:'Respostas', data:counts, backgroundColor:['#ef4444','#f59e0b','#10b981'] }] } });
     }
 
-    // ======================== WHATSAPP (MOCK) ========================
-    function testWhatsApp() {
-        const instance = document.getElementById('wa-instance').value.trim();
-        const token = document.getElementById('wa-token').value.trim();
-        const number = document.getElementById('wa-number').value.trim();
-        const statusDiv = document.getElementById('wa-status');
-        if (!instance || !token || !number) {
-            statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Preencha todos os campos';
-            statusDiv.classList.add('text-red-500');
-            return;
-        }
-        statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando conexão...';
-        setTimeout(() => {
-            statusDiv.innerHTML = '<i class="fab fa-whatsapp"></i> Conexão bem-sucedida! Enviar mensagens em breve.';
-            statusDiv.classList.remove('text-red-500');
-            statusDiv.classList.add('text-green-600');
-            db.config.whatsapp = { instance, token, number };
-            saveAndPush();
-        }, 1500);
-    }
-
-    // ======================== INICIALIZAÇÃO ========================
-    if (localStorage.getItem('odonto_v43')) {
-        try {
-            db = JSON.parse(localStorage.getItem('odonto_v43'));
-        } catch(e) {}
-    }
+    // ========================= INICIALIZAÇÃO =========================
+    if(localStorage.getItem('odonto_v50')) { try { db = JSON.parse(localStorage.getItem('odonto_v50')); } catch(e){} }
     ensureDbStructure();
     renderAll();
+    window.addEventListener('load', () => setTimeout(() => syncCloud(), 500));
 </script>
 </body>
 </html>
