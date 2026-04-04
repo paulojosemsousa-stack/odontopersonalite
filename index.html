@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>OdontoPersonalité v7.2 | Orçamentos</title>
+    <title>OdontoPersonalité v8.0 | Supabase</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
@@ -45,22 +46,33 @@
         }
         .whatsapp-desktop-btn { background: #25D366; color: white; transition: all 0.2s; }
         .whatsapp-desktop-btn:hover { background: #128C7E; }
+        .loading-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     </style>
 </head>
 <body>
 
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="spinner mb-4"></div>
+    <p class="text-white text-sm font-bold" id="loading-msg">Conectando ao banco de dados...</p>
+</div>
+
 <!-- TELA DE LOGIN -->
-<div id="view-login" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center p-4">
+<div id="view-login" class="fixed inset-0 bg-slate-950 z-[100] flex items-center justify-center p-4 hidden">
     <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm space-y-5">
         <div class="text-center">
             <h1 class="text-2xl font-black">Odonto<span class="text-blue-600">Personalité</span></h1>
-            <p class="text-[10px] font-black text-slate-400">v7.2 | Orçamentos</p>
+            <p class="text-[10px] font-black text-slate-400">v8.0 | Cloud + Supabase</p>
         </div>
         <div class="space-y-3">
             <input type="text" id="login-user" placeholder="Usuário" class="w-full p-3 border rounded-xl bg-slate-50 focus:bg-white">
-            <input type="password" id="login-pass" placeholder="Senha" class="w-full p-3 border rounded-xl bg-slate-50 focus:bg-white">
-            <button onclick="doLogin()" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold active:scale-95 transition-all">ENTRAR</button>
+            <input type="password" id="login-pass" placeholder="Senha" class="w-full p-3 border rounded-xl bg-slate-50 focus:bg-white" onkeydown="if(event.key==='Enter') doLogin()">
+            <button onclick="doLogin()" id="btn-login" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold active:scale-95 transition-all">ENTRAR</button>
         </div>
+        <div id="login-error" class="text-center text-xs text-red-500 hidden"></div>
         <div class="text-center text-[10px] text-slate-400">
             admin / admin | joao.silva / 12345 | paciente.teste / 12345
         </div>
@@ -75,7 +87,12 @@
 <!-- TOP BAR -->
 <div id="top-bar" class="hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-3 flex justify-between items-center">
     <span class="font-black text-lg">Odonto<span class="text-blue-600">Personalité</span></span>
-    <div id="sync-status" class="flex items-center gap-1 text-[10px]"><i class="fas fa-circle text-[6px]"></i> <span>Local</span></div>
+    <div class="flex items-center gap-3">
+        <div id="sync-status" class="flex items-center gap-1 text-[10px] font-black text-emerald-500">
+            <span class="sync-dot bg-emerald-400"></span> <span>Supabase</span>
+        </div>
+        <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-red-500"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
 </div>
 
 <main id="main-content" class="max-w-7xl mx-auto px-3 pb-20 pt-16 hidden">
@@ -128,7 +145,7 @@
             </select>
             <div id="desktop-config" class="mt-3 p-3 bg-green-50 rounded-lg">
                 <p class="text-sm font-bold text-green-700"><i class="fab fa-whatsapp"></i> WhatsApp Desktop</p>
-                <p class="text-xs text-gray-600 mt-1">Clique no botão abaixo para enviar mensagem via WhatsApp do seu computador. O aplicativo precisa estar instalado e aberto.</p>
+                <p class="text-xs text-gray-600 mt-1">Clique no botão abaixo para enviar mensagem via WhatsApp do seu computador.</p>
                 <button onclick="enviarWhatsAppDesktop()" class="w-full whatsapp-desktop-btn py-2 rounded-lg mt-2 font-bold"><i class="fab fa-whatsapp"></i> Testar WhatsApp Desktop</button>
             </div>
             <div id="api-config" class="hidden">
@@ -189,20 +206,11 @@
                 <input type="text" id="filter-paciente" placeholder="Paciente" class="p-2 border rounded-lg">
             </div>
             <button onclick="filterBudgets()" class="w-full bg-blue-600 text-white py-2 rounded-xl mb-4">Filtrar</button>
-            
-            <!-- Tabela de Orçamentos -->
             <div class="overflow-x-auto">
                 <table class="table-orcamentos w-full">
                     <thead>
                         <tr>
-                            <th>Nº</th>
-                            <th>Data</th>
-                            <th>Paciente</th>
-                            <th>Dentista</th>
-                            <th>Procedimentos</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Ações</th>
+                            <th>Nº</th><th>Data</th><th>Paciente</th><th>Dentista</th><th>Procedimentos</th><th>Total</th><th>Status</th><th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="budgets-table-body">
@@ -214,7 +222,7 @@
     </section>
 </main>
 
-<!-- MODAL DE ORÇAMENTO COM ATESTADO -->
+<!-- MODAL DE ORÇAMENTO -->
 <div id="orcamento-modal" class="modal hidden">
     <div class="modal-content">
         <div class="flex justify-between items-center mb-4">
@@ -222,17 +230,14 @@
             <button onclick="closeModal()" class="text-slate-400 text-2xl">&times;</button>
         </div>
         <div id="modal-paciente-info" class="bg-slate-50 p-3 rounded-xl mb-4"></div>
-        
         <div class="mb-4">
-            <label class="font-bold text-sm block mb-1">CID (Classificação Internacional de Doenças)</label>
+            <label class="font-bold text-sm block mb-1">CID</label>
             <input type="text" id="cid-code" placeholder="Ex: K02.0 - Cárie dentária" class="w-full p-2 border rounded-lg">
         </div>
-        
         <div class="mb-4">
             <label class="font-bold text-sm block mb-1">Diagnóstico / Justificativa para RH</label>
-            <textarea id="diagnostico" rows="3" placeholder="Descreva o diagnóstico, necessidade do tratamento e justificativa para afastamento..." class="w-full p-2 border rounded-lg"></textarea>
+            <textarea id="diagnostico" rows="3" placeholder="Descreva o diagnóstico..." class="w-full p-2 border rounded-lg"></textarea>
         </div>
-        
         <div class="grid grid-cols-2 gap-3 mb-4">
             <div>
                 <label class="font-bold text-sm block mb-1">Dias de Afastamento</label>
@@ -240,15 +245,13 @@
             </div>
             <div>
                 <label class="font-bold text-sm block mb-1">Recomendações Pós-Operatórias</label>
-                <input type="text" id="recomendacoes" placeholder="Ex: Repouso, dieta líquida..." class="w-full p-2 border rounded-lg">
+                <input type="text" id="recomendacoes" placeholder="Ex: Repouso..." class="w-full p-2 border rounded-lg">
             </div>
         </div>
-        
         <div id="orcamentos-salvos" class="mb-4">
             <h3 class="font-bold text-sm mb-2">Orçamentos anteriores</h3>
             <div id="lista-orcamentos" class="max-h-40 overflow-y-auto"></div>
         </div>
-        
         <div id="procedimentos-selecionados" class="space-y-2 mb-4 max-h-60 overflow-y-auto"></div>
         <div class="flex gap-2 mb-4">
             <select id="add-procedimento-select" class="flex-1 p-2 border rounded-lg">
@@ -269,1238 +272,1350 @@
 </div>
 
 <script>
-    // ==================== CONFIGURAÇÃO GLOBAL ====================
-    let db = { users: [], appointments: [], blocks: [], npsResponses: [], config: { whatsapp: { provider: "desktop", instance: "", token: "", device: "", session: "" }, permissions: {} }, procedimentos: [], orcamentos: [] };
-    let currentUser = null, selectedDate = null, selectedTime = null, isBlockMode = false;
-    let dentistCalendar = null, npsChart = null, currentDentistForCalendar = null;
-    let clientCalendar = null;
-    let currentOrcamento = { 
-        pacienteId: null, pacienteNome: null, pacienteCpf: null, pacienteWhatsapp: null, 
-        dentistaNome: null, dentistaCro: null, data: null, hora: null, itens: [],
-        cid: "", diagnostico: "", diasAfastamento: 1, recomendacoes: "", status: "ativo"
-    };
-    let currentAppointmentId = null;
-    let selectedClientProcedures = [];
-    let currentEditingOrcamentoId = null;
+// ==================== SUPABASE CONFIG ====================
+const SUPABASE_URL = 'https://ohmwmyxlrqaydvxhihnv.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_1PvwLJYujxsSr51sgQXeYA_ZYy2iLu_';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const MODULES = {
-        client: { name: "Cliente", icon: "fa-calendar-check", actions: ["agendar"] },
-        manager: { name: "Fluxo", icon: "fa-tasks", actions: ["mover_cards"] },
-        dentist: { name: "Agenda", icon: "fa-tooth", actions: ["ver_agenda", "bloquear_horarios", "fazer_orcamento"] },
-        nps: { name: "NPS", icon: "fa-chart-line", actions: ["ver_grafico"] },
-        budgets: { name: "Orçamentos", icon: "fa-folder-open", actions: ["consultar_orcamentos"] },
-        settings: { name: "Ajustes", icon: "fa-cog", actions: ["gerenciar_usuarios", "configurar_whatsapp", "configurar_permissoes", "gerenciar_procedimentos"] }
-    };
-    
-    const DEFAULT_PERMISSIONS = {
-        owner: { client: true, manager: true, dentist: true, nps: true, budgets: true, settings: true, actions: { agendar: true, mover_cards: true, ver_agenda: true, bloquear_horarios: true, ver_grafico: true, consultar_orcamentos: true, gerenciar_usuarios: true, configurar_whatsapp: true, configurar_permissoes: true, gerenciar_procedimentos: true, fazer_orcamento: true } },
-        manager: { client: false, manager: true, dentist: true, nps: true, budgets: true, settings: true, actions: { agendar: false, mover_cards: true, ver_agenda: true, bloquear_horarios: false, ver_grafico: true, consultar_orcamentos: true, gerenciar_usuarios: true, configurar_whatsapp: true, configurar_permissoes: true, gerenciar_procedimentos: false, fazer_orcamento: false } },
-        dentist: { client: false, manager: false, dentist: true, nps: false, budgets: false, settings: false, actions: { agendar: false, mover_cards: false, ver_agenda: true, bloquear_horarios: true, ver_grafico: false, consultar_orcamentos: false, gerenciar_usuarios: false, configurar_whatsapp: false, configurar_permissoes: false, gerenciar_procedimentos: false, fazer_orcamento: true } },
-        client: { client: true, manager: false, dentist: false, nps: false, budgets: false, settings: false, actions: { agendar: true, mover_cards: false, ver_agenda: false, bloquear_horarios: false, ver_grafico: false, consultar_orcamentos: false, gerenciar_usuarios: false, configurar_whatsapp: false, configurar_permissoes: false, gerenciar_procedimentos: false, fazer_orcamento: false } }
-    };
+// ==================== ESTADO GLOBAL ====================
+let db = { users: [], appointments: [], blocks: [], npsResponses: [], config: { whatsapp: { provider: "desktop", instance: "", token: "", device: "", session: "" }, permissions: {} }, procedimentos: [], orcamentos: [] };
+let currentUser = null, selectedDate = null, selectedTime = null, isBlockMode = false;
+let dentistCalendar = null, npsChart = null, currentDentistForCalendar = null;
+let clientCalendar = null;
+let currentOrcamento = { pacienteId: null, pacienteNome: null, pacienteCpf: null, pacienteWhatsapp: null, dentistaNome: null, dentistaCro: null, data: null, hora: null, itens: [], cid: "", diagnostico: "", diasAfastamento: 1, recomendacoes: "", status: "ativo" };
+let currentAppointmentId = null;
+let selectedClientProcedures = [];
+let currentEditingOrcamentoId = null;
 
-    // 5 Procedimentos padrão para teste
-    const DEFAULT_PROCEDIMENTOS = [
-        { id: 1, nome: "Consulta Inicial", valor: 150.00 },
-        { id: 2, nome: "Limpeza (Profilaxia)", valor: 200.00 },
-        { id: 3, nome: "Restauração em Resina", valor: 250.00 },
-        { id: 4, nome: "Tratamento de Canal", valor: 500.00 },
-        { id: 5, nome: "Extração de Dente", valor: 180.00 }
-    ];
+const MODULES = {
+    client: { name: "Cliente", icon: "fa-calendar-check", actions: ["agendar"] },
+    manager: { name: "Fluxo", icon: "fa-tasks", actions: ["mover_cards"] },
+    dentist: { name: "Agenda", icon: "fa-tooth", actions: ["ver_agenda", "bloquear_horarios", "fazer_orcamento"] },
+    nps: { name: "NPS", icon: "fa-chart-line", actions: ["ver_grafico"] },
+    budgets: { name: "Orçamentos", icon: "fa-folder-open", actions: ["consultar_orcamentos"] },
+    settings: { name: "Ajustes", icon: "fa-cog", actions: ["gerenciar_usuarios", "configurar_whatsapp", "configurar_permissoes", "gerenciar_procedimentos"] }
+};
 
-    function ensureDbStructure() {
-        if (!db.users) db.users = [];
-        if (!db.appointments) db.appointments = [];
-        if (!db.blocks) db.blocks = [];
-        if (!db.npsResponses) db.npsResponses = [];
-        if (!db.config) db.config = {};
-        if (!db.config.whatsapp) db.config.whatsapp = { provider: "desktop", instance: "", token: "", device: "", session: "" };
+const DEFAULT_PERMISSIONS = {
+    owner:   { client: true, manager: true, dentist: true, nps: true, budgets: true, settings: true, actions: { agendar: true, mover_cards: true, ver_agenda: true, bloquear_horarios: true, ver_grafico: true, consultar_orcamentos: true, gerenciar_usuarios: true, configurar_whatsapp: true, configurar_permissoes: true, gerenciar_procedimentos: true, fazer_orcamento: true } },
+    manager: { client: false, manager: true, dentist: true, nps: true, budgets: true, settings: true, actions: { agendar: false, mover_cards: true, ver_agenda: true, bloquear_horarios: false, ver_grafico: true, consultar_orcamentos: true, gerenciar_usuarios: true, configurar_whatsapp: true, configurar_permissoes: true, gerenciar_procedimentos: false, fazer_orcamento: false } },
+    dentist: { client: false, manager: false, dentist: true, nps: false, budgets: false, settings: false, actions: { agendar: false, mover_cards: false, ver_agenda: true, bloquear_horarios: true, ver_grafico: false, consultar_orcamentos: false, gerenciar_usuarios: false, configurar_whatsapp: false, configurar_permissoes: false, gerenciar_procedimentos: false, fazer_orcamento: true } },
+    client:  { client: true, manager: false, dentist: false, nps: false, budgets: false, settings: false, actions: { agendar: true, mover_cards: false, ver_agenda: false, bloquear_horarios: false, ver_grafico: false, consultar_orcamentos: false, gerenciar_usuarios: false, configurar_whatsapp: false, configurar_permissoes: false, gerenciar_procedimentos: false, fazer_orcamento: false } }
+};
+
+const DEFAULT_PROCEDIMENTOS = [
+    { id: 1, nome: "Consulta Inicial", valor: 150.00 },
+    { id: 2, nome: "Limpeza (Profilaxia)", valor: 200.00 },
+    { id: 3, nome: "Restauração em Resina", valor: 250.00 },
+    { id: 4, nome: "Tratamento de Canal", valor: 500.00 },
+    { id: 5, nome: "Extração de Dente", valor: 180.00 }
+];
+
+// ==================== SUPABASE: CARREGAR DADOS ====================
+async function loadFromSupabase() {
+    setLoading(true, "Carregando dados do servidor...");
+    try {
+        // Carregar usuários
+        const { data: users, error: usersErr } = await sb.from('odonto_users').select('*');
+        if (usersErr) throw usersErr;
+        
+        // Carregar agendamentos
+        const { data: appointments, error: appErr } = await sb.from('odonto_appointments').select('*');
+        if (appErr) throw appErr;
+
+        // Carregar bloqueios
+        const { data: blocks, error: blocksErr } = await sb.from('odonto_blocks').select('*');
+        if (blocksErr) throw blocksErr;
+
+        // Carregar NPS
+        const { data: npsResponses, error: npsErr } = await sb.from('odonto_nps').select('*');
+        if (npsErr) throw npsErr;
+
+        // Carregar procedimentos
+        const { data: procedimentos, error: procErr } = await sb.from('odonto_procedimentos').select('*');
+        if (procErr) throw procErr;
+
+        // Carregar orçamentos
+        const { data: orcamentos, error: orcErr } = await sb.from('odonto_orcamentos').select('*');
+        if (orcErr) throw orcErr;
+
+        // Carregar config
+        const { data: configRows } = await sb.from('odonto_config').select('*').eq('id', 1).maybeSingle();
+
+        db.users = (users || []).map(u => ({ ...u, name: (u.name || '').trim(), cro: u.cro || '' }));
+        db.appointments = (appointments || []).map(a => ({ ...a, dentist: (a.dentist || '').trim(), selectedProcedures: a.selected_procedures || [] }));
+        db.blocks = (blocks || []).map(b => ({ ...b, dentist: (b.dentist || '').trim() }));
+        db.npsResponses = npsResponses || [];
+        db.procedimentos = procedimentos && procedimentos.length > 0 ? procedimentos : [...DEFAULT_PROCEDIMENTOS];
+        db.orcamentos = (orcamentos || []).map(o => ({ ...o, itens: o.itens || [], status: o.status || 'ativo' }));
+
+        if (configRows) {
+            db.config = configRows.data || db.config;
+        }
         if (!db.config.permissions) db.config.permissions = JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
-        if (!db.procedimentos || db.procedimentos.length === 0) db.procedimentos = [...DEFAULT_PROCEDIMENTOS];
-        if (!db.orcamentos) db.orcamentos = [];
-        
-        // Criar alguns orçamentos de exemplo se estiver vazio
-        if (db.orcamentos.length === 0 && db.users.length > 0) {
-            const pacienteTeste = db.users.find(u => u.role === 'client');
-            const dentistaTeste = db.users.find(u => u.role === 'dentist');
-            if (pacienteTeste && dentistaTeste) {
-                db.orcamentos.push({
-                    id: Date.now(),
-                    numero: "000001",
-                    pacienteId: pacienteTeste.id,
-                    pacienteNome: pacienteTeste.name,
-                    pacienteCpf: pacienteTeste.cpf,
-                    pacienteWhatsapp: pacienteTeste.whatsapp,
-                    dentistaNome: dentistaTeste.name,
-                    dentistaCro: dentistaTeste.cro,
-                    data: new Date().toISOString().split('T')[0],
-                    hora: "10:00",
-                    itens: [{ nome: "Consulta Inicial", valor: 150.00 }, { nome: "Limpeza", valor: 200.00 }],
-                    cid: "K02.0 - Cárie dentária",
-                    diagnostico: "Paciente apresenta cárie no dente 46, necessidade de restauração",
-                    diasAfastamento: 1,
-                    recomendacoes: "Evitar alimentos duros nas primeiras 24h",
-                    status: "ativo",
-                    dataCriacao: new Date().toISOString()
-                });
-            }
-        }
-        
+        if (!db.config.whatsapp) db.config.whatsapp = { provider: "desktop", instance: "", token: "", device: "", session: "" };
+
+        // Seed usuários padrão se vazio
         if (db.users.length === 0) {
-            db.users = [
-                { id: 1, name: "Admin Master", cpf: "00000000000", role: "owner", login: "admin", pass: "admin", whatsapp: "", cro: "" },
-                { id: 2, name: "Dr. João Silva", cpf: "11111111111", role: "dentist", login: "joao.silva", pass: "12345", whatsapp: "5511999999999", cro: "SP-12345" },
-                { id: 3, name: "Gerente Carla", cpf: "22222222222", role: "manager", login: "gerente", pass: "12345", whatsapp: "", cro: "" },
-                { id: 4, name: "Maria Oliveira", cpf: "33333333333", role: "client", login: "paciente.teste", pass: "12345", whatsapp: "5511988888888", cro: "" }
-            ];
+            await seedDefaultUsers();
         }
-        db.users.forEach(u => { u.name = u.name.trim(); if (!u.cro) u.cro = ""; });
-        db.appointments.forEach(a => { a.dentist = a.dentist.trim(); if (!a.selectedProcedures) a.selectedProcedures = []; });
-        db.blocks.forEach(b => { b.dentist = b.dentist.trim(); });
-        db.orcamentos.forEach(o => { if (!o.status) o.status = "ativo"; });
-    }
+        // Seed procedimentos padrão se vazio
+        if (db.procedimentos.length === 0) {
+            await seedDefaultProcedimentos();
+        }
 
-    // ==================== PROCEDIMENTOS ====================
-    function renderProcedimentosList() {
-        const container = document.getElementById('procedimentos-list');
-        if (!container) return;
-        container.innerHTML = db.procedimentos.map(p => `
-            <div class="procedimento-item">
-                <span class="flex-1">${p.nome}</span>
-                <span class="font-bold text-emerald-600">R$ ${p.valor.toFixed(2)}</span>
-                <button onclick="removeProcedimento(${p.id})" class="text-red-500 ml-2"><i class="fas fa-trash"></i></button>
-            </div>
-        `).join('');
+        updateSyncStatus(true, "Supabase");
+        setLoading(false);
+        showLoginScreen();
+    } catch(e) {
+        console.error('Supabase error:', e);
+        // Fallback para localStorage
+        const saved = localStorage.getItem('odonto_data');
+        if (saved) {
+            try { db = JSON.parse(saved); } catch(e2) {}
+        }
+        ensureDbStructure();
+        updateSyncStatus(false, "Offline");
+        setLoading(false);
+        showLoginScreen();
+        showToast('⚠️ Modo offline — dados do cache local', 'warning');
     }
+}
 
-    function addProcedimento() {
-        const nome = document.getElementById('new-proc-name').value.trim();
-        const valor = parseFloat(document.getElementById('new-proc-value').value);
-        if (!nome || isNaN(valor)) return alert("Preencha nome e valor");
-        db.procedimentos.push({ id: Date.now(), nome, valor });
-        document.getElementById('new-proc-name').value = '';
-        document.getElementById('new-proc-value').value = '';
+async function seedDefaultUsers() {
+    const defaults = [
+        { name: "Admin Master", cpf: "00000000000", role: "owner", login: "admin", pass: "admin", whatsapp: "", cro: "" },
+        { name: "Dr. João Silva", cpf: "11111111111", role: "dentist", login: "joao.silva", pass: "12345", whatsapp: "5511999999999", cro: "SP-12345" },
+        { name: "Gerente Carla", cpf: "22222222222", role: "manager", login: "gerente", pass: "12345", whatsapp: "", cro: "" },
+        { name: "Maria Oliveira", cpf: "33333333333", role: "client", login: "paciente.teste", pass: "12345", whatsapp: "5511988888888", cro: "" }
+    ];
+    const { data } = await sb.from('odonto_users').insert(defaults).select();
+    if (data) db.users = data.map(u => ({ ...u, name: u.name.trim(), cro: u.cro || '' }));
+}
+
+async function seedDefaultProcedimentos() {
+    const { data } = await sb.from('odonto_procedimentos').insert(DEFAULT_PROCEDIMENTOS.map(p => ({ nome: p.nome, valor: p.valor }))).select();
+    if (data) db.procedimentos = data;
+}
+
+// ==================== SUPABASE: SALVAR ====================
+async function saveUsers() {
+    localStorage.setItem('odonto_data', JSON.stringify(db));
+}
+
+async function upsertUser(user) {
+    const payload = { name: user.name, cpf: user.cpf, role: user.role, cro: user.cro, login: user.login, pass: user.pass, whatsapp: user.whatsapp };
+    if (user.id && typeof user.id === 'number' && user.id > 1000000000000) {
+        // Novo usuário (id gerado localmente)
+        const { data, error } = await sb.from('odonto_users').insert([payload]).select().single();
+        if (error) throw error;
+        return data;
+    } else if (user.id) {
+        const { data, error } = await sb.from('odonto_users').update(payload).eq('id', user.id).select().single();
+        if (error) throw error;
+        return data;
+    } else {
+        const { data, error } = await sb.from('odonto_users').insert([payload]).select().single();
+        if (error) throw error;
+        return data;
+    }
+}
+
+async function deleteUserFromDB(id) {
+    await sb.from('odonto_users').delete().eq('id', id);
+}
+
+async function upsertAppointment(app) {
+    const payload = {
+        dentist: app.dentist,
+        date: app.date,
+        time: app.time,
+        status: app.status,
+        patient_id: app.patientId,
+        selected_procedures: app.selectedProcedures || []
+    };
+    if (app.id && typeof app.id === 'number' && app.id > 1000000000000) {
+        const { data, error } = await sb.from('odonto_appointments').insert([payload]).select().single();
+        if (error) throw error;
+        return { ...data, patientId: data.patient_id, selectedProcedures: data.selected_procedures, dentist: (data.dentist||'').trim() };
+    } else if (app.id) {
+        const { data, error } = await sb.from('odonto_appointments').update(payload).eq('id', app.id).select().single();
+        if (error) throw error;
+        return { ...data, patientId: data.patient_id, selectedProcedures: data.selected_procedures, dentist: (data.dentist||'').trim() };
+    }
+}
+
+async function upsertBlock(block) {
+    const payload = { dentist: block.dentist, date: block.date, time: block.time };
+    if (block.id && typeof block.id === 'number' && block.id > 1000000000000) {
+        const { data, error } = await sb.from('odonto_blocks').insert([payload]).select().single();
+        if (error) throw error;
+        return { ...data, dentist: (data.dentist||'').trim() };
+    }
+    return block;
+}
+
+async function deleteBlockFromDB(id) {
+    await sb.from('odonto_blocks').delete().eq('id', id);
+}
+
+async function upsertProcedimento(proc) {
+    const payload = { nome: proc.nome, valor: proc.valor };
+    if (proc.id && typeof proc.id === 'number' && proc.id > 1000000000000) {
+        const { data, error } = await sb.from('odonto_procedimentos').insert([payload]).select().single();
+        if (error) throw error;
+        return data;
+    } else if (proc.id) {
+        const { data, error } = await sb.from('odonto_procedimentos').update(payload).eq('id', proc.id).select().single();
+        if (error) throw error;
+        return data;
+    }
+}
+
+async function deleteProcedimentoFromDB(id) {
+    await sb.from('odonto_procedimentos').delete().eq('id', id);
+}
+
+async function upsertOrcamento(orc) {
+    const payload = {
+        numero: orc.numero,
+        paciente_id: orc.pacienteId,
+        paciente_nome: orc.pacienteNome,
+        paciente_cpf: orc.pacienteCpf,
+        paciente_whatsapp: orc.pacienteWhatsapp,
+        dentista_nome: orc.dentistaNome,
+        dentista_cro: orc.dentistaCro,
+        data: orc.data,
+        hora: orc.hora,
+        itens: orc.itens,
+        cid: orc.cid,
+        diagnostico: orc.diagnostico,
+        dias_afastamento: orc.diasAfastamento,
+        recomendacoes: orc.recomendacoes,
+        status: orc.status,
+        appointment_id: orc.appointmentId,
+        data_criacao: orc.dataCriacao
+    };
+    if (orc.id && typeof orc.id === 'number' && orc.id > 1000000000000) {
+        const { data, error } = await sb.from('odonto_orcamentos').insert([payload]).select().single();
+        if (error) throw error;
+        return normalizeOrcamento(data);
+    } else if (orc.id) {
+        const { data, error } = await sb.from('odonto_orcamentos').update(payload).eq('id', orc.id).select().single();
+        if (error) throw error;
+        return normalizeOrcamento(data);
+    }
+}
+
+function normalizeOrcamento(o) {
+    return {
+        ...o,
+        pacienteId: o.paciente_id,
+        pacienteNome: o.paciente_nome,
+        pacienteCpf: o.paciente_cpf,
+        pacienteWhatsapp: o.paciente_whatsapp,
+        dentistaNome: o.dentista_nome,
+        dentistaCro: o.dentista_cro,
+        hora: o.hora,
+        itens: o.itens || [],
+        diasAfastamento: o.dias_afastamento,
+        recomendacoes: o.recomendacoes,
+        appointmentId: o.appointment_id,
+        dataCriacao: o.data_criacao,
+        status: o.status || 'ativo'
+    };
+}
+
+async function upsertNps(npsEntry) {
+    const payload = { patient_id: npsEntry.patientId, appointment_id: npsEntry.appointmentId, score: npsEntry.score, date: npsEntry.date };
+    const { data, error } = await sb.from('odonto_nps').insert([payload]).select().single();
+    if (error) throw error;
+    return data;
+}
+
+async function saveConfig() {
+    await sb.from('odonto_config').upsert([{ id: 1, data: db.config }]);
+    localStorage.setItem('odonto_data', JSON.stringify(db));
+}
+
+// Fallback local save
+function saveToLocal() {
+    localStorage.setItem('odonto_data', JSON.stringify(db));
+    updateSyncStatus(true, "Salvo");
+}
+
+// ==================== HELPERS ====================
+function setLoading(show, msg = '') {
+    const overlay = document.getElementById('loading-overlay');
+    const msgEl = document.getElementById('loading-msg');
+    overlay.style.display = show ? 'flex' : 'none';
+    if (msg) msgEl.textContent = msg;
+}
+
+function showLoginScreen() {
+    document.getElementById('view-login').classList.remove('hidden');
+}
+
+function updateSyncStatus(on, txt) {
+    const s = document.getElementById('sync-status');
+    if (s) {
+        const dot = s.querySelector('.sync-dot');
+        const span = s.querySelector('span:last-child');
+        if (dot) dot.className = `sync-dot ${on ? 'bg-emerald-400' : 'bg-red-400'}`;
+        if (span) span.textContent = txt;
+        s.className = `flex items-center gap-1 text-[10px] font-black ${on ? 'text-emerald-500' : 'text-red-500'}`;
+    }
+}
+
+function showToast(msg, type = 'success') {
+    const t = document.createElement('div');
+    const colors = { success: 'bg-emerald-600', warning: 'bg-amber-500', error: 'bg-red-600' };
+    t.className = `fixed bottom-24 left-1/2 -translate-x-1/2 ${colors[type]||colors.success} text-white text-xs font-bold px-4 py-2 rounded-full z-[300] shadow-lg`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+function ensureDbStructure() {
+    if (!db.users) db.users = [];
+    if (!db.appointments) db.appointments = [];
+    if (!db.blocks) db.blocks = [];
+    if (!db.npsResponses) db.npsResponses = [];
+    if (!db.config) db.config = {};
+    if (!db.config.whatsapp) db.config.whatsapp = { provider: "desktop", instance: "", token: "", device: "", session: "" };
+    if (!db.config.permissions) db.config.permissions = JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
+    if (!db.procedimentos || db.procedimentos.length === 0) db.procedimentos = [...DEFAULT_PROCEDIMENTOS];
+    if (!db.orcamentos) db.orcamentos = [];
+    db.users.forEach(u => { u.name = (u.name||'').trim(); if (!u.cro) u.cro = ""; });
+    db.appointments.forEach(a => { a.dentist = (a.dentist||'').trim(); if (!a.selectedProcedures) a.selectedProcedures = []; });
+    db.blocks.forEach(b => { b.dentist = (b.dentist||'').trim(); });
+    db.orcamentos.forEach(o => { if (!o.status) o.status = "ativo"; });
+}
+
+// ==================== LOGIN ====================
+async function doLogin() {
+    const btn = document.getElementById('btn-login');
+    btn.textContent = 'Verificando...';
+    btn.disabled = true;
+    const u = document.getElementById('login-user').value.trim();
+    const p = document.getElementById('login-pass').value.trim();
+    
+    // Tentar buscar usuário direto do Supabase
+    try {
+        const { data: users } = await sb.from('odonto_users').select('*').eq('login', u).eq('pass', p);
+        if (users && users.length > 0) {
+            const found = users[0];
+            found.name = (found.name||'').trim();
+            found.cro = found.cro || '';
+            // Atualizar db.users com dados frescos
+            const idx = db.users.findIndex(x => x.id === found.id);
+            if (idx >= 0) db.users[idx] = { ...db.users[idx], ...found };
+            else db.users.push(found);
+            currentUser = found;
+            start();
+            btn.textContent = 'ENTRAR';
+            btn.disabled = false;
+            return;
+        }
+    } catch(e) {
+        console.warn('Supabase login fallback to local:', e);
+    }
+    
+    // Fallback para dados em memória
+    const found = db.users.find(x => x.login === u && x.pass === p);
+    if (found) {
+        currentUser = found;
+        start();
+    } else {
+        const errEl = document.getElementById('login-error');
+        errEl.textContent = 'Usuário ou senha inválidos.';
+        errEl.classList.remove('hidden');
+        setTimeout(() => errEl.classList.add('hidden'), 3000);
+    }
+    btn.textContent = 'ENTRAR';
+    btn.disabled = false;
+}
+
+function doLogout() {
+    currentUser = null;
+    document.getElementById('view-login').classList.remove('hidden');
+    document.getElementById('main-nav').classList.add('hidden');
+    document.getElementById('top-bar').classList.add('hidden');
+    document.getElementById('main-content').classList.add('hidden');
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+}
+
+function start() {
+    document.getElementById('view-login').classList.add('hidden');
+    document.getElementById('main-nav').classList.remove('hidden');
+    document.getElementById('top-bar').classList.remove('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+    renderAll();
+    buildBottomNav();
+    setupWhatsAppConfig();
+    const firstTab = Object.keys(MODULES).find(mod => hasPermission(mod));
+    switchTab(firstTab || 'client');
+}
+
+// ==================== PROCEDIMENTOS ====================
+function renderProcedimentosList() {
+    const container = document.getElementById('procedimentos-list');
+    if (!container) return;
+    container.innerHTML = db.procedimentos.map(p => `
+        <div class="procedimento-item">
+            <span class="flex-1">${p.nome}</span>
+            <span class="font-bold text-emerald-600">R$ ${parseFloat(p.valor).toFixed(2)}</span>
+            <button onclick="removeProcedimento(${p.id})" class="text-red-500 ml-2"><i class="fas fa-trash"></i></button>
+        </div>
+    `).join('');
+}
+
+async function addProcedimento() {
+    const nome = document.getElementById('new-proc-name').value.trim();
+    const valor = parseFloat(document.getElementById('new-proc-value').value);
+    if (!nome || isNaN(valor)) return alert("Preencha nome e valor");
+    const tempId = Date.now();
+    const proc = { id: tempId, nome, valor };
+    db.procedimentos.push(proc);
+    renderProcedimentosList();
+    document.getElementById('new-proc-name').value = '';
+    document.getElementById('new-proc-value').value = '';
+    try {
+        const saved = await upsertProcedimento(proc);
+        if (saved) {
+            const idx = db.procedimentos.findIndex(p => p.id === tempId);
+            if (idx >= 0) db.procedimentos[idx] = saved;
+        }
+        showToast('✅ Procedimento salvo!');
+    } catch(e) {
+        showToast('⚠️ Erro ao salvar procedimento', 'error');
+    }
+    saveToLocal();
+    loadProcedimentosSelect();
+    loadClientProcedimentos();
+}
+
+async function removeProcedimento(id) {
+    if (confirm("Remover procedimento?")) {
+        db.procedimentos = db.procedimentos.filter(p => p.id !== id);
         renderProcedimentosList();
+        try {
+            await deleteProcedimentoFromDB(id);
+            showToast('🗑️ Procedimento removido');
+        } catch(e) {}
         saveToLocal();
         loadProcedimentosSelect();
         loadClientProcedimentos();
     }
+}
 
-    function removeProcedimento(id) {
-        if (confirm("Remover procedimento?")) {
-            db.procedimentos = db.procedimentos.filter(p => p.id !== id);
-            renderProcedimentosList();
-            saveToLocal();
-            loadProcedimentosSelect();
-            loadClientProcedimentos();
-        }
+function loadProcedimentosSelect() {
+    const select = document.getElementById('add-procedimento-select');
+    if (select) {
+        select.innerHTML = '<option value="">Selecione um procedimento</option>' +
+            db.procedimentos.map(p => `<option value="${p.id}" data-nome="${p.nome}" data-valor="${parseFloat(p.valor).toFixed(2)}">${p.nome} - R$ ${parseFloat(p.valor).toFixed(2)}</option>`).join('');
     }
+}
 
-    function loadProcedimentosSelect() {
-        const select = document.getElementById('add-procedimento-select');
-        if (select) {
-            select.innerHTML = '<option value="">Selecione um procedimento</option>' + 
-                db.procedimentos.map(p => `<option value="${p.id}" data-nome="${p.nome}" data-valor="${p.valor.toFixed(2)}">${p.nome} - R$ ${p.valor.toFixed(2)}</option>`).join('');
-        }
+function loadClientProcedimentos() {
+    const container = document.getElementById('client-procedimentos');
+    if (!container) return;
+    container.innerHTML = db.procedimentos.map(p => `
+        <label class="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
+            <input type="checkbox" class="proc-checkbox" data-id="${p.id}" data-nome="${p.nome}" onchange="toggleClientProcedure(this)">
+            <span class="flex-1">${p.nome}</span>
+            <span class="text-xs text-emerald-600">R$ ${parseFloat(p.valor).toFixed(2)}</span>
+        </label>
+    `).join('');
+}
+
+function toggleClientProcedure(checkbox) {
+    const id = checkbox.dataset.id;
+    const nome = checkbox.dataset.nome;
+    if (checkbox.checked) {
+        if (!selectedClientProcedures.find(p => p.id == id)) selectedClientProcedures.push({ id: parseInt(id), nome });
+    } else {
+        selectedClientProcedures = selectedClientProcedures.filter(p => p.id != id);
     }
+}
 
-    function loadClientProcedimentos() {
-        const container = document.getElementById('client-procedimentos');
-        if (!container) return;
-        container.innerHTML = db.procedimentos.map(p => `
-            <label class="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
-                <input type="checkbox" class="proc-checkbox" data-id="${p.id}" data-nome="${p.nome}" onchange="toggleClientProcedure(this)">
-                <span class="flex-1">${p.nome}</span>
-                <span class="text-xs text-emerald-600">R$ ${p.valor.toFixed(2)}</span>
-            </label>
-        `).join('');
+// ==================== ORÇAMENTO ====================
+function listarOrcamentosSalvos(pacienteId) {
+    const orcamentosPaciente = db.orcamentos.filter(o => o.pacienteId == pacienteId || o.paciente_id == pacienteId);
+    const container = document.getElementById('lista-orcamentos');
+    if (orcamentosPaciente.length === 0) {
+        container.innerHTML = '<p class="text-slate-400 text-center text-sm">Nenhum orçamento salvo</p>';
+        return;
     }
-
-    function toggleClientProcedure(checkbox) {
-        const id = checkbox.dataset.id;
-        const nome = checkbox.dataset.nome;
-        if (checkbox.checked) {
-            if (!selectedClientProcedures.find(p => p.id == id)) {
-                selectedClientProcedures.push({ id: parseInt(id), nome });
-            }
-        } else {
-            selectedClientProcedures = selectedClientProcedures.filter(p => p.id != id);
-        }
-    }
-
-    // ==================== ORÇAMENTO COM ATESTADO ====================
-    function listarOrcamentosSalvos(pacienteId) {
-        const orcamentosPaciente = db.orcamentos.filter(o => o.pacienteId == pacienteId);
-        const container = document.getElementById('lista-orcamentos');
-        if (orcamentosPaciente.length === 0) {
-            container.innerHTML = '<p class="text-slate-400 text-center text-sm">Nenhum orçamento salvo</p>';
-            return;
-        }
-        container.innerHTML = orcamentosPaciente.map(orc => `
-            <div class="orcamento-card" onclick="carregarOrcamento(${orc.id})">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <span class="font-bold text-sm">#${orc.numero} - ${new Date(orc.dataCriacao).toLocaleDateString()}</span>
-                        <span class="text-xs text-slate-500 ml-2">${orc.itens.length} itens</span>
-                    </div>
-                    <span class="font-bold text-emerald-600">R$ ${orc.itens.reduce((s,i)=>s+i.valor,0).toFixed(2)}</span>
+    container.innerHTML = orcamentosPaciente.map(orc => `
+        <div class="orcamento-card" onclick="carregarOrcamento(${orc.id})">
+            <div class="flex justify-between items-center">
+                <div>
+                    <span class="font-bold text-sm">#${orc.numero} - ${new Date(orc.dataCriacao||orc.data_criacao).toLocaleDateString()}</span>
+                    <span class="text-xs text-slate-500 ml-2">${(orc.itens||[]).length} itens</span>
                 </div>
+                <span class="font-bold text-emerald-600">R$ ${(orc.itens||[]).reduce((s,i)=>s+parseFloat(i.valor||0),0).toFixed(2)}</span>
             </div>
-        `).join('');
-    }
-    
-    function carregarOrcamento(orcamentoId) {
-        const orcamento = db.orcamentos.find(o => o.id == orcamentoId);
-        if (orcamento) {
-            currentEditingOrcamentoId = orcamentoId;
-            currentOrcamento = {
-                pacienteId: orcamento.pacienteId,
-                pacienteNome: orcamento.pacienteNome,
-                pacienteCpf: orcamento.pacienteCpf,
-                pacienteWhatsapp: orcamento.pacienteWhatsapp,
-                dentistaNome: orcamento.dentistaNome,
-                dentistaCro: orcamento.dentistaCro,
-                data: orcamento.data,
-                hora: orcamento.hora,
-                itens: [...orcamento.itens],
-                cid: orcamento.cid || "",
-                diagnostico: orcamento.diagnostico || "",
-                diasAfastamento: orcamento.diasAfastamento || 1,
-                recomendacoes: orcamento.recomendacoes || "",
-                status: orcamento.status || "ativo"
-            };
-            document.getElementById('cid-code').value = currentOrcamento.cid;
-            document.getElementById('diagnostico').value = currentOrcamento.diagnostico;
-            document.getElementById('dias-afastamento').value = currentOrcamento.diasAfastamento;
-            document.getElementById('recomendacoes').value = currentOrcamento.recomendacoes;
-            renderOrcamentoItens();
-            updateOrcamentoTotal();
-            alert("Orçamento carregado!");
-        }
-    }
-    
-    function abrirOrcamento(appointmentId) {
-        currentAppointmentId = appointmentId;
-        currentEditingOrcamentoId = null;
-        const appointment = db.appointments.find(a => a.id == appointmentId);
-        if (!appointment) return;
-        const paciente = db.users.find(u => u.id === appointment.patientId);
-        if (!paciente) return alert("Paciente não encontrado");
-        const dentista = db.users.find(u => u.name.trim() === appointment.dentist.trim());
-        
-        // Carregar procedimentos do agendamento com valores
-        const itensComValores = (appointment.selectedProcedures || []).map(p => {
-            const proc = db.procedimentos.find(proc => proc.nome === p.nome);
-            return { nome: p.nome, valor: proc ? proc.valor : 0 };
-        });
-        
+        </div>
+    `).join('');
+}
+
+function carregarOrcamento(orcamentoId) {
+    const orcamento = db.orcamentos.find(o => o.id == orcamentoId);
+    if (orcamento) {
+        currentEditingOrcamentoId = orcamentoId;
         currentOrcamento = {
-            pacienteId: paciente.id,
-            pacienteNome: paciente.name,
-            pacienteCpf: paciente.cpf,
-            pacienteWhatsapp: paciente.whatsapp,
-            dentistaNome: dentista ? dentista.name : appointment.dentist,
-            dentistaCro: dentista ? dentista.cro || "" : "",
-            data: appointment.date,
-            hora: appointment.time,
-            itens: itensComValores,
-            cid: "", diagnostico: "", diasAfastamento: 1, recomendacoes: "", status: "ativo"
+            pacienteId: orcamento.pacienteId||orcamento.paciente_id,
+            pacienteNome: orcamento.pacienteNome||orcamento.paciente_nome,
+            pacienteCpf: orcamento.pacienteCpf||orcamento.paciente_cpf,
+            pacienteWhatsapp: orcamento.pacienteWhatsapp||orcamento.paciente_whatsapp,
+            dentistaNome: orcamento.dentistaNome||orcamento.dentista_nome,
+            dentistaCro: orcamento.dentistaCro||orcamento.dentista_cro,
+            data: orcamento.data, hora: orcamento.hora,
+            itens: [...(orcamento.itens||[])],
+            cid: orcamento.cid||"", diagnostico: orcamento.diagnostico||"",
+            diasAfastamento: orcamento.diasAfastamento||orcamento.dias_afastamento||1,
+            recomendacoes: orcamento.recomendacoes||"", status: orcamento.status||"ativo"
         };
-        
-        document.getElementById('modal-paciente-info').innerHTML = `
-            <p><strong>Paciente:</strong> ${paciente.name}</p>
-            <p><strong>CPF:</strong> ${paciente.cpf}</p>
-            <p><strong>Data:</strong> ${appointment.date} às ${appointment.time}</p>
-        `;
-        
-        document.getElementById('cid-code').value = '';
-        document.getElementById('diagnostico').value = '';
-        document.getElementById('dias-afastamento').value = '1';
-        document.getElementById('recomendacoes').value = '';
-        
-        listarOrcamentosSalvos(paciente.id);
+        document.getElementById('cid-code').value = currentOrcamento.cid;
+        document.getElementById('diagnostico').value = currentOrcamento.diagnostico;
+        document.getElementById('dias-afastamento').value = currentOrcamento.diasAfastamento;
+        document.getElementById('recomendacoes').value = currentOrcamento.recomendacoes;
         renderOrcamentoItens();
         updateOrcamentoTotal();
-        loadProcedimentosSelect();
+        alert("Orçamento carregado!");
+    }
+}
+
+function abrirOrcamento(appointmentId) {
+    currentAppointmentId = appointmentId;
+    currentEditingOrcamentoId = null;
+    const appointment = db.appointments.find(a => a.id == appointmentId);
+    if (!appointment) return;
+    const paciente = db.users.find(u => u.id === (appointment.patientId||appointment.patient_id));
+    if (!paciente) return alert("Paciente não encontrado");
+    const dentista = db.users.find(u => u.name.trim() === appointment.dentist.trim());
+    const procs = appointment.selectedProcedures || appointment.selected_procedures || [];
+    const itensComValores = procs.map(p => {
+        const proc = db.procedimentos.find(proc => proc.nome === p.nome);
+        return { nome: p.nome, valor: proc ? parseFloat(proc.valor) : 0 };
+    });
+    currentOrcamento = {
+        pacienteId: paciente.id, pacienteNome: paciente.name, pacienteCpf: paciente.cpf,
+        pacienteWhatsapp: paciente.whatsapp,
+        dentistaNome: dentista ? dentista.name : appointment.dentist,
+        dentistaCro: dentista ? dentista.cro || "" : "",
+        data: appointment.date, hora: appointment.time,
+        itens: itensComValores, cid: "", diagnostico: "", diasAfastamento: 1, recomendacoes: "", status: "ativo"
+    };
+    document.getElementById('modal-paciente-info').innerHTML = `
+        <p><strong>Paciente:</strong> ${paciente.name}</p>
+        <p><strong>CPF:</strong> ${paciente.cpf}</p>
+        <p><strong>Data:</strong> ${appointment.date} às ${appointment.time}</p>
+    `;
+    document.getElementById('cid-code').value = '';
+    document.getElementById('diagnostico').value = '';
+    document.getElementById('dias-afastamento').value = '1';
+    document.getElementById('recomendacoes').value = '';
+    listarOrcamentosSalvos(paciente.id);
+    renderOrcamentoItens();
+    updateOrcamentoTotal();
+    loadProcedimentosSelect();
+    document.getElementById('orcamento-modal').classList.remove('hidden');
+}
+
+function renderOrcamentoItens() {
+    const container = document.getElementById('procedimentos-selecionados');
+    if ((currentOrcamento.itens||[]).length === 0) {
+        container.innerHTML = '<p class="text-slate-400 text-center p-4">Nenhum procedimento adicionado</p>';
+        return;
+    }
+    container.innerHTML = currentOrcamento.itens.map((item, idx) => `
+        <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
+            <span>${item.nome}</span>
+            <span class="font-bold">R$ ${parseFloat(item.valor||0).toFixed(2)}</span>
+            <button onclick="removeOrcamentoItem(${idx})" class="text-red-500"><i class="fas fa-times-circle"></i></button>
+        </div>
+    `).join('');
+}
+
+function addProcedimentoToOrcamento() {
+    const select = document.getElementById('add-procedimento-select');
+    const selectedOption = select.options[select.selectedIndex];
+    if (!selectedOption || !selectedOption.value) return alert("Selecione um procedimento");
+    const nome = selectedOption.dataset.nome;
+    const valor = parseFloat(selectedOption.dataset.valor);
+    if (!nome || isNaN(valor)) return alert("Erro ao ler procedimento.");
+    currentOrcamento.itens.push({ nome, valor });
+    renderOrcamentoItens();
+    updateOrcamentoTotal();
+    select.value = '';
+}
+
+function removeOrcamentoItem(idx) {
+    currentOrcamento.itens.splice(idx, 1);
+    renderOrcamentoItens();
+    updateOrcamentoTotal();
+}
+
+function updateOrcamentoTotal() {
+    const total = (currentOrcamento.itens||[]).reduce((sum, item) => sum + parseFloat(item.valor||0), 0);
+    document.getElementById('orcamento-total').innerHTML = `R$ ${total.toFixed(2)}`;
+}
+
+async function salvarOrcamento(apenasSalvar = false) {
+    if (currentEditingOrcamentoId) {
+        const index = db.orcamentos.findIndex(o => o.id == currentEditingOrcamentoId);
+        if (index !== -1) {
+            currentOrcamento.cid = document.getElementById('cid-code').value;
+            currentOrcamento.diagnostico = document.getElementById('diagnostico').value;
+            currentOrcamento.diasAfastamento = parseInt(document.getElementById('dias-afastamento').value) || 0;
+            currentOrcamento.recomendacoes = document.getElementById('recomendacoes').value;
+            db.orcamentos[index] = { ...db.orcamentos[index], ...currentOrcamento };
+            saveToLocal();
+            try { await upsertOrcamento(db.orcamentos[index]); } catch(e) { console.error(e); }
+            if (!apenasSalvar) return db.orcamentos[index];
+            return null;
+        }
+    }
+    const count = db.orcamentos.length + 1;
+    const numeroOrcamento = String(count).padStart(6, '0');
+    currentOrcamento.cid = document.getElementById('cid-code').value;
+    currentOrcamento.diagnostico = document.getElementById('diagnostico').value;
+    currentOrcamento.diasAfastamento = parseInt(document.getElementById('dias-afastamento').value) || 0;
+    currentOrcamento.recomendacoes = document.getElementById('recomendacoes').value;
+    currentOrcamento.status = "ativo";
+    const orcamento = {
+        id: Date.now(), numero: numeroOrcamento, ...currentOrcamento,
+        appointmentId: currentAppointmentId, dataCriacao: new Date().toISOString()
+    };
+    db.orcamentos.push(orcamento);
+    saveToLocal();
+    try {
+        const saved = await upsertOrcamento(orcamento);
+        if (saved) {
+            const idx = db.orcamentos.findIndex(o => o.id === orcamento.id);
+            if (idx >= 0) db.orcamentos[idx] = { ...db.orcamentos[idx], ...saved };
+        }
+    } catch(e) { console.error(e); }
+    if (!apenasSalvar) return orcamento;
+    return null;
+}
+
+async function gerarPDFExistenteAtual() {
+    await salvarOrcamento(true);
+    const orcamento = currentEditingOrcamentoId ?
+        db.orcamentos.find(o => o.id == currentEditingOrcamentoId) :
+        await salvarOrcamento(false);
+    if (!orcamento) { alert("Erro ao carregar orçamento"); return; }
+    await gerarPDF(orcamento);
+}
+
+async function gerarPDFExistente(orcamentoId) {
+    const orcamento = db.orcamentos.find(o => o.id == orcamentoId);
+    if (!orcamento) return;
+    await gerarPDF(orcamento);
+}
+
+async function gerarPDF(orcamento) {
+    const paciente = db.users.find(u => u.id === (orcamento.pacienteId||orcamento.paciente_id));
+    const dentista = db.users.find(u => u.name === (orcamento.dentistaNome||orcamento.dentista_nome));
+    const itens = orcamento.itens || [];
+    const total = itens.reduce((sum, item) => sum + parseFloat(item.valor||0), 0);
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
+    const horaAtual = new Date().toLocaleTimeString('pt-BR');
+    const nomePaciente = paciente?.name || orcamento.pacienteNome || orcamento.paciente_nome;
+    const cpfPaciente = paciente?.cpf || orcamento.pacienteCpf || orcamento.paciente_cpf;
+    const nomeDentista = dentista?.name || orcamento.dentistaNome || orcamento.dentista_nome;
+    const croDentista = dentista?.cro || orcamento.dentistaCro || orcamento.dentista_cro;
+    const diasAfas = orcamento.diasAfastamento || orcamento.dias_afastamento || 1;
+    const recomendacoes = orcamento.recomendacoes || 'Seguir orientações médicas.';
+    const diagnostico = orcamento.diagnostico || 'Tratamento odontológico conforme avaliação clínica.';
+
+    const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        *{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Times New Roman',serif;background:white;padding:40px;max-width:1100px;margin:0 auto;}
+        .header{text-align:center;margin-bottom:30px;border-bottom:3px solid #1e40af;padding-bottom:20px;}
+        .logo{font-size:28px;font-weight:bold;color:#1e40af;margin-bottom:8px;}.logo span{color:#1e293b;}
+        .clinica-dados{font-size:11px;color:#64748b;margin-top:5px;}
+        .numero-doc{text-align:right;font-size:12px;color:#64748b;margin-bottom:15px;}
+        .secao{margin-bottom:25px;}.secao-titulo{background:#1e40af;color:white;padding:8px 15px;font-size:14px;font-weight:bold;margin-bottom:15px;border-radius:4px;}
+        .info-row{display:flex;border-bottom:1px solid #e2e8f0;padding:6px 0;}.info-label{width:180px;font-weight:bold;color:#475569;font-size:12px;}.info-value{flex:1;color:#1e293b;font-size:12px;}
+        table{width:100%;border-collapse:collapse;margin:15px 0;}th{background:#f1f5f9;padding:10px;text-align:left;font-size:12px;border-bottom:2px solid #cbd5e1;}td{padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;}
+        .total{text-align:right;font-size:16px;font-weight:bold;margin-top:15px;padding-top:10px;border-top:2px solid #1e40af;}
+        .atestado-box{background:#fefce8;border:1px solid #fde047;padding:20px;margin:20px 0;border-radius:8px;}
+        .atestado-texto{font-size:13px;line-height:1.6;text-align:justify;}
+        .assinaturas{display:flex;justify-content:space-between;margin-top:40px;gap:40px;}
+        .assinatura{text-align:center;flex:1;}.linha-assinatura{border-top:1px solid #000;width:100%;margin-top:30px;padding-top:8px;}
+        .footer{margin-top:30px;text-align:center;font-size:10px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:15px;}
+        .status-doc{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold;margin-left:10px;background:#dbeafe;color:#1e40af;}
+    </style></head><body>
+    <div class="header"><div class="logo">🦷 Odonto<span>Personalité</span></div><div class="clinica-dados">Rua das Flores, 123 - Centro - São Paulo/SP | Tel: (11) 99999-9999</div></div>
+    <div class="numero-doc">Documento: ORÇ-${orcamento.numero} | Emitido em: ${dataAtual} às ${horaAtual}<span class="status-doc">${(orcamento.status||'ativo').toUpperCase()}</span></div>
+    <div class="secao"><div class="secao-titulo">📋 ORÇAMENTO ODONTOLÓGICO</div>
+    <div class="info-row"><div class="info-label">PACIENTE:</div><div class="info-value">${nomePaciente}</div></div>
+    <div class="info-row"><div class="info-label">CPF:</div><div class="info-value">${cpfPaciente}</div></div>
+    <div class="info-row"><div class="info-label">DATA DO ATENDIMENTO:</div><div class="info-value">${orcamento.data} às ${orcamento.hora||'--:--'}</div></div>
+    <div class="info-row"><div class="info-label">DENTISTA:</div><div class="info-value">Dr(a). ${nomeDentista}${croDentista?' - CRO '+croDentista:''}</div></div>
+    <table><thead><tr><th>Procedimento</th><th style="width:120px;text-align:right">Valor (R$)</th></tr></thead><tbody>
+    ${itens.map(item=>`<tr><td>${item.nome}</td><td style="text-align:right">R$ ${parseFloat(item.valor||0).toFixed(2)}</td></tr>`).join('')}
+    ${itens.length===0?'<tr><td colspan="2" style="text-align:center">Nenhum procedimento</td></tr>':''}
+    </tbody></table><div class="total">TOTAL: R$ ${total.toFixed(2)}</div></div>
+    <div class="secao"><div class="secao-titulo">📄 ATESTADO DE SAÚDE - PARA FINS TRABALHISTAS</div>
+    <div class="atestado-box"><div class="atestado-texto">
+    <p><strong>ATESTADO MÉDICO ODONTOLÓGICO</strong></p>
+    <p style="margin-top:10px;">Atesto que o(a) paciente <strong>${nomePaciente}</strong>, CPF <strong>${cpfPaciente}</strong>, esteve sob atendimento nesta clínica no dia <strong>${orcamento.data}</strong>.</p>
+    <p style="margin-top:10px;"><strong>CID:</strong> ${orcamento.cid||'K02.0 - Cárie dentária'}</p>
+    <p style="margin-top:10px;"><strong>Diagnóstico:</strong> ${diagnostico}</p>
+    <p style="margin-top:10px;"><strong>Recomendações:</strong> ${recomendacoes}</p>
+    <p style="margin-top:15px;font-weight:bold;">⚠️ PERÍODO RECOMENDADO DE AFASTAMENTO: ${diasAfas} dia(s)</p>
+    <p style="margin-top:10px;font-size:11px;color:#64748b;">Válido para justificativa de ausência laboral e apresentação ao RH.</p>
+    </div></div></div>
+    <div class="assinaturas">
+    <div class="assinatura"><div class="linha-assinatura"></div><div>Assinatura do Paciente</div></div>
+    <div class="assinatura"><div class="linha-assinatura"></div><div>Assinatura do Dentista</div><div style="font-size:10px;">Dr(a). ${nomeDentista}</div></div>
+    </div>
+    <div class="footer">OdontoPersonalité - Cuidando do seu sorriso com excelência<br>Protocolo: ${Date.now()} | Gerado eletronicamente</div>
+    </body></html>`;
+
+    const loadingDiv = document.createElement('div');
+    loadingDiv.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;"><div style="background:white;padding:20px;border-radius:10px;">📄 Gerando PDF... Aguarde</div></div>';
+    document.body.appendChild(loadingDiv);
+
+    try {
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1100px;height:800px;';
+        document.body.appendChild(iframe);
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(htmlContent);
+        iframe.contentDocument.close();
+        setTimeout(async () => {
+            try {
+                const { jsPDF } = window.jspdf;
+                const canvas = await html2canvas(iframe.contentDocument.body, { scale: 2, useCORS: true, width: 1100 });
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                let heightLeft = pdfHeight, position = 0;
+                pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                heightLeft -= pageHeight;
+                while (heightLeft > 0) {
+                    position = heightLeft - pdfHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+                    heightLeft -= pageHeight;
+                }
+                pdf.save(`orcamento-${orcamento.numero}.pdf`);
+                document.body.removeChild(iframe);
+                document.body.removeChild(loadingDiv);
+                showToast(`✅ PDF #${orcamento.numero} gerado!`);
+            } catch(err) {
+                document.body.removeChild(iframe);
+                document.body.removeChild(loadingDiv);
+                alert("Erro ao gerar PDF: " + err.message);
+            }
+        }, 1000);
+    } catch(err) {
+        document.body.removeChild(loadingDiv);
+        alert("Erro: " + err.message);
+    }
+}
+
+async function alterarStatusOrcamento(id, novoStatus) {
+    const orcamento = db.orcamentos.find(o => o.id == id);
+    if (orcamento) {
+        orcamento.status = novoStatus;
+        saveToLocal();
+        try { await upsertOrcamento(orcamento); } catch(e) {}
+        filterBudgets();
+        showToast(`Status alterado para ${novoStatus.toUpperCase()}`);
+    }
+}
+
+function filterBudgets() {
+    const startDate = document.getElementById('filter-start-date').value;
+    const endDate = document.getElementById('filter-end-date').value;
+    const statusFilter = document.getElementById('filter-status').value;
+    const pacienteFilter = document.getElementById('filter-paciente').value.toLowerCase();
+    let filtered = [...db.orcamentos];
+    if (startDate) filtered = filtered.filter(o => o.data >= startDate);
+    if (endDate) filtered = filtered.filter(o => o.data <= endDate);
+    if (statusFilter) filtered = filtered.filter(o => o.status === statusFilter);
+    if (pacienteFilter) filtered = filtered.filter(o => (o.pacienteNome||o.paciente_nome||'').toLowerCase().includes(pacienteFilter));
+    filtered.sort((a, b) => new Date(b.dataCriacao||b.data_criacao) - new Date(a.dataCriacao||a.data_criacao));
+    const tbody = document.getElementById('budgets-table-body');
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">Nenhum orçamento encontrado</td></tr>';
+        return;
+    }
+    tbody.innerHTML = filtered.map(orc => {
+        const itens = orc.itens || [];
+        const total = itens.reduce((s,i)=>s+parseFloat(i.valor||0),0);
+        const nome = orc.pacienteNome || orc.paciente_nome || '';
+        const dentNome = orc.dentistaNome || orc.dentista_nome || '';
+        const statusClass = orc.status === 'ativo' ? 'status-ativo' : (orc.status === 'efetivado' ? 'status-efetivado' : 'status-cancelado');
+        return `<tr>
+            <td class="font-bold text-blue-600">#${orc.numero}</td>
+            <td>${orc.data}</td><td>${nome}</td><td>${dentNome}</td>
+            <td>${itens.length} itens</td>
+            <td class="font-bold text-emerald-600">R$ ${total.toFixed(2)}</td>
+            <td><span class="status-badge ${statusClass}">${orc.status}</span></td>
+            <td>
+                <button onclick="visualizarOrcamento(${orc.id})" class="text-blue-500 mr-2"><i class="fas fa-eye"></i></button>
+                <button onclick="gerarPDFExistente(${orc.id})" class="text-emerald-500 mr-2"><i class="fas fa-file-pdf"></i></button>
+                <select onchange="alterarStatusOrcamento(${orc.id}, this.value)" class="text-xs p-1 border rounded">
+                    <option value="ativo" ${orc.status==='ativo'?'selected':''}>Ativo</option>
+                    <option value="efetivado" ${orc.status==='efetivado'?'selected':''}>Efetivado</option>
+                    <option value="cancelado" ${orc.status==='cancelado'?'selected':''}>Cancelado</option>
+                </select>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function visualizarOrcamento(orcamentoId) {
+    const orcamento = db.orcamentos.find(o => o.id == orcamentoId);
+    if (orcamento) {
+        currentEditingOrcamentoId = orcamentoId;
+        currentOrcamento = {
+            pacienteId: orcamento.pacienteId||orcamento.paciente_id,
+            pacienteNome: orcamento.pacienteNome||orcamento.paciente_nome,
+            pacienteCpf: orcamento.pacienteCpf||orcamento.paciente_cpf,
+            pacienteWhatsapp: orcamento.pacienteWhatsapp||orcamento.paciente_whatsapp,
+            dentistaNome: orcamento.dentistaNome||orcamento.dentista_nome,
+            dentistaCro: orcamento.dentistaCro||orcamento.dentista_cro,
+            data: orcamento.data, hora: orcamento.hora,
+            itens: [...(orcamento.itens||[])],
+            cid: orcamento.cid||"", diagnostico: orcamento.diagnostico||"",
+            diasAfastamento: orcamento.diasAfastamento||orcamento.dias_afastamento||1,
+            recomendacoes: orcamento.recomendacoes||"", status: orcamento.status||"ativo"
+        };
+        document.getElementById('modal-paciente-info').innerHTML = `
+            <p><strong>Paciente:</strong> ${currentOrcamento.pacienteNome}</p>
+            <p><strong>CPF:</strong> ${currentOrcamento.pacienteCpf}</p>
+            <p><strong>Data:</strong> ${orcamento.data} às ${orcamento.hora||'--:--'}</p>
+            <p><strong>Orçamento #:</strong> ${orcamento.numero}</p>
+        `;
+        document.getElementById('cid-code').value = currentOrcamento.cid;
+        document.getElementById('diagnostico').value = currentOrcamento.diagnostico;
+        document.getElementById('dias-afastamento').value = currentOrcamento.diasAfastamento;
+        document.getElementById('recomendacoes').value = currentOrcamento.recomendacoes;
+        renderOrcamentoItens();
+        updateOrcamentoTotal();
         document.getElementById('orcamento-modal').classList.remove('hidden');
     }
-    
-    function renderOrcamentoItens() {
-        const container = document.getElementById('procedimentos-selecionados');
-        if (currentOrcamento.itens.length === 0) {
-            container.innerHTML = '<p class="text-slate-400 text-center p-4">Nenhum procedimento adicionado</p>';
-            return;
-        }
-        container.innerHTML = currentOrcamento.itens.map((item, idx) => `
-            <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
-                <span>${item.nome}</span>
-                <span class="font-bold">R$ ${item.valor.toFixed(2)}</span>
-                <button onclick="removeOrcamentoItem(${idx})" class="text-red-500"><i class="fas fa-times-circle"></i></button>
-            </div>
-        `).join('');
-    }
-    
-    function addProcedimentoToOrcamento() {
-        const select = document.getElementById('add-procedimento-select');
-        const selectedOption = select.options[select.selectedIndex];
-        if (!selectedOption || !selectedOption.value) return alert("Selecione um procedimento");
-        const nome = selectedOption.dataset.nome;
-        const valor = parseFloat(selectedOption.dataset.valor);
-        if (!nome || isNaN(valor)) return alert("Erro ao ler procedimento.");
-        currentOrcamento.itens.push({ nome, valor });
-        renderOrcamentoItens();
-        updateOrcamentoTotal();
-        select.value = '';
-    }
-    
-    function removeOrcamentoItem(idx) {
-        currentOrcamento.itens.splice(idx, 1);
-        renderOrcamentoItens();
-        updateOrcamentoTotal();
-    }
-    
-    function updateOrcamentoTotal() {
-        const total = currentOrcamento.itens.reduce((sum, item) => sum + item.valor, 0);
-        document.getElementById('orcamento-total').innerHTML = `R$ ${total.toFixed(2)}`;
-    }
-    
-    function salvarOrcamento(apenasSalvar = false) {
-        if (currentEditingOrcamentoId) {
-            // Atualizar orçamento existente
-            const index = db.orcamentos.findIndex(o => o.id == currentEditingOrcamentoId);
-            if (index !== -1) {
-                currentOrcamento.cid = document.getElementById('cid-code').value;
-                currentOrcamento.diagnostico = document.getElementById('diagnostico').value;
-                currentOrcamento.diasAfastamento = parseInt(document.getElementById('dias-afastamento').value) || 0;
-                currentOrcamento.recomendacoes = document.getElementById('recomendacoes').value;
-                db.orcamentos[index] = { ...db.orcamentos[index], ...currentOrcamento };
-                saveToLocal();
-                if (!apenasSalvar) return db.orcamentos[index];
-                return null;
-            }
-        }
-        
-        // Criar novo orçamento
-        const numeroOrcamento = String(db.orcamentos.length + 1).padStart(6, '0');
-        currentOrcamento.cid = document.getElementById('cid-code').value;
-        currentOrcamento.diagnostico = document.getElementById('diagnostico').value;
-        currentOrcamento.diasAfastamento = parseInt(document.getElementById('dias-afastamento').value) || 0;
-        currentOrcamento.recomendacoes = document.getElementById('recomendacoes').value;
-        currentOrcamento.status = "ativo";
-        
-        const orcamento = {
-            id: Date.now(),
-            numero: numeroOrcamento,
-            ...currentOrcamento,
-            appointmentId: currentAppointmentId,
-            dataCriacao: new Date().toISOString()
-        };
-        db.orcamentos.push(orcamento);
-        saveToLocal();
-        if (!apenasSalvar) return orcamento;
-        return null;
-    }
-    
-    async function gerarPDFExistenteAtual() {
-        // Salvar alterações atuais primeiro
-        salvarOrcamento(true);
-        
-        // Usar o orçamento atual para gerar PDF
-        const orcamento = currentEditingOrcamentoId ? 
-            db.orcamentos.find(o => o.id == currentEditingOrcamentoId) : 
-            salvarOrcamento(false);
-        
-        if (!orcamento) {
-            alert("Erro ao carregar orçamento");
-            return;
-        }
-        
-        await gerarPDF(orcamento);
-    }
-    
-    async function gerarPDFExistente(orcamentoId) {
-        const orcamento = db.orcamentos.find(o => o.id == orcamentoId);
-        if (!orcamento) return;
-        await gerarPDF(orcamento);
-    }
-    
-    async function gerarPDF(orcamento) {
-        const paciente = db.users.find(u => u.id === orcamento.pacienteId);
-        const dentista = db.users.find(u => u.name === orcamento.dentistaNome);
-        const total = orcamento.itens.reduce((sum, item) => sum + item.valor, 0);
-        const dataAtual = new Date().toLocaleDateString('pt-BR');
-        const horaAtual = new Date().toLocaleTimeString('pt-BR');
-        const dataValidade = new Date();
-        dataValidade.setDate(dataValidade.getDate() + 30);
-        
-        const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>OdontoPersonalité - Orçamento e Atestado #${orcamento.numero}</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: 'Times New Roman', Times, serif; background: white; padding: 40px; max-width: 1100px; margin: 0 auto; }
-                .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #1e40af; padding-bottom: 20px; }
-                .logo { font-size: 28px; font-weight: bold; color: #1e40af; margin-bottom: 8px; }
-                .logo span { color: #1e293b; }
-                .clinica-dados { font-size: 11px; color: #64748b; margin-top: 5px; }
-                .titulo-principal { text-align: center; font-size: 20px; font-weight: bold; margin: 20px 0; padding: 10px; background: #f0f9ff; border-left: 5px solid #1e40af; }
-                .numero-doc { text-align: right; font-size: 12px; color: #64748b; margin-bottom: 15px; }
-                .secao { margin-bottom: 25px; page-break-inside: avoid; }
-                .secao-titulo { background: #1e40af; color: white; padding: 8px 15px; font-size: 14px; font-weight: bold; margin-bottom: 15px; border-radius: 4px; }
-                .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 15px; }
-                .info-row { display: flex; border-bottom: 1px solid #e2e8f0; padding: 6px 0; }
-                .info-label { width: 140px; font-weight: bold; color: #475569; font-size: 12px; }
-                .info-value { flex: 1; color: #1e293b; font-size: 12px; }
-                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; border-bottom: 2px solid #cbd5e1; }
-                td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
-                .total { text-align: right; font-size: 16px; font-weight: bold; margin-top: 15px; padding-top: 10px; border-top: 2px solid #1e40af; }
-                .atestado-box { background: #fefce8; border: 1px solid #fde047; padding: 20px; margin: 20px 0; border-radius: 8px; }
-                .atestado-texto { font-size: 13px; line-height: 1.6; text-align: justify; }
-                .assinaturas { display: flex; justify-content: space-between; margin-top: 40px; gap: 40px; }
-                .assinatura { text-align: center; flex: 1; }
-                .linha-assinatura { border-top: 1px solid #000; width: 100%; margin-top: 30px; padding-top: 8px; }
-                .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 15px; }
-                .status-doc { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px; background: #dbeafe; color: #1e40af; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="logo">🦷 Odonto<span>Personalité</span></div>
-                <div class="clinica-dados">Rua das Flores, 123 - Centro - São Paulo/SP | Tel: (11) 99999-9999 | CNPJ: 00.000.000/0001-00</div>
-            </div>
-            
-            <div class="numero-doc">
-                Documento: ORÇ-${orcamento.numero} | Emitido em: ${dataAtual} às ${horaAtual}
-                <span class="status-doc">${orcamento.status.toUpperCase()}</span>
-            </div>
-            
-            <div class="secao">
-                <div class="secao-titulo">📋 ORÇAMENTO ODONTOLÓGICO</div>
-                <div class="info-grid">
-                    <div class="info-row"><div class="info-label">PACIENTE:</div><div class="info-value">${paciente?.name || orcamento.pacienteNome}</div></div>
-                    <div class="info-row"><div class="info-label">CPF:</div><div class="info-value">${paciente?.cpf || orcamento.pacienteCpf}</div></div>
-                    <div class="info-row"><div class="info-label">DATA DO ATENDIMENTO:</div><div class="info-value">${orcamento.data} às ${orcamento.hora || '--:--'}</div></div>
-                    <div class="info-row"><div class="info-label">DENTISTA:</div><div class="info-value">Dr(a). ${dentista?.name || orcamento.dentistaNome} ${(dentista?.cro || orcamento.dentistaCro) ? '- CRO ' + (dentista?.cro || orcamento.dentistaCro) : ''}</div></div>
-                </div>
-                
-                <table>
-                    <thead><tr><th>Procedimento</th><th style="width: 120px; text-align: right">Valor (R$)</th></tr></thead>
-                    <tbody>
-                        ${orcamento.itens.map(item => `<tr><td>${item.nome}</td><td style="text-align: right">R$ ${item.valor.toFixed(2)}</td></tr>`).join('')}
-                        ${orcamento.itens.length === 0 ? '<tr><td colspan="2" style="text-align: center">Nenhum procedimento adicionado</td></tr>' : ''}
-                    </tbody>
-                </table>
-                <div class="total">TOTAL DO ORÇAMENTO: R$ ${total.toFixed(2)}</div>
-            </div>
-            
-            <div class="secao">
-                <div class="secao-titulo">📄 ATESTADO DE SAÚDE - PARA FINS TRABALHISTAS (RH)</div>
-                <div class="atestado-box">
-                    <div class="atestado-texto">
-                        <p><strong>ATESTADO MÉDICO ODONTOLÓGICO</strong></p>
-                        <p style="margin-top: 10px;">Atesto que o(a) paciente <strong>${paciente?.name || orcamento.pacienteNome}</strong>, CPF <strong>${paciente?.cpf || orcamento.pacienteCpf}</strong>, esteve sob atendimento nesta clínica no dia <strong>${orcamento.data}</strong>.</p>
-                        <p style="margin-top: 10px;"><strong>CID:</strong> ${orcamento.cid || 'K02.0 - Cárie dentária'}</p>
-                        <p style="margin-top: 10px;"><strong>Diagnóstico:</strong> ${orcamento.diagnostico || 'Tratamento odontológico necessário conforme avaliação clínica.'}</p>
-                        <p style="margin-top: 10px;"><strong>Recomendações:</strong> ${orcamento.recomendacoes || 'Seguir orientações médicas.'}</p>
-                        <p style="margin-top: 15px; font-weight: bold;">⚠️ PERÍODO RECOMENDADO DE AFASTAMENTO: ${orcamento.diasAfastamento} dia(s)</p>
-                        <p style="margin-top: 10px; font-size: 11px; color: #64748b;">Válido para justificativa de ausência laboral e apresentação ao RH.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="assinaturas">
-                <div class="assinatura"><div class="linha-assinatura"></div><div>Assinatura do Paciente</div></div>
-                <div class="assinatura"><div class="linha-assinatura"></div><div>Assinatura do Dentista</div><div style="font-size: 10px;">Dr(a). ${dentista?.name || orcamento.dentistaNome}</div></div>
-            </div>
-            
-            <div class="footer">
-                OdontoPersonalité - Cuidando do seu sorriso com excelência<br>
-                Protocolo: ${Date.now()} | Documento gerado eletronicamente
-            </div>
-        </body>
-        </html>
-        `;
-        
-        const loadingDiv = document.createElement('div');
-        loadingDiv.innerHTML = '<div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:9999;"><div style="background:white; padding:20px; border-radius:10px;">📄 Gerando PDF... Aguarde</div></div>';
-        document.body.appendChild(loadingDiv);
-        
-        try {
-            const iframe = document.createElement('iframe');
-            iframe.style.position = 'fixed';
-            iframe.style.left = '-9999px';
-            iframe.style.top = '-9999px';
-            iframe.width = '800';
-            iframe.height = '1100';
-            document.body.appendChild(iframe);
-            
-            iframe.contentDocument.open();
-            iframe.contentDocument.write(htmlContent);
-            iframe.contentDocument.close();
-            
-            setTimeout(async () => {
-                try {
-                    const { jsPDF } = window.jspdf;
-                    const canvas = await html2canvas(iframe.contentDocument.body, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-                    const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                    const imgWidth = 210;
-                    const pageHeight = 297;
-                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                    let heightLeft = imgHeight;
-                    let position = 0;
-                    
-                    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                    
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                    }
-                    
-                    pdf.save(`Orcamento_Atestado_${orcamento.numero}_${(paciente?.name || orcamento.pacienteNome).replace(/\s/g, '_')}.pdf`);
-                    
-                    document.body.removeChild(iframe);
-                    document.body.removeChild(loadingDiv);
-                    alert(`✅ PDF do orçamento #${orcamento.numero} gerado com sucesso!`);
-                } catch(err) {
-                    document.body.removeChild(iframe);
-                    document.body.removeChild(loadingDiv);
-                    alert("Erro ao gerar PDF: " + err.message);
-                }
-            }, 1000);
-        } catch(err) {
-            document.body.removeChild(loadingDiv);
-            alert("Erro: " + err.message);
-        }
-    }
-    
-    function alterarStatusOrcamento(id, novoStatus) {
-        const orcamento = db.orcamentos.find(o => o.id == id);
-        if (orcamento) {
-            orcamento.status = novoStatus;
-            saveToLocal();
-            filterBudgets();
-            alert(`Status alterado para ${novoStatus.toUpperCase()}`);
-        }
-    }
-    
-    function filterBudgets() {
-        const startDate = document.getElementById('filter-start-date').value;
-        const endDate = document.getElementById('filter-end-date').value;
-        const statusFilter = document.getElementById('filter-status').value;
-        const pacienteFilter = document.getElementById('filter-paciente').value.toLowerCase();
-        
-        let filtered = [...db.orcamentos];
-        
-        if (startDate) filtered = filtered.filter(o => o.data >= startDate);
-        if (endDate) filtered = filtered.filter(o => o.data <= endDate);
-        if (statusFilter) filtered = filtered.filter(o => o.status === statusFilter);
-        if (pacienteFilter) filtered = filtered.filter(o => o.pacienteNome.toLowerCase().includes(pacienteFilter));
-        
-        filtered.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
-        
-        const tbody = document.getElementById('budgets-table-body');
-        if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">Nenhum orçamento encontrado</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = filtered.map(orc => {
-            const total = orc.itens.reduce((s,i)=>s+i.valor,0);
-            const statusClass = orc.status === 'ativo' ? 'status-ativo' : (orc.status === 'efetivado' ? 'status-efetivado' : 'status-cancelado');
-            const statusText = orc.status === 'ativo' ? 'Ativo' : (orc.status === 'efetivado' ? 'Efetivado' : 'Cancelado');
-            
-            return `
-                <tr>
-                    <td class="font-bold text-blue-600">#${orc.numero}</td>
-                    <td>${orc.data}</td>
-                    <td>${orc.pacienteNome}</td>
-                    <td>${orc.dentistaNome}</td>
-                    <td>${orc.itens.length} itens</td>
-                    <td class="font-bold text-emerald-600">R$ ${total.toFixed(2)}</td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <button onclick="visualizarOrcamento(${orc.id})" class="text-blue-500 mr-2" title="Ver"><i class="fas fa-eye"></i></button>
-                        <button onclick="gerarPDFExistente(${orc.id})" class="text-emerald-500 mr-2" title="PDF"><i class="fas fa-file-pdf"></i></button>
-                        <select onchange="alterarStatusOrcamento(${orc.id}, this.value)" class="text-xs p-1 border rounded">
-                            <option value="ativo" ${orc.status === 'ativo' ? 'selected' : ''}>Ativo</option>
-                            <option value="efetivado" ${orc.status === 'efetivado' ? 'selected' : ''}>Efetivado</option>
-                            <option value="cancelado" ${orc.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
-                        </select>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-    
-    function visualizarOrcamento(orcamentoId) {
-        const orcamento = db.orcamentos.find(o => o.id == orcamentoId);
-        if (orcamento) {
-            currentEditingOrcamentoId = orcamentoId;
-            currentOrcamento = {
-                pacienteId: orcamento.pacienteId,
-                pacienteNome: orcamento.pacienteNome,
-                pacienteCpf: orcamento.pacienteCpf,
-                pacienteWhatsapp: orcamento.pacienteWhatsapp,
-                dentistaNome: orcamento.dentistaNome,
-                dentistaCro: orcamento.dentistaCro,
-                data: orcamento.data,
-                hora: orcamento.hora,
-                itens: [...orcamento.itens],
-                cid: orcamento.cid || "",
-                diagnostico: orcamento.diagnostico || "",
-                diasAfastamento: orcamento.diasAfastamento || 1,
-                recomendacoes: orcamento.recomendacoes || "",
-                status: orcamento.status || "ativo"
-            };
-            document.getElementById('modal-paciente-info').innerHTML = `
-                <p><strong>Paciente:</strong> ${orcamento.pacienteNome}</p>
-                <p><strong>CPF:</strong> ${orcamento.pacienteCpf}</p>
-                <p><strong>Data:</strong> ${orcamento.data} às ${orcamento.hora || '--:--'}</p>
-                <p><strong>Orçamento #:</strong> ${orcamento.numero}</p>
-                <p><strong>Status:</strong> <span class="status-badge ${orcamento.status === 'ativo' ? 'status-ativo' : (orcamento.status === 'efetivado' ? 'status-efetivado' : 'status-cancelado')}">${orcamento.status}</span></p>
-            `;
-            document.getElementById('cid-code').value = currentOrcamento.cid;
-            document.getElementById('diagnostico').value = currentOrcamento.diagnostico;
-            document.getElementById('dias-afastamento').value = currentOrcamento.diasAfastamento;
-            document.getElementById('recomendacoes').value = currentOrcamento.recomendacoes;
-            renderOrcamentoItens();
-            updateOrcamentoTotal();
-            document.getElementById('orcamento-modal').classList.remove('hidden');
-        }
-    }
-    
-    function closeModal() {
-        document.getElementById('orcamento-modal').classList.add('hidden');
-        currentEditingOrcamentoId = null;
-    }
+}
 
-    // ==================== WHATSAPP DESKTOP ====================
-    function enviarWhatsAppDesktop() {
-        const numero = prompt("Digite o número do WhatsApp (com DDD, ex: 5511999999999):", currentUser?.whatsapp || "5511999999999");
-        if (!numero) return;
-        
-        const mensagem = prompt("Digite a mensagem:", "🧪 Teste de conexão via WhatsApp Desktop!");
-        if (!mensagem) return;
-        
-        const numeroLimpo = numero.replace(/\D/g, '');
-        const url = `https://wa.me/${numeroLimpo}?text=${encodeURIComponent(mensagem)}`;
-        
-        window.open(url, '_blank');
-        document.getElementById('wa-status').innerHTML = '<span class="text-green-600">✅ Link do WhatsApp aberto! Envie a mensagem.</span>';
-    }
-    
-    // Configuração WhatsApp API
-    function setupWhatsAppConfig() {
-        const providerSelect = document.getElementById('wa-provider');
-        const desktopConfig = document.getElementById('desktop-config');
-        const apiConfig = document.getElementById('api-config');
-        const testApiBtn = document.getElementById('test-api-btn');
-        const popPapConfig = document.getElementById('pop-pap-config');
-        
-        if (providerSelect) {
-            providerSelect.addEventListener('change', () => {
-                const isDesktop = providerSelect.value === 'desktop';
-                desktopConfig.classList.toggle('hidden', !isDesktop);
-                apiConfig.classList.toggle('hidden', isDesktop);
-                testApiBtn.classList.toggle('hidden', isDesktop);
-                
-                if (providerSelect.value === 'poppap') {
-                    popPapConfig.classList.remove('hidden');
-                } else {
-                    popPapConfig.classList.add('hidden');
-                }
-                
-                db.config.whatsapp.provider = providerSelect.value;
-                saveToLocal();
-            });
-            
-            // Set initial state
+function closeModal() {
+    document.getElementById('orcamento-modal').classList.add('hidden');
+    currentEditingOrcamentoId = null;
+}
+
+// ==================== WHATSAPP ====================
+function enviarWhatsAppDesktop() {
+    const numero = prompt("Digite o número do WhatsApp (com DDD):", currentUser?.whatsapp || "5511999999999");
+    if (!numero) return;
+    const mensagem = prompt("Digite a mensagem:", "🧪 Teste de conexão via WhatsApp Desktop!");
+    if (!mensagem) return;
+    window.open(`https://wa.me/${numero.replace(/\D/g,'')}?text=${encodeURIComponent(mensagem)}`, '_blank');
+}
+
+function setupWhatsAppConfig() {
+    const providerSelect = document.getElementById('wa-provider');
+    const desktopConfig = document.getElementById('desktop-config');
+    const apiConfig = document.getElementById('api-config');
+    const testApiBtn = document.getElementById('test-api-btn');
+    const popPapConfig = document.getElementById('pop-pap-config');
+    if (providerSelect) {
+        // Restaurar configuração salva
+        if (db.config.whatsapp.provider) providerSelect.value = db.config.whatsapp.provider;
+        const updateVisibility = () => {
             const isDesktop = providerSelect.value === 'desktop';
             desktopConfig.classList.toggle('hidden', !isDesktop);
             apiConfig.classList.toggle('hidden', isDesktop);
             testApiBtn.classList.toggle('hidden', isDesktop);
-        }
-    }
-
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function saveToLocal() {
-        localStorage.setItem('odonto_data', JSON.stringify(db));
-        updateStatus(true, "Salvo localmente");
-    }
-    
-    function loadFromLocal() {
-        const saved = localStorage.getItem('odonto_data');
-        if (saved) {
-            try {
-                db = JSON.parse(saved);
-                ensureDbStructure();
-                updateStatus(true, "Local");
-            } catch(e) {}
-        }
-        ensureDbStructure();
-        renderAll();
-    }
-    
-    function updateStatus(on, txt) {
-        const s = document.getElementById('sync-status');
-        if (s) {
-            s.className = `flex items-center gap-1 text-[10px] font-black ${on ? 'text-emerald-500' : 'text-rose-500'}`;
-            if (s.querySelector('span')) s.querySelector('span').innerText = txt;
-        }
-    }
-
-    async function testWhatsApp() {
-        const provider = document.getElementById('wa-provider').value;
-        const instance = document.getElementById('wa-instance')?.value.trim() || "";
-        const token = document.getElementById('wa-token')?.value.trim() || "";
-        const device = document.getElementById('wa-device')?.value.trim() || "";
-        const session = document.getElementById('wa-session')?.value.trim() || "";
-        
-        if (provider === 'desktop') {
-            enviarWhatsAppDesktop();
-            return;
-        }
-        
-        if (!instance || !token) { 
-            alert("Preencha URL/Instância e Token"); 
-            return; 
-        }
-        
-        db.config.whatsapp = { provider, instance, token, device, session };
-        saveToLocal();
-        
-        const testNumber = currentUser?.whatsapp || "5511999999999";
-        const msg = "🧪 Teste de conexão via API!";
-        
-        try {
-            let url = "", body = {};
-            if (provider === "poppap") {
-                url = `https://api.poppap.com.br/v1/messages`;
-                body = { number: testNumber.replace(/\D/g, ''), message: msg, device: device || "odontopersonalite", session: session || "default" };
-                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'X-Device-Id': device || "odontopersonalite" }, body: JSON.stringify(body) });
-                if (response.ok) {
-                    document.getElementById('wa-status').innerHTML = '<span class="text-green-600">✅ Mensagem enviada com sucesso!</span>';
-                } else {
-                    document.getElementById('wa-status').innerHTML = '<span class="text-red-600">❌ Falha no envio</span>';
-                }
-            } else if (provider === "evolution") {
-                url = `${instance}/message/sendText/${instance.split('/').pop()}`;
-                body = { number: testNumber, text: msg };
-                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Client-Token': token }, body: JSON.stringify(body) });
-                document.getElementById('wa-status').innerHTML = res.ok ? '<span class="text-green-600">✅ Conectado!</span>' : '<span class="text-red-600">❌ Falha</span>';
-            } else {
-                url = `https://api.z-api.io/instances/${instance}/token/${token}/send-text`;
-                body = { phone: testNumber, message: msg };
-                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                document.getElementById('wa-status').innerHTML = res.ok ? '<span class="text-green-600">✅ Conectado!</span>' : '<span class="text-red-600">❌ Falha</span>';
-            }
-        } catch(e) {
-            document.getElementById('wa-status').innerHTML = '<span class="text-red-600">❌ Erro: ' + e.message + '</span>';
-        }
-    }
-
-    function renderPermissionsTree() {
-        const container = document.getElementById('permissions-tree');
-        if (!container) return;
-        container.innerHTML = '';
-        const roles = ['owner', 'manager', 'dentist', 'client'];
-        for (let role of roles) {
-            const perms = db.config.permissions[role] || JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS[role]));
-            const card = document.createElement('div');
-            card.className = 'border rounded-xl p-3 bg-slate-50 mb-3';
-            card.innerHTML = `<h4 class="font-black text-sm mb-2">${role.toUpperCase()}</h4>`;
-            for (let mod in MODULES) {
-                const div = document.createElement('div');
-                div.className = 'flex items-center gap-2 text-sm';
-                const chk = document.createElement('input');
-                chk.type = 'checkbox'; chk.checked = perms[mod] === true;
-                chk.onchange = (e) => { perms[mod] = e.target.checked; };
-                const label = document.createElement('label');
-                label.innerText = MODULES[mod].name;
-                div.appendChild(chk); div.appendChild(label);
-                card.appendChild(div);
-            }
-            container.appendChild(card);
-        }
-    }
-    
-    async function savePermissions() {
-        const roles = ['owner', 'manager', 'dentist', 'client'];
-        const newPerms = {};
-        for (let role of roles) {
-            const card = Array.from(document.querySelectorAll('#permissions-tree > div')).find(c => c.innerText.includes(role.toUpperCase()));
-            if (!card) continue;
-            const rolePerms = {};
-            let modIndex = 0;
-            for (let mod in MODULES) {
-                const chk = card.querySelectorAll('input[type="checkbox"]')[modIndex];
-                rolePerms[mod] = chk.checked;
-                modIndex++;
-            }
-            newPerms[role] = rolePerms;
-        }
-        db.config.permissions = newPerms;
-        saveToLocal();
-        alert("Permissões salvas! Recarregue.");
-        location.reload();
-    }
-    
-    function hasPermission(module, action = null) {
-        const perms = db.config.permissions[currentUser?.role] || DEFAULT_PERMISSIONS[currentUser?.role];
-        if (!perms) return false;
-        if (action) return perms.actions?.[action] === true;
-        return perms[module] === true;
-    }
-
-    function doLogin() {
-        const u = document.getElementById('login-user').value.trim();
-        const p = document.getElementById('login-pass').value.trim();
-        const found = db.users.find(x => x.login === u && x.pass === p);
-        if (found) { currentUser = found; start(); } else alert("Credenciais inválidas");
-    }
-    
-    function start() {
-        document.getElementById('view-login').classList.add('hidden');
-        document.getElementById('main-nav').classList.remove('hidden');
-        document.getElementById('top-bar').classList.remove('hidden');
-        document.getElementById('main-content').classList.remove('hidden');
-        renderAll();
-        buildBottomNav();
-        setupWhatsAppConfig();
-        const firstTab = Object.keys(MODULES).find(mod => hasPermission(mod));
-        const tabToLoad = firstTab || 'client';
-        switchTab(tabToLoad);
-    }
-    
-    function buildBottomNav() {
-        const navDiv = document.getElementById('bottom-nav');
-        navDiv.innerHTML = '';
-        for (let mod in MODULES) {
-            if (hasPermission(mod)) {
-                const btn = document.createElement('a');
-                btn.href = '#';
-                btn.className = 'flex flex-col items-center py-1 px-3 rounded-full text-slate-500';
-                btn.innerHTML = `<i class="fas ${MODULES[mod].icon} text-xl"></i><span class="text-[10px] mt-1">${MODULES[mod].name}</span>`;
-                btn.onclick = (e) => { e.preventDefault(); switchTab(mod); };
-                btn.id = `tab-${mod}`;
-                navDiv.appendChild(btn);
-            }
-        }
-    }
-    
-    function switchTab(tabId) {
-        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-        const section = document.getElementById(`view-${tabId}`);
-        if (section) section.classList.remove('hidden');
-        document.querySelectorAll('#bottom-nav a').forEach(a => a.classList.remove('text-blue-600', 'font-bold'));
-        const activeBtn = document.getElementById(`tab-${tabId}`);
-        if (activeBtn) activeBtn.classList.add('text-blue-600', 'font-bold');
-        if (tabId === 'manager') initKanban();
-        if (tabId === 'client') { initClientCalendar(); loadClientProcedimentos(); }
-        if (tabId === 'dentist') {
-            const dentistSelect = document.getElementById('dentist-select');
-            if (currentUser?.role === 'dentist' && dentistSelect && !dentistSelect.value) dentistSelect.value = currentUser.name;
-            loadDentistCalendar();
-        }
-        if (tabId === 'nps') updateNPSChart();
-        if (tabId === 'budgets') filterBudgets();
-        if (tabId === 'settings') { renderPermissionsTree(); loadUsersTable(); renderProcedimentosList(); }
-        applyUIPermissions();
-    }
-    
-    function applyUIPermissions() {
-        const blockBtn = document.getElementById('btn-block-mode');
-        if (blockBtn) blockBtn.disabled = !hasPermission('dentist', 'bloquear_horarios');
-    }
-
-    function loadUsersTable() {
-        const tbody = document.getElementById('user-table');
-        if (tbody) tbody.innerHTML = db.users.map(u => `<tr><td class="p-1">${u.name}</td><td class="p-1">${u.role}</td><td class="p-1">${u.cro || '-'}</td><td class="p-1"><button onclick="editUser(${u.id})" class="text-blue-500">Editar</button> <button onclick="deleteUser(${u.id})" class="text-rose-500">Excluir</button></td></tr>`).join('');
-    }
-    
-    function saveUser() {
-        const id = document.getElementById('reg-id').value;
-        const name = document.getElementById('reg-name').value.trim();
-        const cpf = document.getElementById('reg-cpf').value.replace(/\D/g,'');
-        const role = document.getElementById('reg-role').value;
-        const cro = document.getElementById('reg-cro').value.trim();
-        const whatsapp = document.getElementById('reg-whatsapp').value;
-        let login = document.getElementById('reg-login').value.trim();
-        let pass = document.getElementById('reg-pass').value.trim();
-        if (!name || cpf.length<5) return alert("Incompleto");
-        if (!login) login = name.toLowerCase().split(' ')[0]+'.'+(name.toLowerCase().split(' ').pop());
-        if (!pass) pass = cpf.substring(0,5);
-        if (id) {
-            const idx = db.users.findIndex(u=>u.id==id);
-            db.users[idx] = {...db.users[idx], name, cpf, role, cro, login, pass, whatsapp};
-        } else {
-            db.users.push({ id: Date.now(), name, cpf, role, cro, login, pass, whatsapp });
-        }
-        resetUserForm();
-        renderAll();
-        saveToLocal();
-    }
-    
-    function editUser(id) {
-        const u = db.users.find(x=>x.id==id);
-        if (u) {
-            document.getElementById('reg-id').value = u.id;
-            document.getElementById('reg-name').value = u.name;
-            document.getElementById('reg-cpf').value = u.cpf;
-            document.getElementById('reg-role').value = u.role;
-            document.getElementById('reg-cro').value = u.cro || '';
-            document.getElementById('reg-whatsapp').value = u.whatsapp || '';
-            document.getElementById('reg-login').value = u.login;
-            document.getElementById('reg-pass').value = u.pass;
-            document.getElementById('btn-cancel-edit').classList.remove('hidden');
-        }
-    }
-    
-    function resetUserForm() {
-        document.getElementById('reg-id').value = '';
-        document.getElementById('reg-name').value = '';
-        document.getElementById('reg-cpf').value = '';
-        document.getElementById('reg-cro').value = '';
-        document.getElementById('reg-whatsapp').value = '';
-        document.getElementById('reg-login').value = '';
-        document.getElementById('reg-pass').value = '';
-        document.getElementById('btn-cancel-edit').classList.add('hidden');
-    }
-    
-    function deleteUser(id) {
-        if(confirm("Excluir?")) { db.users = db.users.filter(u=>u.id!=id); renderAll(); saveToLocal(); }
-    }
-
-    function renderAll() {
-        ensureDbStructure();
-        loadUsersTable();
-        const dts = db.users.filter(u=>u.role==='dentist');
-        const cDentist = document.getElementById('c-dentist');
-        if (cDentist) cDentist.innerHTML = dts.map(d=>`<option value="${d.name}">${d.name}</option>`).join('');
-        const dentistSelect = document.getElementById('dentist-select');
-        if(dentistSelect) {
-            const prevValue = dentistSelect.value;
-            dentistSelect.innerHTML = '<option value="">Selecione</option>'+dts.map(d=>`<option value="${d.name}">${d.name}</option>`).join('');
-            if(currentUser?.role==='dentist') {
-                dentistSelect.value = currentUser.name;
-                dentistSelect.disabled=true;
-            } else {
-                dentistSelect.disabled=false;
-                if(prevValue) dentistSelect.value = prevValue;
-            }
-        }
-        const card = (a) => {
-            const patient = db.users.find(u=>u.id===a.patientId);
-            return `<div class="bg-white p-3 rounded-xl shadow-sm border card-draggable card" data-id="${a.id}"><p class="font-bold text-sm">${a.dentist}</p><p class="text-xs">${a.date} ${a.time}</p><p class="text-[10px] text-slate-500">Paciente: ${patient?.name||'?'}</p></div>`;
+            popPapConfig.classList.toggle('hidden', providerSelect.value !== 'poppap');
         };
-        const pendingDiv = document.getElementById('list-pending');
-        const activeDiv = document.getElementById('list-active');
-        const doneDiv = document.getElementById('list-done');
-        if (pendingDiv) pendingDiv.innerHTML = db.appointments.filter(a=>a.status==='pending').map(card).join('');
-        if (activeDiv) activeDiv.innerHTML = db.appointments.filter(a=>a.status==='active').map(card).join('');
-        if (doneDiv) doneDiv.innerHTML = db.appointments.filter(a=>a.status==='done').map(card).join('');
+        updateVisibility();
+        providerSelect.addEventListener('change', async () => {
+            db.config.whatsapp.provider = providerSelect.value;
+            updateVisibility();
+            await saveConfig();
+        });
+    }
+}
+
+async function testWhatsApp() {
+    const provider = document.getElementById('wa-provider').value;
+    const instance = document.getElementById('wa-instance')?.value.trim() || "";
+    const token = document.getElementById('wa-token')?.value.trim() || "";
+    if (provider === 'desktop') { enviarWhatsAppDesktop(); return; }
+    if (!instance || !token) { alert("Preencha URL/Instância e Token"); return; }
+    db.config.whatsapp = { provider, instance, token,
+        device: document.getElementById('wa-device')?.value.trim()||"",
+        session: document.getElementById('wa-session')?.value.trim()||""
+    };
+    await saveConfig();
+    showToast('⚙️ Configuração salva!');
+}
+
+async function sendWhatsAppAPI(toNumber, message) {
+    const wa = db.config.whatsapp;
+    try {
+        if (wa.provider === "poppap") {
+            await fetch(`https://api.poppap.com.br/v1/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${wa.token}`, 'X-Device-Id': wa.device||"odontopersonalite" }, body: JSON.stringify({ number: toNumber.replace(/\D/g,''), message, device: wa.device||"odontopersonalite", session: wa.session||"default" }) });
+        } else if (wa.provider === "evolution") {
+            await fetch(`${wa.instance}/message/sendText/${wa.instance.split('/').pop()}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Client-Token': wa.token }, body: JSON.stringify({ number: toNumber, text: message }) });
+        } else {
+            await fetch(`https://api.z-api.io/instances/${wa.instance}/token/${wa.token}/send-text`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: toNumber, message }) });
+        }
+        return true;
+    } catch(e) { return false; }
+}
+
+async function sendAppointmentConfirmation(appointment) {
+    const dentist = db.users.find(u => u.name === appointment.dentist);
+    if (!dentist?.whatsapp) return;
+    const patient = db.users.find(u => u.id === (appointment.patientId||appointment.patient_id));
+    const msg = `🦷 *Novo agendamento*\nPaciente: ${patient?.name}\nData: ${appointment.date}\nHorário: ${appointment.time}`;
+    if (db.config.whatsapp.provider === 'desktop') {
+        window.open(`https://wa.me/${dentist.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+        await sendWhatsAppAPI(dentist.whatsapp, msg);
+    }
+}
+
+async function sendNpsSurvey(appointment) {
+    const patient = db.users.find(u => u.id === (appointment.patientId||appointment.patient_id));
+    if (!patient?.whatsapp) return;
+    const msg = `🦷 *OdontoPersonalité*\nSua consulta com ${appointment.dentist} foi finalizada. Responda com uma nota de 0 a 10:`;
+    if (db.config.whatsapp.provider === 'desktop') {
+        window.open(`https://wa.me/${patient.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+        await sendWhatsAppAPI(patient.whatsapp, msg);
+    }
+    const nota = prompt(`Paciente ${patient.name}\nDigite a nota (0-10):`);
+    if (nota !== null && !isNaN(nota) && nota >= 0 && nota <= 10) {
+        const npsEntry = { patientId: patient.id, appointmentId: appointment.id, score: parseInt(nota), date: new Date().toISOString() };
+        db.npsResponses.push(npsEntry);
+        saveToLocal();
+        try { await upsertNps(npsEntry); } catch(e) {}
         updateNPSChart();
-        if (dentistCalendar && currentDentistForCalendar) dentistCalendar.refetchEvents();
-        if (document.getElementById('view-budgets') && !document.getElementById('view-budgets').classList.contains('hidden')) {
-            filterBudgets();
-        }
+        showToast(`Nota ${nota} registrada!`);
     }
+}
 
-    function initKanban() {
-        ['list-pending','list-active','list-done'].forEach(id=>{
-            const el = document.getElementById(id);
-            if (el) {
-                new Sortable(el, { group: 'tasks', animation:200, onEnd: async (evt)=>{
-                    const appId = evt.item.dataset.id;
-                    const newStatus = evt.to.id.replace('list-','');
-                    const app = db.appointments.find(a=>a.id==appId);
-                    if(app && app.status!==newStatus) {
-                        app.status = newStatus;
-                        saveToLocal();
-                        if(newStatus==='done') await sendNpsSurvey(app);
-                        renderAll();
-                        if (dentistCalendar) dentistCalendar.refetchEvents();
-                    }
-                }});
-            }
-        });
+// ==================== PERMISSÕES ====================
+function renderPermissionsTree() {
+    const container = document.getElementById('permissions-tree');
+    if (!container) return;
+    container.innerHTML = '';
+    const roles = ['owner', 'manager', 'dentist', 'client'];
+    for (let role of roles) {
+        const perms = db.config.permissions[role] || JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS[role]));
+        const card = document.createElement('div');
+        card.className = 'border rounded-xl p-3 bg-slate-50 mb-3';
+        card.innerHTML = `<h4 class="font-black text-sm mb-2">${role.toUpperCase()}</h4>`;
+        for (let mod in MODULES) {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 text-sm';
+            const chk = document.createElement('input');
+            chk.type = 'checkbox'; chk.checked = perms[mod] === true;
+            chk.onchange = (e) => { perms[mod] = e.target.checked; };
+            const label = document.createElement('label');
+            label.innerText = MODULES[mod].name;
+            div.appendChild(chk); div.appendChild(label);
+            card.appendChild(div);
+        }
+        container.appendChild(card);
     }
+}
 
-    function initClientCalendar() {
-        const el = document.getElementById('client-mini-calendar');
-        if (clientCalendar) clientCalendar.destroy();
-        if (el) {
-            clientCalendar = new FullCalendar.Calendar(el, {
-                initialView: 'dayGridMonth',
-                locale: 'pt-br',
-                height: 'auto',
-                dateClick: (info) => {
-                    selectedDate = info.dateStr;
-                    renderTimeSlots();
-                    document.querySelectorAll('.fc-daygrid-day').forEach(day => day.classList.remove('fc-daygrid-day-highlight'));
-                    info.dayEl.classList.add('fc-daygrid-day-highlight');
-                }
-            });
-            clientCalendar.render();
+async function savePermissions() {
+    const roles = ['owner', 'manager', 'dentist', 'client'];
+    const newPerms = {};
+    for (let role of roles) {
+        const card = Array.from(document.querySelectorAll('#permissions-tree > div')).find(c => c.innerText.includes(role.toUpperCase()));
+        if (!card) continue;
+        const rolePerms = {};
+        let modIndex = 0;
+        for (let mod in MODULES) {
+            const chk = card.querySelectorAll('input[type="checkbox"]')[modIndex];
+            rolePerms[mod] = chk.checked;
+            modIndex++;
         }
+        newPerms[role] = rolePerms;
     }
-    
-    function renderTimeSlots() {
-        if(!selectedDate) return;
-        const times = ["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00"];
-        const dentist = document.getElementById('c-dentist').value.trim();
-        const occupied = db.appointments.filter(a=>a.dentist===dentist && a.date===selectedDate).map(a=>a.time);
-        const blocked = db.blocks.filter(b=>b.dentist===dentist && b.date===selectedDate).map(b=>b.time);
-        const unavailable = [...occupied, ...blocked];
-        const container = document.getElementById('time-slots');
-        if (container) {
-            container.innerHTML = times.map(t => {
-                const isUnavail = unavailable.includes(t);
-                const isSelected = (selectedTime === t);
-                let btnClass = 'p-2 rounded-xl font-bold text-sm transition-all ';
-                if (isUnavail) btnClass += 'bg-red-100 text-slate-400 cursor-not-allowed opacity-50';
-                else if (isSelected) btnClass += 'time-slot-selected';
-                else btnClass += 'bg-slate-100 active:scale-95';
-                return `<button onclick="selectTime('${t}')" class="${btnClass}" ${isUnavail ? 'disabled' : ''}>${t}</button>`;
-            }).join('');
+    db.config.permissions = newPerms;
+    await saveConfig();
+    showToast('✅ Permissões salvas!');
+    setTimeout(() => location.reload(), 1500);
+}
+
+function hasPermission(module, action = null) {
+    const perms = db.config.permissions[currentUser?.role] || DEFAULT_PERMISSIONS[currentUser?.role];
+    if (!perms) return false;
+    if (action) return perms.actions?.[action] === true;
+    return perms[module] === true;
+}
+
+// ==================== USUÁRIOS ====================
+function loadUsersTable() {
+    const tbody = document.getElementById('user-table');
+    if (tbody) tbody.innerHTML = db.users.map(u => `<tr><td class="p-1">${u.name}</td><td class="p-1">${u.role}</td><td class="p-1">${u.cro||'-'}</td><td class="p-1"><button onclick="editUser(${u.id})" class="text-blue-500">Editar</button> <button onclick="deleteUser(${u.id})" class="text-rose-500">Excluir</button></td></tr>`).join('');
+}
+
+async function saveUser() {
+    const id = document.getElementById('reg-id').value;
+    const name = document.getElementById('reg-name').value.trim();
+    const cpf = document.getElementById('reg-cpf').value.replace(/\D/g,'');
+    const role = document.getElementById('reg-role').value;
+    const cro = document.getElementById('reg-cro').value.trim();
+    const whatsapp = document.getElementById('reg-whatsapp').value;
+    let login = document.getElementById('reg-login').value.trim();
+    let pass = document.getElementById('reg-pass').value.trim();
+    if (!name || cpf.length < 5) return alert("Dados incompletos");
+    if (!login) login = name.toLowerCase().split(' ')[0]+'.'+name.toLowerCase().split(' ').pop();
+    if (!pass) pass = cpf.substring(0,5);
+    const user = { name, cpf, role, cro, login, pass, whatsapp };
+    if (id) {
+        user.id = parseInt(id);
+        const idx = db.users.findIndex(u => u.id == id);
+        if (idx >= 0) db.users[idx] = { ...db.users[idx], ...user };
+    } else {
+        user.id = Date.now();
+        db.users.push(user);
+    }
+    resetUserForm();
+    renderAll();
+    saveToLocal();
+    try {
+        const saved = await upsertUser(user);
+        if (saved && !id) {
+            const idx = db.users.findIndex(u => u.id === user.id);
+            if (idx >= 0) db.users[idx] = { ...db.users[idx], ...saved, name: (saved.name||'').trim(), cro: saved.cro||'' };
+            renderAll();
+            saveToLocal();
         }
+        showToast('✅ Usuário salvo!');
+    } catch(e) {
+        showToast('⚠️ Erro ao salvar no servidor', 'warning');
     }
-    
-    function selectTime(t) {
-        selectedTime = t;
-        const btn = document.getElementById('btn-confirm-booking');
-        if (btn) {
-            btn.disabled = false;
-            btn.classList.remove('opacity-50');
-        }
-        renderTimeSlots();
+}
+
+function editUser(id) {
+    const u = db.users.find(x => x.id == id);
+    if (u) {
+        document.getElementById('reg-id').value = u.id;
+        document.getElementById('reg-name').value = u.name;
+        document.getElementById('reg-cpf').value = u.cpf;
+        document.getElementById('reg-role').value = u.role;
+        document.getElementById('reg-cro').value = u.cro||'';
+        document.getElementById('reg-whatsapp').value = u.whatsapp||'';
+        document.getElementById('reg-login').value = u.login;
+        document.getElementById('reg-pass').value = u.pass;
+        document.getElementById('btn-cancel-edit').classList.remove('hidden');
     }
-    
-    async function confirmBooking() {
-        if(!selectedDate||!selectedTime) return alert("Selecione data e horário");
-        const dentist = document.getElementById('c-dentist').value.trim();
-        if(db.appointments.find(a=>a.dentist===dentist && a.date===selectedDate && a.time===selectedTime)) return alert("Horário já ocupado");
-        if(db.blocks.find(b=>b.dentist===dentist && b.date===selectedDate && b.time===selectedTime)) return alert("Horário bloqueado");
-        
-        // Buscar valores dos procedimentos selecionados
-        const procedimentosComValores = selectedClientProcedures.map(p => {
-            const proc = db.procedimentos.find(proc => proc.id == p.id);
-            return { nome: p.nome, valor: proc ? proc.valor : 0 };
-        });
-        
-        const newApp = { 
-            id: Date.now(), 
-            dentist, 
-            date: selectedDate, 
-            time: selectedTime, 
-            status: 'pending', 
-            patientId: currentUser.id,
-            selectedProcedures: procedimentosComValores
-        };
-        db.appointments.push(newApp);
+}
+
+function resetUserForm() {
+    ['reg-id','reg-name','reg-cpf','reg-cro','reg-whatsapp','reg-login','reg-pass'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('btn-cancel-edit').classList.add('hidden');
+}
+
+async function deleteUser(id) {
+    if (confirm("Excluir usuário?")) {
+        db.users = db.users.filter(u => u.id != id);
+        renderAll();
         saveToLocal();
-        await sendAppointmentConfirmation(newApp);
-        alert("Agendamento confirmado!");
-        selectedClientProcedures = [];
-        selectedTime = null;
-        renderTimeSlots();
-        loadClientProcedimentos();
-        if (dentistCalendar) dentistCalendar.refetchEvents();
-        setTimeout(() => { if (dentistCalendar) dentistCalendar.refetchEvents(); }, 500);
+        try { await deleteUserFromDB(id); showToast('🗑️ Usuário excluído'); } catch(e) {}
     }
+}
 
-    function loadDentistCalendar() {
-        const dentistName = document.getElementById('dentist-select').value;
-        if (!dentistName) {
-            if (dentistCalendar) dentistCalendar.destroy();
-            const calendarDiv = document.getElementById('dentist-calendar');
-            if (calendarDiv) calendarDiv.innerHTML = '<div class="p-5 text-center text-slate-400">Selecione um dentista</div>';
-            currentDentistForCalendar = null;
-            return;
+// ==================== RENDER GERAL ====================
+function renderAll() {
+    ensureDbStructure();
+    loadUsersTable();
+    const dts = db.users.filter(u => u.role === 'dentist');
+    const cDentist = document.getElementById('c-dentist');
+    if (cDentist) cDentist.innerHTML = dts.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+    const dentistSelect = document.getElementById('dentist-select');
+    if (dentistSelect) {
+        const prevValue = dentistSelect.value;
+        dentistSelect.innerHTML = '<option value="">Selecione</option>' + dts.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+        if (currentUser?.role === 'dentist') {
+            dentistSelect.value = currentUser.name;
+            dentistSelect.disabled = true;
+        } else {
+            dentistSelect.disabled = false;
+            if (prevValue) dentistSelect.value = prevValue;
         }
-        currentDentistForCalendar = dentistName;
-        const calendarEl = document.getElementById('dentist-calendar');
-        if (dentistCalendar) dentistCalendar.destroy();
-        
-        dentistCalendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'timeGridWeek',
-            locale: 'pt-br',
-            slotMinTime: '08:00',
-            slotMaxTime: '18:00',
-            allDaySlot: false,
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
-            events: function(fetchInfo, successCallback, failureCallback) {
-                const events = [];
-                const dentist = currentDentistForCalendar;
-                if (!dentist) { successCallback([]); return; }
-                const apps = db.appointments.filter(app => app.dentist === dentist);
-                apps.forEach(app => {
-                    const patient = db.users.find(u => u.id === app.patientId);
-                    events.push({
-                        id: 'app-' + app.id,
-                        title: patient ? patient.name : 'Paciente',
-                        start: app.date + 'T' + app.time + ':00',
-                        color: '#3b82f6',
-                        extendedProps: { appointmentId: app.id }
-                    });
-                });
-                const blocks = db.blocks.filter(block => block.dentist === dentist);
-                blocks.forEach(block => {
-                    events.push({
-                        id: 'block-' + block.id,
-                        title: '🚫 BLOQUEADO',
-                        start: block.date + 'T' + block.time + ':00',
-                        color: '#ef4444',
-                        classNames: ['blocked-slot']
-                    });
-                });
-                successCallback(events);
-            },
-            eventClick: (info) => {
-                if (info.event.extendedProps.appointmentId) {
-                    abrirOrcamento(info.event.extendedProps.appointmentId);
+    }
+    const card = (a) => {
+        const patient = db.users.find(u => u.id === (a.patientId||a.patient_id));
+        return `<div class="bg-white p-3 rounded-xl shadow-sm border card-draggable card" data-id="${a.id}"><p class="font-bold text-sm">${a.dentist}</p><p class="text-xs">${a.date} ${a.time}</p><p class="text-[10px] text-slate-500">Paciente: ${patient?.name||'?'}</p></div>`;
+    };
+    const pendingDiv = document.getElementById('list-pending');
+    const activeDiv = document.getElementById('list-active');
+    const doneDiv = document.getElementById('list-done');
+    if (pendingDiv) pendingDiv.innerHTML = db.appointments.filter(a => a.status==='pending').map(card).join('');
+    if (activeDiv) activeDiv.innerHTML = db.appointments.filter(a => a.status==='active').map(card).join('');
+    if (doneDiv) doneDiv.innerHTML = db.appointments.filter(a => a.status==='done').map(card).join('');
+    updateNPSChart();
+    if (dentistCalendar && currentDentistForCalendar) dentistCalendar.refetchEvents();
+    if (document.getElementById('view-budgets') && !document.getElementById('view-budgets').classList.contains('hidden')) {
+        filterBudgets();
+    }
+}
+
+// ==================== NAVEGAÇÃO ====================
+function buildBottomNav() {
+    const navDiv = document.getElementById('bottom-nav');
+    navDiv.innerHTML = '';
+    for (let mod in MODULES) {
+        if (hasPermission(mod)) {
+            const btn = document.createElement('a');
+            btn.href = '#';
+            btn.className = 'flex flex-col items-center py-1 px-3 rounded-full text-slate-500';
+            btn.innerHTML = `<i class="fas ${MODULES[mod].icon} text-xl"></i><span class="text-[10px] mt-1">${MODULES[mod].name}</span>`;
+            btn.onclick = (e) => { e.preventDefault(); switchTab(mod); };
+            btn.id = `tab-${mod}`;
+            navDiv.appendChild(btn);
+        }
+    }
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+    const section = document.getElementById(`view-${tabId}`);
+    if (section) section.classList.remove('hidden');
+    document.querySelectorAll('#bottom-nav a').forEach(a => a.classList.remove('text-blue-600', 'font-bold'));
+    const activeBtn = document.getElementById(`tab-${tabId}`);
+    if (activeBtn) activeBtn.classList.add('text-blue-600', 'font-bold');
+    if (tabId === 'manager') initKanban();
+    if (tabId === 'client') { initClientCalendar(); loadClientProcedimentos(); }
+    if (tabId === 'dentist') {
+        const dentistSelect = document.getElementById('dentist-select');
+        if (currentUser?.role === 'dentist' && dentistSelect && !dentistSelect.value) dentistSelect.value = currentUser.name;
+        loadDentistCalendar();
+    }
+    if (tabId === 'nps') updateNPSChart();
+    if (tabId === 'budgets') filterBudgets();
+    if (tabId === 'settings') { renderPermissionsTree(); loadUsersTable(); renderProcedimentosList(); }
+    applyUIPermissions();
+}
+
+function applyUIPermissions() {
+    const blockBtn = document.getElementById('btn-block-mode');
+    if (blockBtn) blockBtn.disabled = !hasPermission('dentist', 'bloquear_horarios');
+}
+
+// ==================== NPS ====================
+function updateNPSChart() {
+    const responses = db.npsResponses || [];
+    const avg = responses.length ? (responses.reduce((a,b) => a+(b.score||0),0)/responses.length).toFixed(1) : 0;
+    const npsScore = document.getElementById('nps-score');
+    if (npsScore) npsScore.innerText = avg;
+    const counts = [0,0,0];
+    responses.forEach(r => { const s = r.score||0; if(s<=6) counts[0]++; else if(s<=8) counts[1]++; else counts[2]++; });
+    const ctx = document.getElementById('chart-nps')?.getContext('2d');
+    if (ctx) {
+        if (npsChart) npsChart.destroy();
+        npsChart = new Chart(ctx, { type:'bar', data:{ labels:['Detratores','Neutros','Promotores'], datasets:[{ label:'Respostas', data:counts, backgroundColor:['#ef4444','#f59e0b','#10b981'] }] }, options:{ responsive:true, maintainAspectRatio:true } });
+    }
+}
+
+// ==================== KANBAN ====================
+function initKanban() {
+    ['list-pending','list-active','list-done'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            new Sortable(el, { group: 'tasks', animation: 200, onEnd: async (evt) => {
+                const appId = evt.item.dataset.id;
+                const newStatus = evt.to.id.replace('list-','');
+                const app = db.appointments.find(a => a.id == appId);
+                if (app && app.status !== newStatus) {
+                    app.status = newStatus;
+                    saveToLocal();
+                    try { await upsertAppointment(app); } catch(e) {}
+                    if (newStatus === 'done') await sendNpsSurvey(app);
+                    renderAll();
+                    if (dentistCalendar) dentistCalendar.refetchEvents();
                 }
-            },
-            dateClick: async (info) => {
-                if (!isBlockMode || !hasPermission('dentist', 'bloquear_horarios')) return;
-                const date = info.dateStr.split('T')[0];
-                const time = info.dateStr.split('T')[1].substring(0,5);
-                const existing = db.blocks.find(b => b.dentist === currentDentistForCalendar && b.date === date && b.time === time);
-                if (existing) {
-                    if (confirm("Remover bloqueio?")) {
-                        db.blocks = db.blocks.filter(b => b.id !== existing.id);
-                        saveToLocal();
-                        dentistCalendar.refetchEvents();
-                    }
-                } else {
-                    if (confirm(`Bloquear ${time} em ${date}?`)) {
-                        db.blocks.push({ id: Date.now(), dentist: currentDentistForCalendar, date, time });
-                        saveToLocal();
-                        dentistCalendar.refetchEvents();
-                    }
-                }
+            }});
+        }
+    });
+}
+
+// ==================== CALENDÁRIOS ====================
+function initClientCalendar() {
+    const el = document.getElementById('client-mini-calendar');
+    if (clientCalendar) clientCalendar.destroy();
+    if (el) {
+        clientCalendar = new FullCalendar.Calendar(el, {
+            initialView: 'dayGridMonth', locale: 'pt-br', height: 'auto',
+            dateClick: (info) => {
+                selectedDate = info.dateStr;
+                renderTimeSlots();
+                document.querySelectorAll('.fc-daygrid-day').forEach(day => day.classList.remove('fc-daygrid-day-highlight'));
+                info.dayEl.classList.add('fc-daygrid-day-highlight');
             }
         });
-        dentistCalendar.render();
+        clientCalendar.render();
     }
-    
-    function forceRefreshCalendar() {
-        if (currentDentistForCalendar) {
-            loadDentistCalendar();
-            alert("Calendário recarregado!");
-        } else {
-            alert("Selecione um dentista primeiro.");
-        }
-    }
-    
-    function toggleBlockMode() {
-        isBlockMode = !isBlockMode;
-        const btn = document.getElementById('btn-block-mode');
-        if (btn) {
-            btn.innerText = `Bloqueio: ${isBlockMode ? 'ON' : 'OFF'}`;
-            btn.classList.toggle('bg-red-600', isBlockMode);
-            btn.classList.toggle('bg-slate-800', !isBlockMode);
-        }
-        if (dentistCalendar) dentistCalendar.refetchEvents();
-    }
+}
 
-    function updateNPSChart() {
-        const responses = db.npsResponses || [];
-        const avg = responses.length ? (responses.reduce((a,b)=>a+b.score,0)/responses.length).toFixed(1) : 0;
-        const npsScore = document.getElementById('nps-score');
-        if (npsScore) npsScore.innerText = avg;
-        const counts = [0,0,0];
-        responses.forEach(r=>{ if(r.score<=6) counts[0]++; else if(r.score<=8) counts[1]++; else counts[2]++; });
-        const ctx = document.getElementById('chart-nps')?.getContext('2d');
-        if(ctx) {
-            if(npsChart) npsChart.destroy();
-            npsChart = new Chart(ctx, { type:'bar', data:{ labels:['Detratores','Neutros','Promotores'], datasets:[{ label:'Respostas', data:counts, backgroundColor:['#ef4444','#f59e0b','#10b981'] }] }, options:{ responsive: true, maintainAspectRatio: true } });
-        }
+function renderTimeSlots() {
+    if (!selectedDate) return;
+    const times = ["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00"];
+    const dentist = document.getElementById('c-dentist').value.trim();
+    const occupied = db.appointments.filter(a => a.dentist===dentist && a.date===selectedDate).map(a => a.time);
+    const blocked = db.blocks.filter(b => b.dentist===dentist && b.date===selectedDate).map(b => b.time);
+    const unavailable = [...occupied, ...blocked];
+    const container = document.getElementById('time-slots');
+    if (container) {
+        container.innerHTML = times.map(t => {
+            const isUnavail = unavailable.includes(t);
+            const isSelected = (selectedTime === t);
+            let btnClass = 'p-2 rounded-xl font-bold text-sm transition-all ';
+            if (isUnavail) btnClass += 'bg-red-100 text-slate-400 cursor-not-allowed opacity-50';
+            else if (isSelected) btnClass += 'time-slot-selected';
+            else btnClass += 'bg-slate-100 active:scale-95';
+            return `<button onclick="selectTime('${t}')" class="${btnClass}" ${isUnavail?'disabled':''}>${t}</button>`;
+        }).join('');
     }
-    
-    async function sendAppointmentConfirmation(appointment) {
-        const dentist = db.users.find(u => u.name === appointment.dentist);
-        if (!dentist?.whatsapp) return;
-        const patient = db.users.find(u => u.id === appointment.patientId);
-        const msg = `🦷 *Novo agendamento*\nPaciente: ${patient?.name}\nData: ${appointment.date}\nHorário: ${appointment.time}`;
-        
-        const wa = db.config.whatsapp;
-        if (wa.provider === 'desktop') {
-            const url = `https://wa.me/${dentist.whatsapp}?text=${encodeURIComponent(msg)}`;
-            window.open(url, '_blank');
-        } else {
-            await sendWhatsAppAPI(dentist.whatsapp, msg);
+}
+
+function selectTime(t) {
+    selectedTime = t;
+    const btn = document.getElementById('btn-confirm-booking');
+    if (btn) { btn.disabled = false; btn.classList.remove('opacity-50'); }
+    renderTimeSlots();
+}
+
+async function confirmBooking() {
+    if (!selectedDate || !selectedTime) return alert("Selecione data e horário");
+    const dentist = document.getElementById('c-dentist').value.trim();
+    if (db.appointments.find(a => a.dentist===dentist && a.date===selectedDate && a.time===selectedTime)) return alert("Horário já ocupado");
+    if (db.blocks.find(b => b.dentist===dentist && b.date===selectedDate && b.time===selectedTime)) return alert("Horário bloqueado");
+    const procedimentosComValores = selectedClientProcedures.map(p => {
+        const proc = db.procedimentos.find(proc => proc.id == p.id);
+        return { nome: p.nome, valor: proc ? parseFloat(proc.valor) : 0 };
+    });
+    const newApp = { id: Date.now(), dentist, date: selectedDate, time: selectedTime, status: 'pending', patientId: currentUser.id, selectedProcedures: procedimentosComValores };
+    db.appointments.push(newApp);
+    saveToLocal();
+    try {
+        const saved = await upsertAppointment(newApp);
+        if (saved) {
+            const idx = db.appointments.findIndex(a => a.id === newApp.id);
+            if (idx >= 0) db.appointments[idx] = { ...db.appointments[idx], ...saved };
         }
+        showToast('✅ Agendamento confirmado!');
+    } catch(e) {
+        showToast('⚠️ Agendamento salvo localmente', 'warning');
     }
-    
-    async function sendNpsSurvey(appointment) {
-        const patient = db.users.find(u => u.id === appointment.patientId);
-        if (!patient?.whatsapp) return;
-        const msg = `🦷 *OdontoPersonalité*\nSua consulta com ${appointment.dentist} foi finalizada. Responda com uma nota de 0 a 10:`;
-        
-        const wa = db.config.whatsapp;
-        if (wa.provider === 'desktop') {
-            const url = `https://wa.me/${patient.whatsapp}?text=${encodeURIComponent(msg)}`;
-            window.open(url, '_blank');
-            const nota = prompt(`Paciente ${patient.name} (${patient.whatsapp})\nDigite a nota (0-10):`);
-            if (nota !== null && !isNaN(nota) && nota >= 0 && nota <= 10) {
-                if (!db.npsResponses) db.npsResponses = [];
-                db.npsResponses.push({ patientId: patient.id, appointmentId: appointment.id, score: parseInt(nota), date: new Date().toISOString() });
-                saveToLocal();
-                updateNPSChart();
-                alert(`Nota ${nota} registrada!`);
-            }
-        } else {
-            const sent = await sendWhatsAppAPI(patient.whatsapp, msg);
-            if (sent) {
-                const nota = prompt(`Paciente ${patient.name} (${patient.whatsapp})\nDigite a nota (0-10):`);
-                if (nota !== null && !isNaN(nota) && nota >= 0 && nota <= 10) {
-                    if (!db.npsResponses) db.npsResponses = [];
-                    db.npsResponses.push({ patientId: patient.id, appointmentId: appointment.id, score: parseInt(nota), date: new Date().toISOString() });
+    await sendAppointmentConfirmation(newApp);
+    selectedClientProcedures = [];
+    selectedTime = null;
+    renderTimeSlots();
+    loadClientProcedimentos();
+    if (dentistCalendar) dentistCalendar.refetchEvents();
+}
+
+function loadDentistCalendar() {
+    const dentistName = document.getElementById('dentist-select').value;
+    if (!dentistName) {
+        if (dentistCalendar) dentistCalendar.destroy();
+        const calendarDiv = document.getElementById('dentist-calendar');
+        if (calendarDiv) calendarDiv.innerHTML = '<div class="p-5 text-center text-slate-400">Selecione um dentista</div>';
+        currentDentistForCalendar = null;
+        return;
+    }
+    currentDentistForCalendar = dentistName;
+    const calendarEl = document.getElementById('dentist-calendar');
+    if (dentistCalendar) dentistCalendar.destroy();
+    dentistCalendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek', locale: 'pt-br',
+        slotMinTime: '08:00', slotMaxTime: '18:00', allDaySlot: false,
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
+        events: function(fetchInfo, successCallback) {
+            const events = [];
+            const dentist = currentDentistForCalendar;
+            if (!dentist) { successCallback([]); return; }
+            db.appointments.filter(app => app.dentist === dentist).forEach(app => {
+                const patient = db.users.find(u => u.id === (app.patientId||app.patient_id));
+                events.push({ id: 'app-'+app.id, title: patient ? patient.name : 'Paciente', start: app.date+'T'+app.time+':00', color: '#3b82f6', extendedProps: { appointmentId: app.id } });
+            });
+            db.blocks.filter(block => block.dentist === dentist).forEach(block => {
+                events.push({ id: 'block-'+block.id, title: '🚫 BLOQUEADO', start: block.date+'T'+block.time+':00', color: '#ef4444', classNames: ['blocked-slot'] });
+            });
+            successCallback(events);
+        },
+        eventClick: (info) => {
+            if (info.event.extendedProps.appointmentId) abrirOrcamento(info.event.extendedProps.appointmentId);
+        },
+        dateClick: async (info) => {
+            if (!isBlockMode || !hasPermission('dentist', 'bloquear_horarios')) return;
+            const date = info.dateStr.split('T')[0];
+            const time = info.dateStr.split('T')[1]?.substring(0,5) || '08:00';
+            const existing = db.blocks.find(b => b.dentist === currentDentistForCalendar && b.date === date && b.time === time);
+            if (existing) {
+                if (confirm("Remover bloqueio?")) {
+                    db.blocks = db.blocks.filter(b => b.id !== existing.id);
                     saveToLocal();
-                    updateNPSChart();
-                    alert(`Nota ${nota} registrada!`);
+                    try { await deleteBlockFromDB(existing.id); } catch(e) {}
+                    dentistCalendar.refetchEvents();
+                }
+            } else {
+                if (confirm(`Bloquear ${time} em ${date}?`)) {
+                    const newBlock = { id: Date.now(), dentist: currentDentistForCalendar, date, time };
+                    db.blocks.push(newBlock);
+                    saveToLocal();
+                    try {
+                        const saved = await upsertBlock(newBlock);
+                        if (saved) {
+                            const idx = db.blocks.findIndex(b => b.id === newBlock.id);
+                            if (idx >= 0) db.blocks[idx] = saved;
+                        }
+                    } catch(e) {}
+                    dentistCalendar.refetchEvents();
                 }
             }
         }
-    }
-    
-    async function sendWhatsAppAPI(toNumber, message) {
-        const wa = db.config.whatsapp;
-        try {
-            let url = "", body = {};
-            if (wa.provider === "poppap") {
-                url = `https://api.poppap.com.br/v1/messages`;
-                body = { number: toNumber.replace(/\D/g, ''), message: message, device: wa.device || "odontopersonalite", session: wa.session || "default" };
-                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${wa.token}`, 'X-Device-Id': wa.device || "odontopersonalite" }, body: JSON.stringify(body) });
-                return response.ok;
-            } else if (wa.provider === "evolution") {
-                url = `${wa.instance}/message/sendText/${wa.instance.split('/').pop()}`;
-                body = { number: toNumber, text: message };
-                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Client-Token': wa.token }, body: JSON.stringify(body) });
-                return res.ok;
-            } else {
-                url = `https://api.z-api.io/instances/${wa.instance}/token/${wa.token}/send-text`;
-                body = { phone: toNumber, message: message };
-                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                return res.ok;
-            }
-        } catch(e) { 
-            console.error(e);
-            return false; 
-        }
-    }
+    });
+    dentistCalendar.render();
+}
 
-    // Inicialização
-    loadFromLocal();
+function forceRefreshCalendar() {
+    if (currentDentistForCalendar) {
+        loadDentistCalendar();
+        showToast('🔄 Calendário recarregado!');
+    } else {
+        alert("Selecione um dentista primeiro.");
+    }
+}
+
+function toggleBlockMode() {
+    isBlockMode = !isBlockMode;
+    const btn = document.getElementById('btn-block-mode');
+    if (btn) {
+        btn.innerText = `Bloqueio: ${isBlockMode ? 'ON' : 'OFF'}`;
+        btn.classList.toggle('bg-red-600', isBlockMode);
+        btn.classList.toggle('bg-slate-800', !isBlockMode);
+    }
+    if (dentistCalendar) dentistCalendar.refetchEvents();
+}
+
+// ==================== INICIALIZAÇÃO ====================
+window.addEventListener('DOMContentLoaded', () => {
+    loadFromSupabase();
+});
 </script>
 </body>
 </html>
