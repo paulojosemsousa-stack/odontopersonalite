@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>OdontoPersonalité v9.0 | Multi-Clínica</title>
+    <title>OdontoPersonalité v9.0 | Multi-Tenant Seguro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
@@ -60,49 +60,18 @@
 </head>
 <body>
 
-<!-- LOADING OVERLAY -->
 <div id="loading-overlay" class="loading-overlay">
     <div class="spinner mb-5"></div>
     <p class="text-white font-bold text-sm" id="loading-msg">Iniciando sistema...</p>
     <p class="text-slate-400 text-xs mt-1" id="loading-sub">OdontoPersonalité v9.0</p>
 </div>
 
-<!-- ============ LOGIN ============ -->
 <div id="view-login" class="fixed inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 z-[100] flex items-center justify-center p-4 hidden">
     <div class="w-full max-w-sm space-y-4">
-
-        <!-- Clinic brand banner (shows when clinic selected) -->
-        <div id="login-clinic-banner" class="hidden text-center animate-fade">
-            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 flex items-center gap-3">
-                <img id="login-clinic-logo" src="" class="h-12 w-12 object-contain rounded-xl bg-white/10 p-1" onerror="this.style.display='none'">
-                <div class="text-left">
-                    <p id="login-clinic-nome" class="text-white font-black text-base"></p>
-                    <p id="login-grupo-nome" class="text-blue-300 text-xs"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Login card -->
         <div class="bg-white rounded-2xl shadow-2xl p-6 space-y-4">
             <div class="text-center">
                 <div id="login-default-logo" class="text-3xl font-black">Odonto<span class="text-blue-600">Personalité</span></div>
-                <p class="text-[10px] text-slate-400 font-black mt-1">v9.0 | Multi-Clínica + Supabase</p>
-            </div>
-
-            <!-- Grupo selector -->
-            <div id="login-grupo-wrap">
-                <label class="text-xs font-bold text-slate-500 mb-1 block">Grupo Econômico</label>
-                <select id="login-grupo-sel" onchange="onLoginGrupoChange()" class="w-full p-3 border rounded-xl bg-slate-50 text-sm">
-                    <option value="">— Selecione o grupo —</option>
-                </select>
-            </div>
-
-            <!-- Clinica selector -->
-            <div id="login-clinica-wrap">
-                <label class="text-xs font-bold text-slate-500 mb-1 block">Clínica</label>
-                <select id="login-clinica-sel" onchange="onLoginClinicaChange()" class="w-full p-3 border rounded-xl bg-slate-50 text-sm">
-                    <option value="">— Selecione a clínica —</option>
-                </select>
+                <p class="text-[10px] text-slate-400 font-black mt-1">v9.0 | Multi-Tenant Seguro</p>
             </div>
 
             <div class="space-y-2">
@@ -111,31 +80,29 @@
             </div>
             <button onclick="doLogin()" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-black transition-all active:scale-95">ENTRAR</button>
             <div id="login-error" class="text-center text-xs text-red-500 hidden font-bold"></div>
-            <p class="text-center text-[10px] text-slate-400">admin / admin &nbsp;|&nbsp; joao.silva / 12345</p>
+            <p class="text-center text-[10px] text-slate-400">Entre com suas credenciais de acesso</p>
+            <p class="text-center text-[10px] text-slate-300 mt-1">Super Admin: <code class="bg-slate-100 px-1 rounded">superadmin</code> / <code class="bg-slate-100 px-1 rounded">Odonto@Master2026</code></p>
         </div>
     </div>
 </div>
 
-<!-- ============ SWITCH CLINICA MODAL ============ -->
 <div id="switch-modal" class="modal hidden">
     <div class="modal-content" style="max-width:520px">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h2 class="text-lg font-black"><i class="fas fa-exchange-alt text-blue-600 mr-2"></i>Trocar Clínica</h2>
-                <p class="text-xs text-slate-400">Selecione a clínica em que deseja trabalhar</p>
+                <h2 class="text-lg font-black"><i class="fas fa-exchange-alt text-blue-600 mr-2"></i>Selecione a Clínica</h2>
+                <p class="text-xs text-slate-400" id="switch-modal-desc">Selecione a clínica em que deseja trabalhar</p>
             </div>
-            <button onclick="closeSwitchModal()" class="text-slate-400 text-2xl">&times;</button>
+            <button onclick="closeSwitchModal()" id="btn-close-switch" class="text-slate-400 text-2xl">&times;</button>
         </div>
         <div id="switch-grupos-container" class="space-y-4"></div>
     </div>
 </div>
 
-<!-- ============ BOTTOM NAV ============ -->
 <nav id="main-nav" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50 hidden">
     <div id="bottom-nav" class="flex justify-around items-center py-2 px-1 bottom-nav"></div>
 </nav>
 
-<!-- ============ TOP BAR ============ -->
 <div id="top-bar" class="hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-3 py-2 flex justify-between items-center">
     <div class="flex items-center gap-2">
         <div id="topbar-logo-wrap" class="hidden">
@@ -162,10 +129,30 @@
     </div>
 </div>
 
-<!-- ============ MAIN CONTENT ============ -->
+<!-- Setup banner: shown when odonto_prontuarios table is missing -->
+<div id="setup-banner" class="hidden fixed top-[60px] left-0 right-0 z-30 bg-amber-50 border-b border-amber-200 px-4 py-2.5 flex items-center gap-3 flex-wrap">
+    <i class="fas fa-exclamation-triangle text-amber-500 flex-shrink-0"></i>
+    <div class="flex-1 min-w-0">
+        <p class="text-xs font-bold text-amber-800" id="setup-banner-msg">Tabela <code class="bg-amber-100 px-1 rounded">odonto_prontuarios</code> não encontrada. Prontuários sendo salvos localmente.</p>
+        <p class="text-[10px] text-amber-600 mt-0.5">Execute o SQL de setup: <strong>Gestão → botão "Ver SQL de Setup"</strong></p>
+    </div>
+    <button onclick="runSetupSQL()" class="bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0 hover:bg-amber-600">
+        <i class="fas fa-database mr-1"></i>Criar tabela agora
+    </button>
+    <button onclick="document.getElementById('setup-banner').classList.add('hidden')" class="text-amber-400 text-lg flex-shrink-0">&times;</button>
+</div>
+
+<div id="storage-banner" class="hidden fixed top-[60px] left-0 right-0 z-[29] bg-blue-50 border-b border-blue-200 px-4 py-2.5 flex items-center gap-3 flex-wrap" style="top:calc(60px + var(--setup-banner-h, 0px))">
+    <i class="fas fa-cloud-upload-alt text-blue-500 flex-shrink-0"></i>
+    <div class="flex-1 min-w-0">
+        <p class="text-xs font-bold text-blue-800">Bucket <code class="bg-blue-100 px-1 rounded">odonto-media</code> não encontrado. Imagens e vídeos sendo salvos localmente.</p>
+        <p class="text-[10px] text-blue-600 mt-0.5">Crie o bucket no painel Supabase: <strong>Storage → New Bucket → nome: odonto-media</strong></p>
+    </div>
+    <button onclick="document.getElementById('storage-banner').classList.add('hidden')" class="text-blue-400 text-lg flex-shrink-0">&times;</button>
+</div>
+
 <main id="main-content" class="max-w-7xl mx-auto px-3 pb-24 pt-16 hidden">
 
-    <!-- CLIENTE -->
     <section id="view-client" class="hidden space-y-4">
         <div class="bg-white p-4 rounded-2xl shadow-sm space-y-4">
             <h2 class="text-xl font-black">1. Dentista e Data</h2>
@@ -179,14 +166,12 @@
         </div>
     </section>
 
-    <!-- KANBAN -->
     <section id="view-manager" class="hidden space-y-4">
         <div class="bg-slate-100 p-3 rounded-2xl"><h4 class="font-black text-slate-500 text-sm">AGUARDANDO</h4><div id="list-pending" class="min-h-[120px] space-y-2 mt-2"></div></div>
         <div class="bg-slate-100 p-3 rounded-2xl"><h4 class="font-black text-blue-600 text-sm">EM ATENDIMENTO</h4><div id="list-active" class="min-h-[120px] space-y-2 mt-2"></div></div>
         <div class="bg-slate-100 p-3 rounded-2xl"><h4 class="font-black text-emerald-600 text-sm">FINALIZADOS</h4><div id="list-done" class="min-h-[120px] space-y-2 mt-2"></div></div>
     </section>
 
-    <!-- AGENDA DENTISTA -->
     <section id="view-dentist" class="hidden space-y-3">
         <div class="flex flex-wrap justify-between gap-2 items-center">
             <select id="dentist-select" class="flex-1 p-3 border rounded-xl bg-slate-50" onchange="loadDentistCalendar()"></select>
@@ -196,16 +181,13 @@
         <div id="dentist-calendar" class="overflow-x-auto"></div>
     </section>
 
-    <!-- NPS -->
     <section id="view-nps" class="hidden space-y-4">
         <div class="bg-white p-5 rounded-2xl text-center"><span class="text-xs text-slate-400">NPS SCORE MÉDIO</span><p id="nps-score" class="text-5xl font-black text-blue-600 mt-1">0</p><p class="text-xs text-slate-400 mt-1" id="nps-total-label">0 respostas</p></div>
         <div class="bg-white p-3 rounded-2xl"><canvas id="chart-nps" class="w-full" style="max-height:260px"></canvas></div>
     </section>
 
-    <!-- GESTÃO: GRUPOS + CLÍNICAS (novo) -->
     <section id="view-gestao" class="hidden space-y-4">
 
-        <!-- Grupos Econômicos (super_admin only) -->
         <div id="grupos-section" class="bg-white p-4 rounded-2xl space-y-3 hidden">
             <div class="flex justify-between items-center">
                 <h3 class="font-black text-base"><i class="fas fa-layer-group text-purple-600 mr-1"></i> Grupos Econômicos</h3>
@@ -218,7 +200,6 @@
                     <input type="text" id="grupo-cnpj" placeholder="CNPJ do Grupo" class="p-2 border rounded-lg text-sm">
                     <input type="text" id="grupo-descricao" placeholder="Descrição" class="p-2 border rounded-lg text-sm">
                 </div>
-                <!-- Logo grupo -->
                 <label class="logo-upload-zone block" for="grupo-logo-input">
                     <i class="fas fa-cloud-upload-alt text-slate-400 text-2xl mb-1"></i>
                     <p class="text-xs text-slate-500">Logo do Grupo (clique para selecionar)</p>
@@ -236,7 +217,6 @@
             <div id="grupos-list" class="space-y-2"></div>
         </div>
 
-        <!-- Clínicas -->
         <div id="clinicas-section" class="bg-white p-4 rounded-2xl space-y-3">
             <div class="flex justify-between items-center">
                 <h3 class="font-black text-base"><i class="fas fa-hospital text-blue-600 mr-1"></i> Clínicas</h3>
@@ -254,7 +234,6 @@
                     <input type="text" id="clinica-cnpj" placeholder="CNPJ" class="p-2 border rounded-lg text-sm">
                     <input type="email" id="clinica-email" placeholder="E-mail" class="p-2 border rounded-lg text-sm">
                 </div>
-                <!-- Logo clínica -->
                 <label class="logo-upload-zone block" for="clinica-logo-input">
                     <i class="fas fa-image text-slate-400 text-2xl mb-1"></i>
                     <p class="text-xs text-slate-500">Logo da Clínica (PNG, JPG — max 1MB)</p>
@@ -274,7 +253,6 @@
                 </div>
             </div>
 
-            <!-- Filtro por grupo -->
             <div class="flex gap-2">
                 <select id="filter-clinicas-grupo" onchange="renderClinicasList()" class="flex-1 p-2 border rounded-xl bg-slate-50 text-sm">
                     <option value="">Todos os grupos</option>
@@ -283,7 +261,6 @@
             <div id="clinicas-list" class="grid gap-3 sm:grid-cols-2"></div>
         </div>
 
-        <!-- Minha Clínica (owner) -->
         <div id="minha-clinica-section" class="bg-white p-4 rounded-2xl space-y-3 hidden">
             <h3 class="font-black text-base"><i class="fas fa-home text-emerald-600 mr-1"></i> Minha Clínica</h3>
             <div class="grid grid-cols-2 gap-2">
@@ -309,7 +286,6 @@
             <button onclick="saveMinhaClinica()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm">Salvar Alterações</button>
         </div>
 
-        <!-- Trocar Clínica (inline para quem tem acesso) -->
         <div id="trocar-clinica-section" class="bg-white p-4 rounded-2xl space-y-3 hidden">
             <h3 class="font-black text-base"><i class="fas fa-exchange-alt text-orange-500 mr-1"></i> Trocar Clínica Ativa</h3>
             <p class="text-xs text-slate-400">Clínica atual: <strong id="current-clinica-label"></strong></p>
@@ -317,7 +293,6 @@
         </div>
     </section>
 
-    <!-- CONFIGURAÇÕES -->
     <section id="view-settings" class="hidden space-y-4">
         <div class="bg-white p-4 rounded-2xl space-y-3">
             <h3 class="font-bold"><i class="fab fa-whatsapp text-green-600 mr-1"></i> WhatsApp API</h3>
@@ -384,7 +359,6 @@
         </div>
     </section>
 
-    <!-- ORÇAMENTOS -->
     <section id="view-budgets" class="hidden space-y-4">
         <div class="bg-white p-4 rounded-2xl">
             <h2 class="text-xl font-black mb-4"><i class="fas fa-folder-open text-blue-600 mr-1"></i> Orçamentos</h2>
@@ -408,9 +382,181 @@
             </div>
         </div>
     </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ABA PRONTUÁRIO — Odontograma + Mídia
+    ══════════════════════════════════════════════════════════════ -->
+    <section id="view-prontuario" class="hidden space-y-4">
+
+        <!-- Cabeçalho + seletor de paciente -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 class="text-lg font-black flex items-center gap-2">
+                    <i class="fas fa-notes-medical text-blue-600"></i> Prontuário Digital
+                </h2>
+                <div class="flex items-center gap-2">
+                    <span id="pront-clinica-badge" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-1 rounded-full"></span>
+                    <button onclick="saveProntuarioNow()" class="bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl">
+                        <i class="fas fa-save mr-1"></i>Salvar
+                    </button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 block mb-1">PACIENTE</label>
+                    <select id="pront-paciente" onchange="loadProntuarioPaciente()" class="w-full p-2.5 border rounded-xl bg-slate-50 text-sm font-medium">
+                        <option value="">Selecione o paciente...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 block mb-1">DENTISTA RESPONSÁVEL</label>
+                    <select id="pront-dentista" class="w-full p-2.5 border rounded-xl bg-slate-50 text-sm font-medium">
+                        <option value="">Selecione o dentista...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Odontograma SVG interativo -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-black text-sm flex items-center gap-2"><i class="fas fa-tooth text-blue-500"></i> Odontograma (FDI)</h3>
+                <div class="flex gap-1 flex-wrap">
+                    <button onclick="setProntStatus('saudavel')" class="legend-btn text-[10px] font-bold px-2 py-1 rounded-lg border-2 border-transparent bg-slate-50 text-slate-600" data-status="saudavel">⬜ Saudável</button>
+                    <button onclick="setProntStatus('carie')" class="legend-btn text-[10px] font-bold px-2 py-1 rounded-lg border-2 border-transparent bg-red-50 text-red-600" data-status="carie">🔴 Cárie</button>
+                    <button onclick="setProntStatus('restaurado')" class="legend-btn text-[10px] font-bold px-2 py-1 rounded-lg border-2 border-transparent bg-blue-50 text-blue-600" data-status="restaurado">🔵 Restaurado</button>
+                    <button onclick="setProntStatus('extraido')" class="legend-btn text-[10px] font-bold px-2 py-1 rounded-lg border-2 border-transparent bg-slate-100 text-slate-500" data-status="extraido">✕ Extraído</button>
+                    <button onclick="setProntStatus('coroa')" class="legend-btn text-[10px] font-bold px-2 py-1 rounded-lg border-2 border-transparent bg-yellow-50 text-yellow-700" data-status="coroa">👑 Coroa</button>
+                    <button onclick="setProntStatus('endodontia')" class="legend-btn text-[10px] font-bold px-2 py-1 rounded-lg border-2 border-transparent bg-orange-50 text-orange-600" data-status="endodontia">🔶 Endo.</button>
+                    <button onclick="setProntStatus('implante')" class="legend-btn text-[10px] font-bold px-2 py-1 rounded-lg border-2 border-transparent bg-purple-50 text-purple-600" data-status="implante">🔩 Implante</button>
+                </div>
+            </div>
+            <p class="text-[10px] text-slate-400 mb-3 flex items-center gap-1">
+                <i class="fas fa-info-circle"></i>
+                Selecione um status acima, depois clique nas superfícies do dente. Clique no número para anotações.
+            </p>
+            <!-- Odontograma SVG -->
+            <div class="overflow-x-auto">
+                <svg id="odontograma-svg" viewBox="0 0 760 320" class="w-full" style="min-width:560px;font-family:system-ui,sans-serif"></svg>
+            </div>
+            <!-- Legenda de superfícies -->
+            <div class="flex flex-wrap gap-3 mt-3 text-[10px] text-slate-500 justify-center">
+                <span class="flex items-center gap-1"><span class="w-3 h-2 bg-slate-200 rounded inline-block"></span> V=Vestibular</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 bg-slate-200 rounded inline-block"></span> L=Lingual</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 bg-slate-200 rounded inline-block"></span> M=Mesial</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 bg-slate-200 rounded inline-block"></span> D=Distal</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-2 bg-slate-200 rounded inline-block"></span> O=Oclusal</span>
+            </div>
+        </div>
+
+        <!-- Painel de anotações do dente selecionado -->
+        <div id="pront-tooth-panel" class="bg-white p-4 rounded-2xl shadow-sm hidden">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-black text-sm" id="pront-tooth-title">Dente 11</h3>
+                <button onclick="closeThoothPanel()" class="text-slate-400 text-lg">&times;</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-3" id="pront-tooth-surfaces-grid"></div>
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1">ANOTAÇÕES / OBSERVAÇÕES</label>
+                <textarea id="pront-tooth-obs" rows="3" placeholder="Descreva o procedimento, materiais usados, observações clínicas..." class="w-full p-2.5 border rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+            </div>
+            <div class="flex gap-2 mt-3">
+                <select id="pront-tooth-proc" class="flex-1 p-2 border rounded-xl text-sm bg-slate-50">
+                    <option value="">Procedimento realizado...</option>
+                </select>
+                <button onclick="saveToothAnnotation()" class="bg-blue-600 text-white text-xs font-bold px-4 rounded-xl">Salvar</button>
+            </div>
+        </div>
+
+        <!-- Histórico de procedimentos por dente -->
+        <div id="pront-historico-section" class="bg-white p-4 rounded-2xl shadow-sm hidden">
+            <h3 class="font-black text-sm mb-3"><i class="fas fa-history text-slate-400 mr-1"></i>Histórico de Procedimentos</h3>
+            <div id="pront-historico-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+        </div>
+
+        <!-- Observações gerais do paciente -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm">
+            <h3 class="font-black text-sm mb-2"><i class="fas fa-file-medical-alt text-emerald-500 mr-1"></i>Anamnese / Observações Gerais</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 block mb-1">ALERGIAS</label>
+                    <input type="text" id="pront-alergias" placeholder="Ex: Penicilina, Latex..." class="w-full p-2 border rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 block mb-1">MEDICAMENTOS EM USO</label>
+                    <input type="text" id="pront-medicamentos" placeholder="Ex: Losartana 50mg..." class="w-full p-2 border rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 block mb-1">DOENÇAS SISTÊMICAS</label>
+                    <input type="text" id="pront-doencas" placeholder="Ex: Hipertensão, Diabetes..." class="w-full p-2 border rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 block mb-1">HISTÓRICO FAMILIAR</label>
+                    <input type="text" id="pront-historico-fam" placeholder="Ex: Câncer, Cardiopatia..." class="w-full p-2 border rounded-xl text-sm">
+                </div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1">OBSERVAÇÕES CLÍNICAS</label>
+                <textarea id="pront-obs-gerais" rows="3" class="w-full p-2.5 border rounded-xl text-sm resize-none" placeholder="Anote observações gerais, queixas, histórico..."></textarea>
+            </div>
+        </div>
+
+        <!-- Seção de Mídia (Fotos e Vídeos) -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-black text-sm flex items-center gap-2">
+                    <i class="fas fa-images text-purple-500"></i> Galeria de Exames e Imagens
+                </h3>
+                <div class="flex gap-2">
+                    <label for="pront-upload-img" class="cursor-pointer bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1">
+                        <i class="fas fa-camera"></i> Foto/RX
+                        <input type="file" id="pront-upload-img" accept="image/*" multiple onchange="handleProntMediaUpload(event,'image')">
+                    </label>
+                    <label for="pront-upload-video" class="cursor-pointer bg-purple-600 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1">
+                        <i class="fas fa-video"></i> Vídeo
+                        <input type="file" id="pront-upload-video" accept="video/*" onchange="handleProntMediaUpload(event,'video')">
+                    </label>
+                    <button onclick="startCameraCapture()" class="bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl">
+                        <i class="fas fa-circle text-red-300 mr-1"></i>Câmera
+                    </button>
+                </div>
+            </div>
+            <!-- Câmera ao vivo -->
+            <div id="camera-section" class="hidden mb-4 space-y-2">
+                <video id="camera-preview" autoplay muted playsinline class="w-full max-h-48 rounded-xl bg-black object-cover"></video>
+                <div class="flex gap-2">
+                    <button onclick="capturePhoto()" class="flex-1 bg-blue-600 text-white text-xs font-bold py-2 rounded-xl"><i class="fas fa-camera mr-1"></i>Tirar Foto</button>
+                    <button onclick="stopCamera()" class="px-4 bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl">Fechar</button>
+                </div>
+            </div>
+            <!-- Galeria -->
+            <div id="pront-media-gallery" class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                <div class="col-span-full text-center text-slate-300 py-8 text-sm" id="pront-media-empty">
+                    <i class="fas fa-images text-3xl mb-2 block opacity-30"></i>
+                    Nenhuma imagem adicionada
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de visualização de mídia -->
+    <div id="media-view-modal" class="modal hidden">
+        <div class="relative max-w-2xl w-full">
+            <button onclick="closeMediaModal()" class="absolute top-2 right-2 z-10 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold">&times;</button>
+            <img id="media-view-img" src="" class="hidden w-full rounded-2xl max-h-screen object-contain">
+            <video id="media-view-video" controls class="hidden w-full rounded-2xl max-h-screen"></video>
+            <div class="bg-white rounded-b-2xl p-3 flex justify-between items-center">
+                <p id="media-view-caption" class="text-xs text-slate-500"></p>
+                <button onclick="deleteCurrentMedia()" class="text-red-500 text-xs font-bold"><i class="fas fa-trash mr-1"></i>Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de câmera canvas (captura) -->
+    <canvas id="camera-canvas" class="hidden"></canvas>
+
 </main>
 
-<!-- ============ MODAL ORÇAMENTO ============ -->
 <div id="orcamento-modal" class="modal hidden">
     <div class="modal-content">
         <div class="flex justify-between items-center mb-4">
@@ -450,8 +596,15 @@
     </div>
 </div>
 
-<!-- ============ JAVASCRIPT ============ -->
 <script>
+// ==================== SEGURANÇA MASTER ====================
+// Senha Master do Sistema — altere antes de publicar em produção
+const MASTER_USER = 'superadmin';
+const MASTER_PASS = 'Odonto@Master2026';
+// O super_admin tem acesso a todos os grupos e clínicas
+// Nenhum usuário de grupo pode ver dados de outro grupo
+// =====================================================
+
 // ==================== SUPABASE ====================
 const SUPABASE_URL = 'https://ohmwmyxlrqaydvxhihnv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_1PvwLJYujxsSr51sgQXeYA_ZYy2iLu_';
@@ -475,19 +628,20 @@ const MODULES = {
     nps:     { name:"NPS",       icon:"fa-chart-line" },
     budgets: { name:"Orçamentos",icon:"fa-folder-open" },
     gestao:  { name:"Gestão",    icon:"fa-building" },
+    prontuario:{ name:"Prontuário", icon:"fa-notes-medical" },
     settings:{ name:"Ajustes",   icon:"fa-cog" }
 };
 
 const DEFAULT_PERMISSIONS = {
-    super_admin: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, settings:true,
+    super_admin: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, settings:true,
         actions:{agendar:true,mover_cards:true,ver_agenda:true,bloquear_horarios:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:true,gerenciar_procedimentos:true,fazer_orcamento:true,gerenciar_grupos:true,gerenciar_clinicas:true,trocar_clinica:true,editar_minha_clinica:true}},
-    group_admin: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:true, settings:true,
+    group_admin: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, settings:true,
         actions:{mover_cards:true,ver_agenda:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:false,gerenciar_procedimentos:true,fazer_orcamento:false,gerenciar_grupos:false,gerenciar_clinicas:true,trocar_clinica:true,editar_minha_clinica:true}},
-    owner: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, settings:true,
+    owner: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, settings:true,
         actions:{agendar:true,mover_cards:true,ver_agenda:true,bloquear_horarios:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:true,gerenciar_procedimentos:true,fazer_orcamento:true,gerenciar_grupos:false,gerenciar_clinicas:false,trocar_clinica:false,editar_minha_clinica:true}},
-    manager: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:false, settings:true,
+    manager: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:false, prontuario:true, settings:true,
         actions:{mover_cards:true,ver_agenda:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:false,gerenciar_procedimentos:false,fazer_orcamento:false}},
-    dentist: { client:false, manager:false, dentist:true, nps:false, budgets:false, gestao:false, settings:false,
+    dentist: { client:false, manager:false, dentist:true, nps:false, budgets:false, gestao:false, prontuario:true, settings:false,
         actions:{ver_agenda:true,bloquear_horarios:true,fazer_orcamento:true}},
     client:  { client:true, manager:false, dentist:false, nps:false, budgets:false, gestao:false, settings:false,
         actions:{agendar:true}}
@@ -564,51 +718,14 @@ function updateTopBar() {
     document.getElementById('topbar-clinica-nome').textContent = currentClinica.nome;
     document.getElementById('topbar-grupo-nome').textContent = grupo?.nome || '';
     infoEl.classList.remove('hidden');
-    // Switch button visibility
-    const canSwitch = ['super_admin','group_admin'].includes(currentUser?.role);
+    
+    const canSwitch = allClinicas.length > 1 && ['super_admin','group_admin'].includes(currentUser?.role);
     const switchBtn = document.getElementById('btn-switch-clinica');
     if (switchBtn) switchBtn.classList.toggle('hidden', !canSwitch);
 }
 
-// ==================== MULTI-CLINICA ====================
-function onLoginGrupoChange() {
-    const grupoId = document.getElementById('login-grupo-sel').value;
-    const clinicaSel = document.getElementById('login-clinica-sel');
-    const filtered = grupoId ? allClinicas.filter(c => c.grupo_id == grupoId && c.ativa) : allClinicas.filter(c=>c.ativa);
-    clinicaSel.innerHTML = '<option value="">— Selecione a clínica —</option>' +
-        filtered.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    if (filtered.length === 1) { clinicaSel.value = filtered[0].id; onLoginClinicaChange(); }
-    else { document.getElementById('login-clinic-banner').classList.add('hidden'); }
-}
-function onLoginClinicaChange() {
-    const clinicaId = document.getElementById('login-clinica-sel').value;
-    const clinica = allClinicas.find(c => c.id == clinicaId);
-    const banner = document.getElementById('login-clinic-banner');
-    if (clinica) {
-        const grupo = allGrupos.find(g => g.id === clinica.grupo_id);
-        const logo = clinica.logo_base64 || grupo?.logo_base64;
-        const logoEl = document.getElementById('login-clinic-logo');
-        if (logo) { logoEl.src = logo; logoEl.style.display = 'block'; } else { logoEl.style.display = 'none'; }
-        document.getElementById('login-clinic-nome').textContent = clinica.nome;
-        document.getElementById('login-grupo-nome').textContent = grupo ? grupo.nome : '';
-        banner.classList.remove('hidden');
-    } else {
-        banner.classList.add('hidden');
-    }
-}
-function populateLoginSelectors() {
-    const grupoSel = document.getElementById('login-grupo-sel');
-    const clinicaSel = document.getElementById('login-clinica-sel');
-    const grupoWrap = document.getElementById('login-grupo-wrap');
-    grupoSel.innerHTML = '<option value="">— Todos os grupos —</option>' +
-        allGrupos.filter(g=>g.ativa).map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
-    // Auto-select if single group
-    if (allGrupos.length === 1) { grupoSel.value = allGrupos[0].id; grupoWrap.style.display = 'none'; }
-    else grupoWrap.style.display = '';
-    onLoginGrupoChange();
-}
-
-async function switchClinica(clinicaId) {
+// ==================== MULTI-CLINICA SWITCH ====================
+async function switchClinica(clinicaId, isFromLogin = false) {
     const clinica = allClinicas.find(c => c.id == clinicaId);
     if (!clinica || clinica.id === currentClinica?.id) { closeSwitchModal(); return; }
     setLoading(true, `Carregando ${clinica.nome}...`, 'Aguarde');
@@ -617,6 +734,14 @@ async function switchClinica(clinicaId) {
     updateTopBar();
     closeSwitchModal();
     setLoading(false);
+
+    if (isFromLogin || document.getElementById('view-login').classList.contains('hidden') === false) {
+        document.getElementById('view-login').classList.add('hidden');
+        document.getElementById('main-nav').classList.remove('hidden');
+        document.getElementById('top-bar').classList.remove('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+    }
+
     renderAll();
     buildBottomNav();
     setupWhatsAppConfig();
@@ -628,7 +753,6 @@ async function switchClinica(clinicaId) {
 function openSwitchModal() {
     const container = document.getElementById('switch-grupos-container');
     container.innerHTML = '';
-    // Group by grupo
     const gruposComClinicas = allGrupos.filter(g =>
         allClinicas.some(c => c.grupo_id === g.id && c.ativa && canAccessClinica(c))
     );
@@ -649,8 +773,22 @@ function openSwitchModal() {
         });
     }
     document.getElementById('switch-modal').classList.remove('hidden');
+    
+    // Hide close button if we are in login flow (meaning no clinic is loaded yet)
+    const btnClose = document.getElementById('btn-close-switch');
+    if (!currentClinica && btnClose) {
+        btnClose.classList.add('hidden');
+        document.getElementById('switch-modal-desc').textContent = "Você tem acesso a mais de uma clínica. Qual deseja acessar agora?";
+    } else if (btnClose) {
+        btnClose.classList.remove('hidden');
+        document.getElementById('switch-modal-desc').textContent = "Selecione a clínica em que deseja trabalhar";
+    }
 }
-function closeSwitchModal() { document.getElementById('switch-modal').classList.add('hidden'); }
+function closeSwitchModal() { 
+    if (currentClinica) {
+        document.getElementById('switch-modal').classList.add('hidden'); 
+    }
+}
 
 function canAccessClinica(clinica) {
     if (!currentUser) return false;
@@ -663,39 +801,30 @@ function canAccessClinica(clinica) {
 async function loadFromSupabase() {
     setLoading(true, 'Conectando ao banco...', 'OdontoPersonalité v9.0');
     try {
-        const [gRes, cRes] = await Promise.all([
-            sb.from('odonto_grupos').select('*').eq('ativa', true).order('nome'),
-            sb.from('odonto_clinicas').select('*').eq('ativa', true).order('nome')
-        ]);
-        allGrupos = gRes.data || [];
-        allClinicas = cRes.data || [];
-        if (allGrupos.length === 0) { await seedDefaultData(); }
-        populateLoginSelectors();
+        // Ping Supabase to check connection
+        const { error } = await sb.from('odonto_grupos').select('id').limit(1);
+        if (error) throw error;
         updateSyncStatus(true, 'Supabase');
         showLoginScreen();
     } catch(e) {
         console.error('Supabase init error:', e);
-        const saved = localStorage.getItem('odonto_mc_data');
-        if (saved) { try { const d = JSON.parse(saved); allGrupos = d.grupos||[]; allClinicas = d.clinicas||[]; } catch(e2){} }
-        if (allGrupos.length === 0) seedLocalDefault();
-        populateLoginSelectors();
         updateSyncStatus(false, 'Offline');
-        showLoginScreen();
         showToast('⚠️ Modo offline — cache local', 'warning');
+        showLoginScreen();
     }
 }
 
 async function loadClinicaData() {
     if (!currentClinica) return;
-    const cid = currentClinica.id;
+    const clinicaId = currentClinica.id; // renamed to avoid shadowing cid() function
     try {
-        const [uR, aR, bR, nR, pR, oR] = await Promise.all([
-            sb.from('odonto_users').select('*').eq('clinica_id', cid),
-            sb.from('odonto_appointments').select('*').eq('clinica_id', cid),
-            sb.from('odonto_blocks').select('*').eq('clinica_id', cid),
-            sb.from('odonto_nps').select('*').eq('clinica_id', cid),
-            sb.from('odonto_procedimentos').select('*').eq('clinica_id', cid),
-            sb.from('odonto_orcamentos').select('*').eq('clinica_id', cid)
+        const [uR, aR, bR, nR, pR, oR] = await Promise.all([ // security: all filtered by clinica_id
+            sb.from('odonto_users').select('*').eq('clinica_id', clinicaId),
+            sb.from('odonto_appointments').select('*').eq('clinica_id', clinicaId),
+            sb.from('odonto_blocks').select('*').eq('clinica_id', clinicaId),
+            sb.from('odonto_nps').select('*').eq('clinica_id', clinicaId),
+            sb.from('odonto_procedimentos').select('*').eq('clinica_id', clinicaId),
+            sb.from('odonto_orcamentos').select('*').eq('clinica_id', clinicaId)
         ]);
         db.users = (uR.data||[]).map(u=>({...u, name:(u.name||'').trim(), cro:u.cro||''}));
         db.appointments = (aR.data||[]).map(a=>({...a, dentist:(a.dentist||'').trim(), patientId:a.patient_id, selectedProcedures:a.selected_procedures||[]}));
@@ -703,12 +832,17 @@ async function loadClinicaData() {
         db.npsResponses = nR.data||[];
         db.procedimentos = pR.data && pR.data.length > 0 ? pR.data : [...DEFAULT_PROCEDIMENTOS.map((p,i)=>({id:i+1,...p}))];
         db.orcamentos = (oR.data||[]).map(normalizeOrcamento);
+        // Load prontuarios (dental records) — scoped to this clinic
+        try {
+            const pronR = await sb.from('odonto_prontuarios').select('*').eq('clinica_id', clinicaId);
+            db.prontuarios = pronR.data || [];
+        } catch(e) { db.prontuarios = db.prontuarios || []; }
         // Config from clinica
         db.config = (currentClinica.config && typeof currentClinica.config === 'object') ? currentClinica.config : {};
         if (!db.config.permissions) db.config.permissions = JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
         if (!db.config.whatsapp) db.config.whatsapp = {provider:"desktop",instance:"",token:"",device:"",session:""};
         // Seed procedures if empty
-        if (db.procedimentos.every(p => !p.clinica_id)) await seedProcedimentos(cid);
+        if (db.procedimentos.every(p => !p.clinica_id)) await seedProcedimentos(clinicaId);
         saveLocalCache();
         updateSyncStatus(true, 'Supabase');
     } catch(e) {
@@ -716,36 +850,6 @@ async function loadClinicaData() {
         loadLocalCache(cid);
         updateSyncStatus(false, 'Offline');
     }
-}
-
-async function seedDefaultData() {
-    try {
-        const { data: grupo } = await sb.from('odonto_grupos').insert([{nome:'OdontoPersonalité',cnpj:'00.000.000/0001-00',descricao:'Grupo principal'}]).select().single();
-        const { data: clinica } = await sb.from('odonto_clinicas').insert([{grupo_id:grupo.id,nome:'Clínica Central',endereco:'Rua das Flores, 123 - Centro',cidade:'São Paulo/SP',telefone:'(11) 99999-9999',config:{}}]).select().single();
-        const users = [
-            {name:"Admin Master",cpf:"00000000000",role:"super_admin",login:"admin",pass:"admin",whatsapp:"",cro:"",clinica_id:clinica.id},
-            {name:"Dr. João Silva",cpf:"11111111111",role:"dentist",login:"joao.silva",pass:"12345",whatsapp:"5511999999999",cro:"SP-12345",clinica_id:clinica.id},
-            {name:"Gerente Carla",cpf:"22222222222",role:"manager",login:"gerente",pass:"12345",whatsapp:"",cro:"",clinica_id:clinica.id},
-            {name:"Maria Oliveira",cpf:"33333333333",role:"client",login:"paciente.teste",pass:"12345",whatsapp:"5511988888888",cro:"",clinica_id:clinica.id}
-        ];
-        await sb.from('odonto_users').insert(users);
-        await sb.from('odonto_procedimentos').insert(DEFAULT_PROCEDIMENTOS.map(p=>({...p,clinica_id:clinica.id})));
-        allGrupos = [grupo];
-        allClinicas = [clinica];
-        showToast('✅ Dados iniciais criados!', 'info');
-    } catch(e) { console.error('Seed error:', e); seedLocalDefault(); }
-}
-
-function seedLocalDefault() {
-    allGrupos = [{id:1,nome:'OdontoPersonalité',ativa:true}];
-    allClinicas = [{id:1,grupo_id:1,nome:'Clínica Central',cidade:'São Paulo/SP',ativa:true,config:{}}];
-    db.users = [
-        {id:1,name:"Admin Master",cpf:"00000000000",role:"super_admin",login:"admin",pass:"admin",clinica_id:1},
-        {id:2,name:"Dr. João Silva",cpf:"11111111111",role:"dentist",login:"joao.silva",pass:"12345",whatsapp:"5511999999999",cro:"SP-12345",clinica_id:1},
-        {id:3,name:"Maria Oliveira",cpf:"33333333333",role:"client",login:"paciente.teste",pass:"12345",clinica_id:1}
-    ];
-    db.procedimentos = DEFAULT_PROCEDIMENTOS.map((p,i)=>({id:i+1,...p,clinica_id:1}));
-    db.config = {permissions:JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS)),whatsapp:{provider:"desktop",instance:"",token:"",device:"",session:""}};
 }
 
 async function seedProcedimentos(clinicaId) {
@@ -830,7 +934,6 @@ async function saveConfig() {
     try {
         await sb.from('odonto_clinicas').update({config:db.config}).eq('id',cid());
         currentClinica.config = db.config;
-        // Update allClinicas cache
         const idx = allClinicas.findIndex(c=>c.id===cid());
         if(idx>=0) allClinicas[idx].config = db.config;
     } catch(e){ console.error(e); }
@@ -851,6 +954,11 @@ function toggleGrupoForm() {
 }
 function cancelGrupoForm() { document.getElementById('grupo-form').classList.add('hidden'); }
 async function saveGrupo() {
+    // PROTEÇÃO NO FRONT: Apenas super admin pode salvar grupo
+    if (currentUser?.role !== 'super_admin') {
+        return showToast('Acesso negado: Apenas Administrador Master.', 'error');
+    }
+
     const nome = document.getElementById('grupo-nome').value.trim();
     if (!nome) return showToast('Nome obrigatório', 'error');
     const id = document.getElementById('grupo-id').value;
@@ -874,7 +982,6 @@ async function saveGrupo() {
         cancelGrupoForm();
         renderGruposList();
         populateClinicaGrupoSel();
-        populateLoginSelectors();
         saveLocalCache();
     } catch(e) { showToast('Erro: '+e.message,'error'); }
 }
@@ -896,7 +1003,6 @@ async function deleteGrupo(id) {
         await sb.from('odonto_grupos').delete().eq('id',id);
         allGrupos = allGrupos.filter(g=>g.id!=id);
         renderGruposList();
-        populateLoginSelectors();
         showToast('🗑️ Grupo excluído');
     } catch(e) { showToast('Erro: '+e.message,'error'); }
 }
@@ -939,8 +1045,19 @@ function populateClinicaGrupoSel() {
     if (filterSel) filterSel.innerHTML = '<option value="">Todos os grupos</option>' + allGrupos.map(g=>`<option value="${g.id}">${g.nome}</option>`).join('');
 }
 async function saveClinica() {
+    // PROTEÇÃO NO FRONT: Apenas admins
+    if (currentUser?.role !== 'super_admin' && currentUser?.role !== 'group_admin') {
+        return showToast('Acesso negado para gerenciar clínicas.', 'error');
+    }
+
     const nome = document.getElementById('clinica-nome').value.trim();
-    const grupoId = document.getElementById('clinica-grupo-sel').value;
+    let grupoId = document.getElementById('clinica-grupo-sel').value;
+    
+    // Forçar o grupo correto se for Group Admin
+    if (currentUser?.role === 'group_admin') {
+        grupoId = currentUser.grupo_id;
+    }
+
     if (!nome) return showToast('Nome obrigatório','error');
     if (!grupoId) return showToast('Selecione um grupo','error');
     const id = document.getElementById('clinica-id').value;
@@ -970,7 +1087,6 @@ async function saveClinica() {
         showToast('✅ Clínica salva!');
         cancelClinicaForm();
         renderClinicasList();
-        populateLoginSelectors();
         saveLocalCache();
     } catch(e) { showToast('Erro: '+e.message,'error'); }
 }
@@ -989,7 +1105,7 @@ function editClinica(id) {
     document.getElementById('clinica-grupo-sel').value=c.grupo_id;
     if (c.logo_base64) { document.getElementById('clinica-logo-img').src=c.logo_base64; document.getElementById('clinica-logo-preview').classList.remove('hidden'); }
     else clearLogo('clinica');
-    tempLogos.clinica = undefined; // undefined = keep existing
+    tempLogos.clinica = undefined;
     document.getElementById('clinica-form').scrollIntoView({behavior:'smooth'});
 }
 async function toggleClinicaAtiva(id) {
@@ -1095,59 +1211,115 @@ function renderTrocarClinicaSection() {
     }).join('');
 }
 
-// ==================== AUTH ====================
+// ==================== AUTH SEGURO ====================
 async function doLogin() {
+    // ── Master Admin: verificação local (funciona offline)
+    const uVal = document.getElementById('login-user').value.trim();
+    const pVal = document.getElementById('login-pass').value.trim();
+    if (uVal === MASTER_USER && pVal === MASTER_PASS) {
+        // Load all grupos and clinicas for super_admin
+        currentUser = { id:0, name:'Super Admin', role:'super_admin', login:'superadmin', clinica_id:null, grupo_id:null };
+        setLoading(true,'Carregando dados master...','Super Admin');
+        try {
+            const [gR, cR] = await Promise.all([
+                sb.from('odonto_grupos').select('*').order('id'),
+                sb.from('odonto_clinicas').select('*').order('nome')
+            ]);
+            allGrupos = gR.data || [];
+            allClinicas = cR.data || [];
+        } catch(e) { allGrupos=[]; allClinicas=[]; }
+        setLoading(false);
+        document.getElementById('view-login').classList.add('hidden');
+        // Super admin: open switch modal to pick a clinic, or go to gestao
+        if (allClinicas.length > 0) {
+            // Auto-enter first active clinic for viewing
+            const firstActive = allClinicas.find(c=>c.ativa) || allClinicas[0];
+            if (firstActive) {
+                await switchClinica(firstActive.id, true);
+            }
+        } else {
+            // No clinics yet: show app shell with gestao only
+            document.getElementById('main-nav').classList.remove('hidden');
+            document.getElementById('top-bar').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            buildBottomNav(); switchTab('gestao');
+        }
+        showToast('👑 Super Admin — acesso total', 'info');
+        return;
+    }
+
     const btn = document.getElementById('btn-login');
     btn.textContent='Verificando...'; btn.disabled=true;
     const u = document.getElementById('login-user').value.trim();
     const p = document.getElementById('login-pass').value.trim();
-    const selClinicaId = document.getElementById('login-clinica-sel').value;
     const errEl = document.getElementById('login-error');
     errEl.classList.add('hidden');
-    if (!selClinicaId) {
-        showLoginError('Selecione uma clínica primeiro');
-        btn.textContent='ENTRAR'; btn.disabled=false; return;
-    }
-    const clinica = allClinicas.find(c=>c.id==selClinicaId);
-    if (!clinica) { showLoginError('Clínica não encontrada'); btn.textContent='ENTRAR'; btn.disabled=false; return; }
+
     try {
-        const {data:users} = await sb.from('odonto_users').select('*').eq('login',u).eq('pass',p).eq('clinica_id',parseInt(selClinicaId));
+        // Busca do usuário (Global ou na base cacheada local)
+        const {data:users, error: uErr} = await sb.from('odonto_users').select('*').eq('login',u).eq('pass',p);
         let found = users?.[0];
-        if (!found) {
-            // Check super_admin (any clinica)
-            const {data:admins} = await sb.from('odonto_users').select('*').eq('login',u).eq('pass',p).eq('role','super_admin');
-            found = admins?.[0];
+        
+        if (!found && db.users) { // Fallback local
+            found = db.users.find(x=>x.login===u && x.pass===p);
         }
+
         if (!found) {
-            // Fallback: local cache
-            found = db.users.find(x=>x.login===u && x.pass===p && (x.clinica_id==selClinicaId || x.role==='super_admin'));
+            showLoginError('Usuário ou senha inválidos');
+            btn.textContent='ENTRAR'; btn.disabled=false; return;
         }
-        if (found) {
-            found.name=(found.name||'').trim(); found.cro=found.cro||'';
-            currentUser = found;
-            currentClinica = clinica;
-            setLoading(true, `Carregando ${clinica.nome}...`, '');
-            await loadClinicaData();
-            updateTopBar();
-            setLoading(false);
-            document.getElementById('view-login').classList.add('hidden');
-            document.getElementById('main-nav').classList.remove('hidden');
-            document.getElementById('top-bar').classList.remove('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            renderAll();
-            buildBottomNav();
-            setupWhatsAppConfig();
-            const firstTab = Object.keys(MODULES).find(mod=>hasPermission(mod));
-            switchTab(firstTab||'client');
+
+        found.name=(found.name||'').trim(); found.cro=found.cro||'';
+        currentUser = found;
+
+        // Baseado na Role do usuário, carrega apenas o que ele pode ver
+        let gRes, cRes;
+        if (currentUser.role === 'super_admin') {
+            gRes = await sb.from('odonto_grupos').select('*').eq('ativa', true);
+            cRes = await sb.from('odonto_clinicas').select('*').eq('ativa', true);
+        } else if (currentUser.role === 'group_admin') {
+            gRes = await sb.from('odonto_grupos').select('*').eq('id', currentUser.grupo_id).eq('ativa', true);
+            cRes = await sb.from('odonto_clinicas').select('*').eq('grupo_id', currentUser.grupo_id).eq('ativa', true);
         } else {
-            showLoginError('Usuário, senha ou clínica inválidos');
+            if (currentUser.clinica_id) {
+                // Usuário vinculado a uma clínica específica
+                cRes = await sb.from('odonto_clinicas').select('*').eq('id', currentUser.clinica_id).eq('ativa', true);
+                if(cRes.data?.[0]) {
+                    gRes = await sb.from('odonto_grupos').select('*').eq('id', cRes.data[0].grupo_id).eq('ativa', true);
+                }
+            } else {
+                // Fallback: clinica_id não definido (ex: usuário admin antigo)
+                // Tenta carregar todas as clínicas ativas — usuário escolhe
+                cRes = await sb.from('odonto_clinicas').select('*').eq('ativa', true).order('nome');
+                if(cRes.data?.length > 0) {
+                    gRes = await sb.from('odonto_grupos').select('*').order('id');
+                }
+            }
         }
+
+        allGrupos = gRes?.data || [];
+        allClinicas = cRes?.data || [];
+
+        if (allClinicas.length === 0) {
+            showLoginError('Nenhuma clínica encontrada. Verifique se sua conta está vinculada a uma clínica ativa no Supabase (campo clinica_id em odonto_users).');
+            btn.textContent='ENTRAR'; btn.disabled=false; return;
+        }
+
+        // Se tiver mais de uma clínica, mostra Modal. Se for uma só, entra direto.
+        if (allClinicas.length > 1) {
+            document.getElementById('view-login').classList.add('hidden');
+            openSwitchModal(); // Usuário escolhe a clínica e depois entra no sistema
+        } else {
+            await switchClinica(allClinicas[0].id, true);
+        }
+
     } catch(e) {
         showLoginError('Erro de conexão. Verifique a rede.');
         console.error(e);
     }
     btn.textContent='ENTRAR'; btn.disabled=false;
 }
+
 function showLoginError(msg) {
     const el = document.getElementById('login-error');
     el.textContent=msg; el.classList.remove('hidden');
@@ -1285,7 +1457,6 @@ async function gerarPDF(orcamento) {
     const nomeDentista=dentista?.name||orcamento.dentistaNome||orcamento.dentista_nome;
     const croDentista=dentista?.cro||orcamento.dentistaCro||orcamento.dentista_cro;
     const diasAfas=orcamento.diasAfastamento||orcamento.dias_afastamento||1;
-    // Clinic branding for PDF
     const clinicaNome=currentClinica?.nome||'OdontoPersonalité';
     const clinicaEnd=currentClinica?.endereco||'Rua das Flores, 123 — Centro';
     const clinicaCidade=currentClinica?.cidade||'São Paulo/SP';
@@ -1405,6 +1576,7 @@ function switchTab(tabId){
     if(tabId==='nps') updateNPSChart();
     if(tabId==='budgets') filterBudgets();
     if(tabId==='gestao') loadGestaoSection();
+    if(tabId==='prontuario') { initProntuario(); checkProntuarioSetup(); }
     if(tabId==='settings'){renderPermissionsTree();loadUsersTable();renderProcedimentosList();}
     applyUIPermissions();
 }
@@ -1428,7 +1600,7 @@ function loadGestaoSection(){
     // Trocar clinica
     const trocarSection=document.getElementById('trocar-clinica-section');
     if(trocarSection) trocarSection.classList.toggle('hidden',!(isSuperAdmin||isGroupAdmin));
-    if(isSuperAdmin){ renderGruposList(); renderClinicasList(); populateClinicaGrupoSel(); }
+    if(isSuperAdmin){ renderGruposList(); renderClinicasList(); populateClinicaGrupoSel(); renderSetupSQLSection(); }
     if(isGroupAdmin){ renderClinicasList(); populateClinicaGrupoSel(); }
     if(isOwner) loadMinhaClinica();
     if(isSuperAdmin||isGroupAdmin) renderTrocarClinicaSection();
@@ -1449,10 +1621,788 @@ function loadDentistCalendar(){ const dn=(document.getElementById('dentist-selec
 function forceRefreshCalendar(){ if(currentDentistForCalendar){loadDentistCalendar();showToast('🔄 Calendário atualizado!')}else alert("Selecione um dentista."); }
 function toggleBlockMode(){ isBlockMode=!isBlockMode;const btn=document.getElementById('btn-block-mode');if(btn){btn.textContent=`Bloqueio: ${isBlockMode?'ON':'OFF'}`;btn.classList.toggle('bg-red-600',isBlockMode);btn.classList.toggle('bg-slate-800',!isBlockMode);}if(dentistCalendar)dentistCalendar.refetchEvents(); }
 
+
+// ══════════════════════════════════════════════════════════════════════
+// PRONTUÁRIO — Odontograma FDI + Mídia
+// ══════════════════════════════════════════════════════════════════════
+let prontState = {
+    pacienteId: null,
+    dentistaNome: null,
+    activeStatus: 'carie',
+    selectedTooth: null,
+    // teeth: { "11": { V:"carie", L:"saudavel", M:"saudavel", D:"saudavel", O:"saudavel", obs:"", proc:"" }, ... }
+    teeth: {},
+    historico: [],   // [ { tooth, surface, status, proc, obs, data, dentista } ]
+    anamnese: { alergias:"", medicamentos:"", doencas:"", historico_fam:"", obs_gerais:"" },
+    media: []        // [ { id, type:"image"|"video", dataUrl, caption, data } ]
+};
+
+// FDI: upper right→left, lower left→right (displayed as seen from front)
+const TOOTH_UPPER = [18,17,16,15,14,13,12,11, 21,22,23,24,25,26,27,28];
+const TOOTH_LOWER = [48,47,46,45,44,43,42,41, 31,32,33,34,35,36,37,38];
+const MOLAR_TEETH = [18,17,16,15,28,27,26,25,48,47,46,45,38,37,36,35]; // wider teeth
+
+const STATUS_COLORS = {
+    saudavel:  { fill:'#f8fafc', stroke:'#94a3b8', label:'Saudável' },
+    carie:     { fill:'#fca5a5', stroke:'#ef4444', label:'Cárie' },
+    restaurado:{ fill:'#93c5fd', stroke:'#3b82f6', label:'Restaurado' },
+    extraido:  { fill:'#e2e8f0', stroke:'#94a3b8', label:'Extraído', cross:true },
+    coroa:     { fill:'#fde68a', stroke:'#f59e0b', label:'Coroa' },
+    endodontia:{ fill:'#fed7aa', stroke:'#f97316', label:'Endodontia' },
+    implante:  { fill:'#e9d5ff', stroke:'#a855f7', label:'Implante' },
+};
+
+function initProntuario() {
+    // Update badge
+    const badge = document.getElementById('pront-clinica-badge');
+    if (badge) badge.textContent = currentClinica?.nome || '';
+
+    // Populate patient selector
+    const pSel = document.getElementById('pront-paciente');
+    if (pSel) {
+        const clients = db.users.filter(u => u.role === 'client');
+        pSel.innerHTML = '<option value="">Selecione o paciente...</option>' +
+            clients.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+    }
+
+    // Populate dentist selector
+    const dSel = document.getElementById('pront-dentista');
+    if (dSel) {
+        const dentists = db.users.filter(u => u.role === 'dentist');
+        dSel.innerHTML = '<option value="">Selecione...</option>' +
+            dentists.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+        // Auto-select if dentist is logged in
+        if (currentUser?.role === 'dentist') {
+            dSel.value = currentUser.name;
+            dSel.disabled = true;
+        }
+    }
+
+    // Populate procedure selector in tooth panel
+    const procSel = document.getElementById('pront-tooth-proc');
+    if (procSel) {
+        procSel.innerHTML = '<option value="">Procedimento realizado...</option>' +
+            db.procedimentos.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
+    }
+
+    renderOdontograma();
+    setProntStatus('carie'); // default selected
+}
+
+function renderOdontograma() {
+    const svg = document.getElementById('odontograma-svg');
+    if (!svg) return;
+    const W = 760, toothW = 36, toothH = 36, gap = 4, startX = 16, upperY = 30, lowerY = 170;
+    let html = '';
+
+    // Labels
+    html += `<text x="${W/2}" y="145" text-anchor="middle" font-size="9" fill="#94a3b8" font-weight="bold">SUPERIOR</text>`;
+    html += `<text x="${W/2}" y="162" text-anchor="middle" font-size="9" fill="#94a3b8" font-weight="bold">INFERIOR</text>`;
+    html += `<line x1="${W/2}" y1="28" x2="${W/2}" y2="142" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+    html += `<line x1="${W/2}" y1="165" x2="${W/2}" y2="260" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+    html += `<text x="8" y="80" font-size="8" fill="#94a3b8" transform="rotate(-90,8,80)">D. ESQUERDO</text>`;
+    html += `<text x="${W-6}" y="80" font-size="8" fill="#94a3b8" text-anchor="end" transform="rotate(90,${W-6},80)">D. DIREITO</text>`;
+
+    function drawTooth(tNum, x, y, isUpper) {
+        const isMolar = MOLAR_TEETH.includes(tNum);
+        const w = isMolar ? toothW + 4 : toothW;
+        const h = toothH;
+        const ts = prontState.teeth[String(tNum)] || {};
+        const isExtracted = ts.V === 'extraido' && ts.O === 'extraido';
+        const cx = x + w/2, cy = y + h/2;
+
+        const surfaces = ['V','L','M','D','O'];
+        const surfPaths = {
+            V: `M${cx},${cy} L${x},${y} L${x+w},${y} Z`,
+            L: `M${cx},${cy} L${x},${y+h} L${x+w},${y+h} Z`,
+            M: `M${cx},${cy} L${x},${y} L${x},${y+h} Z`,
+            D: `M${cx},${cy} L${x+w},${y} L${x+w},${y+h} Z`,
+            O: `M${cx-w*0.28},${cy-h*0.28} L${cx+w*0.28},${cy-h*0.28} L${cx+w*0.28},${cy+h*0.28} L${cx-w*0.28},${cy+h*0.28} Z`
+        };
+
+        // Background
+        html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+
+        if (isExtracted) {
+            html += `<line x1="${x+4}" y1="${y+4}" x2="${x+w-4}" y2="${y+h-4}" stroke="#94a3b8" stroke-width="2.5"/>`;
+            html += `<line x1="${x+w-4}" y1="${y+4}" x2="${x+4}" y2="${y+h-4}" stroke="#94a3b8" stroke-width="2.5"/>`;
+        } else {
+            surfaces.forEach(s => {
+                const status = ts[s] || 'saudavel';
+                const col = STATUS_COLORS[status];
+                html += `<path d="${surfPaths[s]}" fill="${col.fill}" stroke="${col.stroke}" stroke-width="0.5" opacity="0.9"
+                    onclick="handleSurfaceClick(${tNum},'${s}')" style="cursor:pointer"
+                    onmouseenter="this.style.opacity='0.7'" onmouseleave="this.style.opacity='0.9'">
+                    <title>${toothName(tNum)} — Superfície ${s}: ${col.label}</title></path>`;
+            });
+        }
+
+        // Tooth number (clickable for annotations)
+        const numY = isUpper ? y - 3 : y + h + 11;
+        const hasNote = ts.obs && ts.obs.length > 0;
+        html += `<text x="${cx}" y="${numY}" text-anchor="middle" font-size="8.5" font-weight="bold"
+            fill="${hasNote ? '#3b82f6' : '#64748b'}" style="cursor:pointer"
+            onclick="openThoothPanel(${tNum})">${tNum}</text>`;
+        if (hasNote) {
+            html += `<circle cx="${cx+8}" cy="${numY-7}" r="3" fill="#3b82f6"/>`;
+        }
+    }
+
+    // Draw upper teeth
+    let xPos = startX;
+    TOOTH_UPPER.forEach((t, i) => {
+        const isMolar = MOLAR_TEETH.includes(t);
+        const w = isMolar ? toothW + 4 : toothW;
+        if (i === 8) xPos += 10; // midline gap
+        drawTooth(t, xPos, upperY + 16, true);
+        xPos += w + gap;
+    });
+
+    // Draw lower teeth
+    xPos = startX;
+    TOOTH_LOWER.forEach((t, i) => {
+        const isMolar = MOLAR_TEETH.includes(t);
+        const w = isMolar ? toothW + 4 : toothW;
+        if (i === 8) xPos += 10;
+        drawTooth(t, xPos, lowerY + 14, false);
+        xPos += w + gap;
+    });
+
+    svg.innerHTML = html;
+}
+
+function toothName(num) {
+    const names = {11:'Incisivo Central Sup D',12:'Incisivo Lateral Sup D',13:'Canino Sup D',14:'1º Pré-molar Sup D',15:'2º Pré-molar Sup D',16:'1º Molar Sup D',17:'2º Molar Sup D',18:'Siso Sup D',21:'Incisivo Central Sup E',22:'Incisivo Lateral Sup E',23:'Canino Sup E',24:'1º Pré-molar Sup E',25:'2º Pré-molar Sup E',26:'1º Molar Sup E',27:'2º Molar Sup E',28:'Siso Sup E',31:'Incisivo Central Inf E',32:'Incisivo Lateral Inf E',33:'Canino Inf E',34:'1º Pré-molar Inf E',35:'2º Pré-molar Inf E',36:'1º Molar Inf E',37:'2º Molar Inf E',38:'Siso Inf E',41:'Incisivo Central Inf D',42:'Incisivo Lateral Inf D',43:'Canino Inf D',44:'1º Pré-molar Inf D',45:'2º Pré-molar Inf D',46:'1º Molar Inf D',47:'2º Molar Inf D',48:'Siso Inf D'};
+    return names[num] || `Dente ${num}`;
+}
+
+function setProntStatus(status) {
+    prontState.activeStatus = status;
+    document.querySelectorAll('.legend-btn').forEach(btn => {
+        btn.classList.toggle('ring-2', btn.dataset.status === status);
+        btn.classList.toggle('ring-offset-1', btn.dataset.status === status);
+        btn.classList.toggle('ring-blue-500', btn.dataset.status === status);
+    });
+}
+
+function handleSurfaceClick(toothNum, surface) {
+    const key = String(toothNum);
+    if (!prontState.teeth[key]) prontState.teeth[key] = { V:'saudavel', L:'saudavel', M:'saudavel', D:'saudavel', O:'saudavel', obs:'', proc:'' };
+    
+    // If extraido, set all surfaces
+    if (prontState.activeStatus === 'extraido') {
+        ['V','L','M','D','O'].forEach(s => prontState.teeth[key][s] = 'extraido');
+    } else {
+        prontState.teeth[key][surface] = prontState.activeStatus;
+    }
+
+    // Log to history
+    const hist = {
+        tooth: toothNum, surface, status: prontState.activeStatus,
+        proc: '', obs: '', data: new Date().toLocaleDateString('pt-BR'),
+        dentista: document.getElementById('pront-dentista')?.value || currentUser?.name || ''
+    };
+    prontState.historico.unshift(hist);
+
+    renderOdontograma();
+    renderHistorico();
+}
+
+function openThoothPanel(toothNum) {
+    prontState.selectedTooth = toothNum;
+    const panel = document.getElementById('pront-tooth-panel');
+    panel.classList.remove('hidden');
+    document.getElementById('pront-tooth-title').textContent = `Dente ${toothNum} — ${toothName(toothNum)}`;
+
+    const key = String(toothNum);
+    const ts = prontState.teeth[key] || {};
+
+    // Surface status grid
+    const grid = document.getElementById('pront-tooth-surfaces-grid');
+    const surfaces = [
+        {s:'V',label:'Vestibular'},{s:'L',label:'Lingual'},{s:'M',label:'Mesial'},
+        {s:'D',label:'Distal'},{s:'O',label:'Oclusal'}
+    ];
+    grid.innerHTML = surfaces.map(({s,label}) => {
+        const st = ts[s] || 'saudavel';
+        const col = STATUS_COLORS[st];
+        return `<div class="text-center p-2 rounded-xl border" style="background:${col.fill};border-color:${col.stroke}">
+            <div class="text-xs font-black" style="color:${col.stroke}">${s}</div>
+            <div class="text-[10px] text-slate-600">${label}</div>
+            <div class="text-[10px] font-bold mt-0.5" style="color:${col.stroke}">${col.label}</div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('pront-tooth-obs').value = ts.obs || '';
+    const procSel = document.getElementById('pront-tooth-proc');
+    if (procSel) procSel.value = ts.proc || '';
+    panel.scrollIntoView({ behavior:'smooth' });
+}
+
+function closeThoothPanel() {
+    document.getElementById('pront-tooth-panel').classList.add('hidden');
+    prontState.selectedTooth = null;
+}
+
+function saveToothAnnotation() {
+    const t = prontState.selectedTooth;
+    if (!t) return;
+    const key = String(t);
+    if (!prontState.teeth[key]) prontState.teeth[key] = { V:'saudavel',L:'saudavel',M:'saudavel',D:'saudavel',O:'saudavel',obs:'',proc:'' };
+    prontState.teeth[key].obs = document.getElementById('pront-tooth-obs').value;
+    prontState.teeth[key].proc = document.getElementById('pront-tooth-proc').value;
+    renderOdontograma();
+    showToast('✅ Anotação salva no dente ' + t);
+}
+
+function renderHistorico() {
+    const hist = prontState.historico;
+    const section = document.getElementById('pront-historico-section');
+    const list = document.getElementById('pront-historico-list');
+    if (!section || !list) return;
+    section.classList.toggle('hidden', hist.length === 0);
+    if (!hist.length) return;
+    list.innerHTML = hist.slice(0,20).map(h => {
+        const col = STATUS_COLORS[h.status] || STATUS_COLORS.saudavel;
+        return `<div class="flex items-start gap-3 p-2.5 border rounded-xl bg-slate-50">
+            <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center font-black text-xs" style="background:${col.fill};color:${col.stroke};border:1px solid ${col.stroke}">${h.tooth}</div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-bold">Dente ${h.tooth} — Sup. ${h.surface}</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style="background:${col.fill};color:${col.stroke}">${col.label}</span>
+                    ${h.proc ? `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-bold">${h.proc}</span>` : ''}
+                </div>
+                ${h.obs ? `<p class="text-[11px] text-slate-500 mt-0.5 truncate">${h.obs}</p>` : ''}
+                <p class="text-[10px] text-slate-400 mt-0.5">${h.data} ${h.dentista ? '• Dr(a). '+h.dentista : ''}</p>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// MÍDIA — Upload real no Supabase Storage
+// Bucket: odonto-media (crie no painel Supabase Storage → New bucket)
+// ══════════════════════════════════════════════════════════════════════
+const STORAGE_BUCKET = 'odonto-media';
+let currentMediaIndex = null;
+
+// ── Converte base64 dataUrl para Blob (necessário para upload)
+function dataUrlToBlob(dataUrl) {
+    const [header, data] = dataUrl.split(',');
+    const mime = header.match(/:(.*?);/)[1];
+    const binary = atob(data);
+    const arr = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+}
+
+// ── Faz upload de um arquivo (Blob ou File) para o Supabase Storage
+// Retorna a URL pública ou null em caso de falha
+async function uploadToStorage(fileOrBlob, fileName, clinicaId, pacienteId) {
+    const ext = fileName.split('.').pop() || 'jpg';
+    // Path: clinica_id/paciente_id/timestamp.ext
+    const path = `${clinicaId}/${pacienteId}/${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+    try {
+        const { data, error } = await sb.storage
+            .from(STORAGE_BUCKET)
+            .upload(path, fileOrBlob, {
+                contentType: fileOrBlob.type || 'image/jpeg',
+                upsert: false
+            });
+        if (error) throw error;
+        // Gerar URL pública
+        const { data: urlData } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+        return { path, url: urlData.publicUrl };
+    } catch(e) {
+        console.error('Storage upload error:', e);
+        const isBucketMissing = e?.message?.includes('Bucket not found') || e?.message?.includes('bucket') || e?.statusCode === 404 || e?.error === 'Bucket not found';
+        if (isBucketMissing) {
+            document.getElementById('storage-banner')?.classList.remove('hidden');
+        }
+        return null;
+    }
+}
+
+// ── Remove arquivo do Storage
+async function deleteFromStorage(path) {
+    try {
+        await sb.storage.from(STORAGE_BUCKET).remove([path]);
+    } catch(e) { console.error('Storage delete error:', e); }
+}
+
+// ── Handler de upload de imagens/vídeos
+async function handleProntMediaUpload(event, type) {
+    if (!prontState.pacienteId) { showToast('Selecione um paciente primeiro','error'); return; }
+    const files = Array.from(event.target.files);
+    for (const file of files) {
+        if (file.size > 50 * 1024 * 1024) { showToast('Arquivo muito grande (max 50MB)', 'error'); continue; }
+        // Mostra preview imediato enquanto faz upload
+        const localDataUrl = await new Promise(res => {
+            const reader = new FileReader();
+            reader.onload = e => res(e.target.result);
+            reader.readAsDataURL(file);
+        });
+        const tempItem = {
+            id: Date.now() + Math.random(),
+            type,
+            dataUrl: localDataUrl,  // temporário, para preview
+            storageUrl: null,       // será preenchido após upload
+            storagePath: null,
+            caption: file.name,
+            data: new Date().toLocaleDateString('pt-BR'),
+            uploading: true
+        };
+        prontState.media.push(tempItem);
+        renderMediaGallery();
+
+        // Upload no background
+        const result = await uploadToStorage(file, file.name, cid(), prontState.pacienteId);
+        const idx = prontState.media.findIndex(m => m.id === tempItem.id);
+        if (idx >= 0) {
+            if (result) {
+                prontState.media[idx].storageUrl  = result.url;
+                prontState.media[idx].storagePath = result.path;
+                prontState.media[idx].dataUrl     = result.url; // usar URL do Storage
+                prontState.media[idx].uploading   = false;
+                showToast(type === 'image' ? '📷 Imagem salva no Storage!' : '🎥 Vídeo salvo no Storage!');
+            } else {
+                // Fallback: manter local (base64) com aviso
+                prontState.media[idx].uploading = false;
+                prontState.media[idx].offlineOnly = true;
+                showToast('⚠️ Upload falhou — imagem salva só localmente. Configure o bucket "odonto-media" no Supabase.', 'warning');
+            }
+            renderMediaGallery();
+        }
+    }
+    event.target.value = '';
+}
+
+// ── Salvar prontuário com URLs do Storage (não base64)
+async function saveProntuarioNow() {
+    if (!prontState.pacienteId) { showToast('Selecione um paciente','error'); return; }
+
+    // Coletar anamnese
+    prontState.anamnese = {
+        alergias:     document.getElementById('pront-alergias')?.value || '',
+        medicamentos: document.getElementById('pront-medicamentos')?.value || '',
+        doencas:      document.getElementById('pront-doencas')?.value || '',
+        historico_fam:document.getElementById('pront-historico-fam')?.value || '',
+        obs_gerais:   document.getElementById('pront-obs-gerais')?.value || '',
+    };
+
+    // Media: gravar apenas URL do Storage e metadados (nunca base64 no DB)
+    const mediaMeta = prontState.media.map(m => ({
+        id:          m.id,
+        type:        m.type,
+        storageUrl:  m.storageUrl || null,
+        storagePath: m.storagePath || null,
+        // Fallback local só para itens que ainda não subiram
+        localDataUrl: (!m.storageUrl && m.offlineOnly) ? m.dataUrl : null,
+        caption:     m.caption,
+        data:        m.data
+    }));
+
+    const payload = {
+        paciente_id:  prontState.pacienteId,
+        clinica_id:   cid(),
+        dentista:     document.getElementById('pront-dentista')?.value || '',
+        teeth:        prontState.teeth,
+        historico:    prontState.historico,
+        anamnese:     prontState.anamnese,
+        media_meta:   mediaMeta,
+        updated_at:   new Date().toISOString()
+    };
+
+    try {
+        // Verificar se já existe prontuário para esse paciente nessa clínica
+        const { data: existing } = await sb
+            .from('odonto_prontuarios')
+            .select('id')
+            .eq('paciente_id', prontState.pacienteId)
+            .eq('clinica_id', cid())
+            .maybeSingle();
+
+        if (existing?.id) {
+            const { error } = await sb.from('odonto_prontuarios').update(payload).eq('id', existing.id);
+            if (error) throw error;
+        } else {
+            const { error } = await sb.from('odonto_prontuarios').insert([payload]);
+            if (error) throw error;
+        }
+
+        // Atualizar cache local
+        if (!db.prontuarios) db.prontuarios = [];
+        const localIdx = db.prontuarios.findIndex(p =>
+            p.paciente_id == prontState.pacienteId && p.clinica_id === cid()
+        );
+        if (localIdx >= 0) db.prontuarios[localIdx] = { ...db.prontuarios[localIdx], ...payload };
+        else db.prontuarios.push(payload);
+        saveLocalCache();
+
+        showToast('✅ Prontuário salvo no banco!');
+    } catch(e) {
+        console.error('saveProntuarioNow error:', e);
+        const isTableMissing = e?.message?.includes('does not exist') || e?.code === '42P01' || e?.message?.includes('prontuarios');
+        if (isTableMissing) {
+            document.getElementById('setup-banner')?.classList.remove('hidden');
+            document.getElementById('setup-banner-msg').textContent =
+                'Tabela odonto_prontuarios não existe no Supabase. Execute o SQL de setup para habilitar o salvamento em nuvem.';
+        }
+        // Salvar localmente como fallback
+        if (!db.prontuarios) db.prontuarios = [];
+        const localIdx = db.prontuarios.findIndex(p =>
+            p.paciente_id == prontState.pacienteId && p.clinica_id === cid()
+        );
+        if (localIdx >= 0) db.prontuarios[localIdx] = { ...db.prontuarios[localIdx], ...payload };
+        else db.prontuarios.push(payload);
+        saveLocalCache();
+        showToast(isTableMissing
+            ? '⚠️ Tabela prontuários não existe — execute o SQL de setup!'
+            : '⚠️ Salvo localmente — verifique conexão Supabase', 'warning');
+    }
+}
+
+// ── Carregar prontuário: restaurar imagens via storageUrl
+function loadProntuarioPaciente() {
+    const sel = document.getElementById('pront-paciente');
+    prontState.pacienteId = sel?.value || null;
+    if (!prontState.pacienteId) return;
+
+    const saved = db.prontuarios?.find(p =>
+        p.paciente_id == prontState.pacienteId && p.clinica_id === cid()
+    );
+    if (saved) {
+        prontState.teeth    = saved.teeth    || {};
+        prontState.historico= saved.historico|| [];
+        prontState.anamnese = saved.anamnese || {};
+        // Restaurar media: usar storageUrl (URL do Supabase) ou localDataUrl como fallback
+        prontState.media = (saved.media_meta || []).map(m => ({
+            ...m,
+            dataUrl: m.storageUrl || m.localDataUrl || '', // para exibição
+            uploading: false
+        }));
+        // Preencher campos anamnese
+        document.getElementById('pront-alergias').value      = prontState.anamnese.alergias    || '';
+        document.getElementById('pront-medicamentos').value  = prontState.anamnese.medicamentos || '';
+        document.getElementById('pront-doencas').value       = prontState.anamnese.doencas      || '';
+        document.getElementById('pront-historico-fam').value = prontState.anamnese.historico_fam|| '';
+        document.getElementById('pront-obs-gerais').value    = prontState.anamnese.obs_gerais   || '';
+    } else {
+        prontState.teeth = {}; prontState.historico = []; prontState.anamnese = {}; prontState.media = [];
+        ['pront-alergias','pront-medicamentos','pront-doencas','pront-historico-fam','pront-obs-gerais']
+            .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    }
+    renderOdontograma();
+    renderMediaGallery();
+    renderHistorico();
+    document.getElementById('pront-tooth-panel').classList.add('hidden');
+}
+
+// ── Galeria — renderizar (mostra indicador de upload em andamento)
+function renderMediaGallery() {
+    const gallery = document.getElementById('pront-media-gallery');
+    if (!gallery) return;
+    if (!prontState.media.length) {
+        gallery.innerHTML = `<div class="col-span-full text-center text-slate-300 py-8 text-sm" id="pront-media-empty">
+            <i class="fas fa-images text-3xl mb-2 block opacity-30"></i>Nenhuma imagem adicionada</div>`;
+        return;
+    }
+    gallery.innerHTML = prontState.media.map((m, i) => {
+        const isUploading = m.uploading;
+        const isOffline   = m.offlineOnly;
+        const borderColor = isUploading ? 'border-yellow-400' : isOffline ? 'border-orange-400' : 'border-transparent';
+        if (m.type === 'image') {
+            return `<div class="relative group cursor-pointer" onclick="${isUploading ? '' : `openMediaModal(${i})`}">
+                <img src="${m.dataUrl}" class="w-full aspect-square object-cover rounded-xl border-2 ${borderColor} group-hover:border-blue-400 transition-all" onerror="this.src='data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"#f1f5f9\"/><text y=\".9em\" font-size=\"80\" text-anchor=\"middle\" x=\"50\">🖼️</text></svg>'">
+                ${isUploading ? `<div class="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center"><div class="spinner" style="width:24px;height:24px;border-color:rgba(255,255,255,.3);border-top-color:white"></div></div>` : ''}
+                ${isOffline ? `<div class="absolute top-1 right-1 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">LOCAL</div>` : ''}
+                ${m.storageUrl ? `<div class="absolute top-1 right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">✓</div>` : ''}
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent rounded-b-xl p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p class="text-white text-[10px] truncate">${m.caption}</p></div>
+            </div>`;
+        } else {
+            return `<div class="relative group cursor-pointer" onclick="${isUploading ? '' : `openMediaModal(${i})`}">
+                <div class="w-full aspect-square rounded-xl flex items-center justify-center border-2 ${borderColor} group-hover:border-purple-400 transition-all bg-slate-800">
+                    ${isUploading ? `<div class="spinner" style="width:24px;height:24px;border-color:rgba(255,255,255,.3);border-top-color:white"></div>` : `<i class="fas fa-play-circle text-white text-3xl"></i>`}
+                </div>
+                ${m.storageUrl ? `<div class="absolute top-1 right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">✓</div>` : ''}
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent rounded-b-xl p-1.5">
+                    <p class="text-white text-[10px] truncate">${m.caption}</p></div>
+            </div>`;
+        }
+    }).join('');
+}
+
+function openMediaModal(index) {
+    currentMediaIndex = index;
+    const m = prontState.media[index];
+    if (!m || m.uploading) return;
+    const modal = document.getElementById('media-view-modal');
+    const img   = document.getElementById('media-view-img');
+    const video = document.getElementById('media-view-video');
+    img.classList.add('hidden'); video.classList.add('hidden');
+    if (m.type === 'image') {
+        img.src = m.dataUrl || m.storageUrl;
+        img.classList.remove('hidden');
+    } else {
+        video.src = m.dataUrl || m.storageUrl;
+        video.classList.remove('hidden');
+    }
+    document.getElementById('media-view-caption').textContent =
+        `${m.caption} — ${m.data}${m.storageUrl ? ' • ✅ Salvo no Storage' : ' • ⚠️ Só local'}`;
+    modal.classList.remove('hidden');
+}
+function closeMediaModal() {
+    document.getElementById('media-view-modal').classList.add('hidden');
+    const v = document.getElementById('media-view-video');
+    if (v) { v.pause(); v.src=''; }
+}
+async function deleteCurrentMedia() {
+    if (currentMediaIndex === null) return;
+    const m = prontState.media[currentMediaIndex];
+    if (!m) return;
+    // Remover do Storage se tiver path
+    if (m.storagePath) {
+        await deleteFromStorage(m.storagePath);
+    }
+    prontState.media.splice(currentMediaIndex, 1);
+    closeMediaModal();
+    renderMediaGallery();
+    await saveProntuarioNow();
+    showToast('🗑️ Mídia removida do Storage e banco');
+}
+
+// ── Câmera ao vivo
+let cameraStream = null;
+async function startCameraCapture() {
+    if (!prontState.pacienteId) { showToast('Selecione um paciente primeiro','error'); return; }
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+        document.getElementById('camera-preview').srcObject = cameraStream;
+        document.getElementById('camera-section').classList.remove('hidden');
+    } catch(e) {
+        showToast('Câmera não disponível: ' + e.message, 'error');
+    }
+}
+async function capturePhoto() {
+    const video  = document.getElementById('camera-preview');
+    const canvas = document.getElementById('camera-canvas');
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    const blob    = dataUrlToBlob(dataUrl);
+    const fileName= `foto_${new Date().toISOString().replace(/[:.]/g,'_')}.jpg`;
+    // Preview imediato
+    const tempItem = {
+        id: Date.now(), type:'image', dataUrl,
+        storageUrl:null, storagePath:null,
+        caption: fileName, data: new Date().toLocaleDateString('pt-BR'),
+        uploading: true
+    };
+    prontState.media.push(tempItem);
+    renderMediaGallery();
+    // Upload no background
+    const result = await uploadToStorage(blob, fileName, cid(), prontState.pacienteId);
+    const idx = prontState.media.findIndex(m => m.id === tempItem.id);
+    if (idx >= 0) {
+        if (result) {
+            prontState.media[idx].storageUrl  = result.url;
+            prontState.media[idx].storagePath = result.path;
+            prontState.media[idx].dataUrl     = result.url;
+            prontState.media[idx].uploading   = false;
+            showToast('📷 Foto enviada para o Storage!');
+        } else {
+            prontState.media[idx].uploading   = false;
+            prontState.media[idx].offlineOnly = true;
+            showToast('⚠️ Foto salva só localmente','warning');
+        }
+        renderMediaGallery();
+    }
+}
+function stopCamera() {
+    if (cameraStream) { cameraStream.getTracks().forEach(t=>t.stop()); cameraStream=null; }
+    document.getElementById('camera-section').classList.add('hidden');
+}
+
+// ── SQL Setup: Storage + tabela prontuários
+function getProntuarioSQL() {
+return `-- =====================================================
+-- OdontoPersonalité v10 — Prontuário + Storage Setup
+-- Execute no SQL Editor do Supabase
+-- =====================================================
+
+-- 1. Tabela de prontuários
+CREATE TABLE IF NOT EXISTS odonto_prontuarios (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  paciente_id  int  REFERENCES odonto_users(id) ON DELETE CASCADE,
+  clinica_id   int  REFERENCES odonto_clinicas(id) ON DELETE CASCADE,
+  dentista     text,
+  teeth        jsonb DEFAULT '{}',
+  historico    jsonb DEFAULT '[]',
+  anamnese     jsonb DEFAULT '{}',
+  media_meta   jsonb DEFAULT '[]',
+  updated_at   timestamptz DEFAULT now()
+);
+
+-- Índice único: um prontuário por paciente por clínica
+CREATE UNIQUE INDEX IF NOT EXISTS idx_pront_pac_cli
+  ON odonto_prontuarios(paciente_id, clinica_id);
+CREATE INDEX IF NOT EXISTS idx_pront_clinica
+  ON odonto_prontuarios(clinica_id);
+
+-- RLS (Row Level Security)
+ALTER TABLE odonto_prontuarios ENABLE ROW LEVEL SECURITY;
+
+-- =====================================================
+-- 2. Bucket de Storage para imagens e vídeos
+-- =====================================================
+-- Execute no Supabase Dashboard:
+-- Storage → New Bucket → Nome: odonto-media → Public: OFF (privado)
+--
+-- OU via SQL (requer extensão pg_net ou via API):
+-- INSERT INTO storage.buckets (id, name, public)
+--   VALUES ('odonto-media', 'odonto-media', false)
+--   ON CONFLICT DO NOTHING;
+
+-- =====================================================
+-- 3. Políticas de Storage (Supabase Dashboard → Storage → Policies)
+-- =====================================================
+-- Adicione estas políticas no bucket odonto-media:
+--
+-- POLICY "Usuários autenticados podem ler"
+--   Operation: SELECT
+--   Target roles: authenticated
+--   Policy: true
+--
+-- POLICY "Usuários autenticados podem upload"
+--   Operation: INSERT
+--   Target roles: authenticated
+--   Policy: true
+--
+-- POLICY "Usuários autenticados podem deletar seus arquivos"
+--   Operation: DELETE
+--   Target roles: authenticated
+--   Policy: true
+--
+-- =====================================================
+-- 4. Estrutura do path no Storage
+-- =====================================================
+-- Arquivos são organizados assim:
+-- odonto-media/{clinica_id}/{paciente_id}/{timestamp}.jpg
+-- Isso garante isolamento entre clínicas no Storage.
+-- =====================================================`;
+}
+
+// ── CSS extra para legend buttons
+(function injectProntCSS(){
+    const style = document.createElement('style');
+    style.textContent = '.legend-btn { user-select:none; transition:all .15s; } .legend-btn:hover { opacity:.85; transform:scale(1.03); }';
+    document.head.appendChild(style);
+})();
+
+
+// ── Criação automática da tabela prontuários via Supabase
+async function runSetupSQL() {
+    showToast('⏳ Tentando criar tabela via Supabase...', 'info');
+    // Supabase não permite DDL via anon key — mostrar o SQL para executar manualmente
+    const sqlText = getProntuarioSQL();
+    // Copiar para clipboard
+    try {
+        await navigator.clipboard.writeText(sqlText);
+        showToast('✅ SQL copiado! Cole no Supabase SQL Editor (Dashboard → SQL Editor)', 'success');
+    } catch(e) {
+        showToast('Abra o Supabase → SQL Editor e execute o SQL de setup (botão em Gestão)', 'info');
+    }
+    // Abre o Supabase Dashboard
+    window.open('https://supabase.com/dashboard', '_blank');
+}
+
+
+// ── Seção de SQL Setup na área de Gestão
+function renderSetupSQLSection() {
+    const gestao = document.getElementById('view-gestao');
+    if (!gestao) return;
+    let box = document.getElementById('sql-setup-box');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'sql-setup-box';
+        box.className = 'bg-white p-4 rounded-2xl space-y-3';
+        gestao.appendChild(box);
+    }
+    box.innerHTML = `
+        <div class="flex items-center justify-between">
+            <h3 class="font-black text-sm flex items-center gap-2">
+                <i class="fas fa-database text-indigo-600"></i> Setup do Banco de Dados
+            </h3>
+            <span class="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded-full">v10.0</span>
+        </div>
+        <p class="text-xs text-slate-500">Execute o SQL abaixo no <strong>Supabase SQL Editor</strong> para criar a tabela de prontuários e configurar o Storage para imagens.</p>
+        <div class="flex gap-2 flex-wrap">
+            <button onclick="copiarSQLSetup()" class="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-indigo-700">
+                <i class="fas fa-copy mr-1"></i>Copiar SQL
+            </button>
+            <button onclick="abrirSupabaseDash()" class="bg-slate-700 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-slate-800">
+                <i class="fas fa-external-link-alt mr-1"></i>Abrir Supabase
+            </button>
+            <button onclick="checkProntuarioSetup()" class="bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-emerald-700">
+                <i class="fas fa-check-circle mr-1"></i>Verificar Setup
+            </button>
+        </div>
+        <div id="setup-status" class="hidden p-3 rounded-xl text-xs font-bold"></div>
+        <div class="bg-slate-900 rounded-xl p-4 max-h-48 overflow-y-auto">
+            <pre class="text-emerald-400 text-[10px] leading-relaxed whitespace-pre-wrap" id="sql-preview-text">${getProntuarioSQL()}</pre>
+        </div>
+    `;
+}
+async function copiarSQLSetup() {
+    try {
+        await navigator.clipboard.writeText(getProntuarioSQL());
+        showToast('✅ SQL copiado! Cole no Supabase SQL Editor.','success');
+    } catch(e) { showToast('Selecione e copie o SQL acima manualmente.','info'); }
+}
+function abrirSupabaseDash() {
+    window.open('https://supabase.com/dashboard/project/_/sql/new','_blank');
+    showToast('Cole o SQL copiado no editor e clique em Run','info');
+}
+
+// ── Verificar se tabelas e bucket existem ao entrar na aba prontuário
+async function checkProntuarioSetup() {
+    // Test 1: tabela odonto_prontuarios
+    try {
+        await sb.from('odonto_prontuarios').select('id').limit(1);
+        document.getElementById('setup-banner')?.classList.add('hidden');
+    } catch(e) {
+        if (e?.message?.includes('does not exist') || e?.code === '42P01') {
+            document.getElementById('setup-banner')?.classList.remove('hidden');
+        }
+    }
+    // Test 2: bucket odonto-media
+    try {
+        const {error} = await sb.storage.from(STORAGE_BUCKET).list('', { limit:1 });
+        if (error && (error.message?.includes('Bucket not found') || error.message?.includes('bucket'))) {
+            document.getElementById('storage-banner')?.classList.remove('hidden');
+        } else {
+            document.getElementById('storage-banner')?.classList.add('hidden');
+        }
+    } catch(e) {
+        document.getElementById('storage-banner')?.classList.remove('hidden');
+    }
+}
+
 // ==================== INIT ====================
 window.addEventListener('DOMContentLoaded', () => {
     loadFromSupabase();
 });
 </script>
 </body>
-</html>
+</html
+
+-- =====================================================
+-- 5. Vincular admin e usuários antigos a uma clínica
+-- =====================================================
+-- Execute isto se usuários aparecem sem clínica (tela branca no login):
+-- UPDATE odonto_users SET clinica_id = (SELECT id FROM odonto_clinicas LIMIT 1)
+--   WHERE clinica_id IS NULL;
+-- =====================================================>
