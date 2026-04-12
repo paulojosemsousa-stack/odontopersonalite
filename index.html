@@ -66,22 +66,198 @@
     <p class="text-slate-400 text-xs mt-1" id="loading-sub">OdontoPersonalité v9.0</p>
 </div>
 
-<div id="view-login" class="fixed inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 z-[100] flex items-center justify-center p-4 hidden">
-    <div class="w-full max-w-sm space-y-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 space-y-4">
-            <div class="text-center">
-                <div id="login-default-logo" class="text-3xl font-black">Odonto<span class="text-blue-600">Personalité</span></div>
-                <p class="text-[10px] text-slate-400 font-black mt-1">v9.0 | Multi-Tenant Seguro</p>
+<div id="view-login" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden" style="background:linear-gradient(135deg,#020818 0%,#0a1628 40%,#0d1f3c 70%,#070d1a 100%)">
+
+    <!-- Fundo animado -->
+    <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
+        <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,0.10),transparent 70%);top:-120px;right:-100px;animation:floatOrb1 8s ease-in-out infinite"></div>
+        <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.08),transparent 70%);bottom:-80px;left:-80px;animation:floatOrb2 10s ease-in-out infinite"></div>
+        <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,0.06),transparent 70%);top:45%;left:5%;animation:floatOrb1 12s ease-in-out infinite reverse"></div>
+    </div>
+    <style>
+    @keyframes floatOrb1{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-20px) scale(1.05)}}
+    @keyframes floatOrb2{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(15px) scale(0.97)}}
+    @keyframes loginSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .login-step-active{animation:loginSlideIn .25s ease forwards}
+    </style>
+
+    <div class="w-full relative" style="max-width:430px">
+
+        <!-- Logo -->
+        <div class="text-center mb-5">
+            <div id="login-default-logo" class="font-black text-white" style="font-size:1.75rem;letter-spacing:-1px">
+                Odonto<span style="color:#60a5fa">Personalité</span>
+            </div>
+            <p style="font-size:9px;color:#334155;font-weight:800;letter-spacing:2.5px;margin-top:4px">MULTI-TENANT · ACESSO SEGURO</p>
+        </div>
+
+        <!-- Card -->
+        <div style="background:white;border-radius:22px;box-shadow:0 28px 70px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.05);overflow:hidden">
+
+            <!-- Barra de etapas -->
+            <div style="background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:13px 22px">
+                <div style="display:flex;align-items:center;gap:6px">
+
+                    <!-- Dot 1 -->
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                        <div id="sdot1" style="width:24px;height:24px;border-radius:50%;background:#2563eb;color:white;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;transition:all .35s">1</div>
+                        <span id="slbl1" style="font-size:10px;font-weight:800;color:#2563eb;white-space:nowrap;transition:color .3s">Usuário</span>
+                    </div>
+                    <div style="flex:1;height:2px;background:#e2e8f0;border-radius:2px;overflow:hidden"><div id="sbar1" style="height:100%;background:#2563eb;width:0;transition:width .4s ease"></div></div>
+
+                    <!-- Dot 2 -->
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                        <div id="sdot2" style="width:24px;height:24px;border-radius:50%;background:#e2e8f0;color:#94a3b8;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;transition:all .35s">2</div>
+                        <span id="slbl2" style="font-size:10px;font-weight:800;color:#94a3b8;white-space:nowrap;transition:color .3s">Clínica</span>
+                    </div>
+                    <div style="flex:1;height:2px;background:#e2e8f0;border-radius:2px;overflow:hidden"><div id="sbar2" style="height:100%;background:#7c3aed;width:0;transition:width .4s ease"></div></div>
+
+                    <!-- Dot 3 -->
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                        <div id="sdot3" style="width:24px;height:24px;border-radius:50%;background:#e2e8f0;color:#94a3b8;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;transition:all .35s">3</div>
+                        <span id="slbl3" style="font-size:10px;font-weight:800;color:#94a3b8;white-space:nowrap;transition:color .3s">Senha</span>
+                    </div>
+                    <div style="flex:1;height:2px;background:#e2e8f0;border-radius:2px;overflow:hidden"><div id="sbar3" style="height:100%;background:#16a34a;width:0;transition:width .4s ease"></div></div>
+
+                    <!-- Dot 4 -->
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                        <div id="sdot4" style="width:24px;height:24px;border-radius:50%;background:#e2e8f0;color:#94a3b8;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;transition:all .35s">✓</div>
+                        <span id="slbl4" style="font-size:10px;font-weight:800;color:#94a3b8;white-space:nowrap;transition:color .3s">Entrar</span>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="space-y-2">
-                <input type="text" id="login-user" placeholder="Usuário" class="w-full p-3 border rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" id="login-pass" placeholder="Senha" class="w-full p-3 border rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" onkeydown="if(event.key==='Enter')doLogin()">
+            <div style="padding:26px 24px 22px">
+
+                <!-- ══ STEP 1: LOGIN (USERNAME ONLY) ══ -->
+                <div id="lstep1" class="login-step-active">
+                    <h2 style="font-size:16px;font-weight:900;color:#0f172a;margin:0 0 4px">Bem-vindo de volta</h2>
+                    <p style="font-size:11px;color:#64748b;margin:0 0 18px">Informe seu usuário para identificar sua clínica</p>
+
+                    <div style="position:relative;margin-bottom:14px">
+                        <i class="fas fa-user" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;pointer-events:none"></i>
+                        <input type="text" id="login-user" placeholder="Digite seu usuário" autocomplete="username"
+                            style="width:100%;padding:12px 14px 12px 38px;border:1.5px solid #e2e8f0;border-radius:13px;background:#f8fafc;font-size:13px;font-weight:600;box-sizing:border-box;outline:none;transition:border .2s,background .2s"
+                            onfocus="this.style.borderColor='#3b82f6';this.style.background='white'"
+                            onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'"
+                            onkeydown="if(event.key==='Enter')lsStep1Next()">
+                    </div>
+
+                    <button onclick="lsStep1Next()" id="btn-ls1"
+                        style="width:100%;background:#2563eb;color:white;padding:13px;border-radius:13px;font-weight:900;font-size:13px;border:none;cursor:pointer;letter-spacing:.5px;transition:background .2s,transform .15s"
+                        onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'"
+                        onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                        <i class="fas fa-arrow-right" style="margin-right:8px"></i>PRÓXIMO
+                    </button>
+
+                    <div id="login-error" style="display:none;margin-top:10px;padding:9px 13px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:11px;font-weight:700;color:#dc2626;text-align:center">
+                        <i class="fas fa-exclamation-circle" style="margin-right:5px"></i><span id="login-error-msg"></span>
+                    </div>
+
+                    <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9;text-align:center">
+                        <p style="font-size:10px;color:#94a3b8;font-weight:600;margin:0">
+                            <i class="fas fa-shield-alt" style="color:#60a5fa;margin-right:4px"></i>
+                            Dados 100% isolados por clínica · LGPD
+                        </p>
+                        <p style="font-size:9px;color:#cbd5e1;margin:4px 0 0">
+                            Super Admin: <code style="background:#f1f5f9;padding:1px 6px;border-radius:4px;color:#475569">superadmin</code>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ══ STEP 2: SELEÇÃO DE CLÍNICA (group_admin / super_admin) ══ -->
+                <div id="lstep2" style="display:none">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+                        <button onclick="lsGoBack(2)"
+                            style="width:30px;height:30px;border-radius:50%;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s"
+                            onmouseover="this.style.borderColor='#2563eb';this.style.color='#2563eb'" onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b'">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h2 style="font-size:15px;font-weight:900;color:#0f172a;margin:0">Em qual clínica vai atuar?</h2>
+                            <p id="ls2-sub" style="font-size:11px;color:#64748b;margin:2px 0 0">Selecione a unidade para continuar</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge do usuário reconhecido -->
+                    <div style="display:flex;align-items:center;gap:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 13px;margin-bottom:14px">
+                        <div id="ls2-avatar" style="width:36px;height:36px;border-radius:50%;background:#2563eb;color:white;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0">?</div>
+                        <div>
+                            <p id="ls2-name" style="font-size:12px;font-weight:800;color:#1e3a8a;margin:0">—</p>
+                            <p id="ls2-role" style="font-size:10px;color:#3b82f6;margin:0">Verificando acesso...</p>
+                        </div>
+                        <span style="margin-left:auto;background:#dbeafe;color:#1e40af;font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px">IDENTIFICADO</span>
+                    </div>
+
+                    <div id="ls2-clinicas" style="max-height:290px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px"></div>
+                </div>
+
+                <!-- ══ STEP 3: SENHA ══ -->
+                <div id="lstep3" style="display:none">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+                        <button id="btn-ls3-back" onclick="lsGoBack(3)"
+                            style="width:30px;height:30px;border-radius:50%;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s"
+                            onmouseover="this.style.borderColor='#2563eb';this.style.color='#2563eb'" onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b'">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h2 style="font-size:15px;font-weight:900;color:#0f172a;margin:0">Digite sua senha</h2>
+                            <p style="font-size:11px;color:#64748b;margin:2px 0 0">Confirme o acesso à clínica selecionada</p>
+                        </div>
+                    </div>
+
+                    <!-- Card da clínica selecionada -->
+                    <div id="ls3-clinica-card" style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 13px;margin-bottom:16px">
+                        <div id="ls3-clinica-logo" style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#dbeafe,#eff6ff);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;color:#2563eb;flex-shrink:0">?</div>
+                        <div>
+                            <p id="ls3-clinica-nome" style="font-size:12px;font-weight:800;color:#166534;margin:0">—</p>
+                            <p id="ls3-clinica-cidade" style="font-size:10px;color:#15803d;margin:0">—</p>
+                        </div>
+                        <i class="fas fa-hospital" style="color:#bbf7d0;margin-left:auto;font-size:16px"></i>
+                    </div>
+
+                    <!-- Campo senha -->
+                    <div style="position:relative;margin-bottom:14px">
+                        <i class="fas fa-lock" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;pointer-events:none"></i>
+                        <input type="password" id="login-pass" placeholder="Senha" autocomplete="current-password"
+                            style="width:100%;padding:12px 42px 12px 38px;border:1.5px solid #e2e8f0;border-radius:13px;background:#f8fafc;font-size:13px;font-weight:600;box-sizing:border-box;outline:none;transition:border .2s,background .2s"
+                            onfocus="this.style.borderColor='#7c3aed';this.style.background='white'"
+                            onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'"
+                            onkeydown="if(event.key==='Enter')lsStep3Login()">
+                        <button onclick="lsTogglePass()" tabindex="-1"
+                            style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px;padding:4px" title="Mostrar/ocultar senha">
+                            <i id="eye-icon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="lsStep3Login()" id="btn-ls3"
+                        style="width:100%;background:#7c3aed;color:white;padding:13px;border-radius:13px;font-weight:900;font-size:13px;border:none;cursor:pointer;letter-spacing:.5px;transition:background .2s,transform .15s"
+                        onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'"
+                        onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                        <i class="fas fa-sign-in-alt" style="margin-right:8px"></i>ENTRAR NO SISTEMA
+                    </button>
+
+                    <div id="login-error-3" style="display:none;margin-top:10px;padding:9px 13px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:11px;font-weight:700;color:#dc2626;text-align:center">
+                        <i class="fas fa-exclamation-circle" style="margin-right:5px"></i><span id="login-error-msg-3"></span>
+                    </div>
+                </div>
+
+                <!-- ══ STEP 4: CARREGANDO / SUCESSO ══ -->
+                <div id="lstep4" style="display:none;text-align:center;padding:24px 0">
+                    <div id="ls4-spinner" style="width:52px;height:52px;border:4px solid #dbeafe;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 18px"></div>
+                    <p id="ls4-msg" style="font-size:14px;font-weight:800;color:#1e293b;margin:0 0 5px">Carregando...</p>
+                    <p id="ls4-sub" style="font-size:11px;color:#94a3b8;margin:0">Aguarde um momento</p>
+                    <div id="ls4-ok" style="display:none">
+                        <div style="width:60px;height:60px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+                            <i class="fas fa-check" style="color:#16a34a;font-size:24px"></i>
+                        </div>
+                        <p style="font-size:15px;font-weight:900;color:#166534;margin:0 0 5px">Acesso autorizado!</p>
+                        <p id="ls4-clinica-ok" style="font-size:11px;color:#16a34a;margin:0">Entrando...</p>
+                    </div>
+                </div>
+
             </div>
-            <button onclick="doLogin()" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-black transition-all active:scale-95">ENTRAR</button>
-            <div id="login-error" class="text-center text-xs text-red-500 hidden font-bold"></div>
-            <p class="text-center text-[10px] text-slate-400">Entre com suas credenciais de acesso</p>
-            <p class="text-center text-[10px] text-slate-300 mt-1">Super Admin: <code class="bg-slate-100 px-1 rounded">superadmin</code> / <code class="bg-slate-100 px-1 rounded">Odonto@Master2026</code></p>
         </div>
     </div>
 </div>
@@ -719,15 +895,25 @@ function updateTopBar() {
     document.getElementById('topbar-grupo-nome').textContent = grupo?.nome || '';
     infoEl.classList.remove('hidden');
     
+    // Botão trocar clínica: SOMENTE super_admin e group_admin com + de 1 clínica
     const canSwitch = allClinicas.length > 1 && ['super_admin','group_admin'].includes(currentUser?.role);
     const switchBtn = document.getElementById('btn-switch-clinica');
     if (switchBtn) switchBtn.classList.toggle('hidden', !canSwitch);
 }
 
-// ==================== MULTI-CLINICA SWITCH ====================
+// ==================== MULTI-CLINICA SWITCH (pós-login) ====================
+// Apenas super_admin e group_admin podem trocar de clínica após o login
 async function switchClinica(clinicaId, isFromLogin = false) {
+    // Verificação de segurança
+    if (!['super_admin','group_admin'].includes(currentUser?.role) && !isFromLogin) {
+        showToast('⛔ Sem permissão para trocar de clínica', 'error');
+        return;
+    }
     const clinica = allClinicas.find(c => c.id == clinicaId);
-    if (!clinica || clinica.id === currentClinica?.id) { closeSwitchModal(); return; }
+    if (!clinica) { showToast('Clínica não encontrada', 'error'); return; }
+    if (clinica.id === currentClinica?.id) { closeSwitchModal(); return; }
+    if (!canAccessClinica(clinica)) { showToast('⛔ Acesso negado a esta clínica', 'error'); return; }
+
     setLoading(true, `Carregando ${clinica.nome}...`, 'Aguarde');
     currentClinica = clinica;
     await loadClinicaData();
@@ -735,12 +921,9 @@ async function switchClinica(clinicaId, isFromLogin = false) {
     closeSwitchModal();
     setLoading(false);
 
-    if (isFromLogin || document.getElementById('view-login').classList.contains('hidden') === false) {
-        document.getElementById('view-login').classList.add('hidden');
-        document.getElementById('main-nav').classList.remove('hidden');
-        document.getElementById('top-bar').classList.remove('hidden');
-        document.getElementById('main-content').classList.remove('hidden');
-    }
+    document.getElementById('main-nav').classList.remove('hidden');
+    document.getElementById('top-bar').classList.remove('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
 
     renderAll();
     buildBottomNav();
@@ -756,29 +939,37 @@ function openSwitchModal() {
     const gruposComClinicas = allGrupos.filter(g =>
         allClinicas.some(c => c.grupo_id === g.id && c.ativa && canAccessClinica(c))
     );
-    if (gruposComClinicas.length === 0) {
+    const semGrupo = allClinicas.filter(c => c.ativa && canAccessClinica(c) && !allGrupos.some(g => g.id === c.grupo_id));
+
+    function renderCard(c) {
+        return `<div onclick="switchClinica(${c.id})" class="clinic-card ${c.id===currentClinica?.id?'active-clinic':''} bg-white border rounded-xl p-3 flex items-center gap-3">
+            ${c.logo_base64 ? `<img src="${c.logo_base64}" class="h-10 w-10 object-contain rounded-lg bg-slate-50 p-0.5">` : `<div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-black text-lg">${(c.nome||'?').charAt(0)}</div>`}
+            <div class="flex-1 min-w-0"><p class="font-bold text-sm truncate">${c.nome}</p><p class="text-xs text-slate-400">${c.cidade||''}</p></div>
+            ${c.id===currentClinica?.id ? '<span class="text-emerald-500 text-xs font-bold flex-shrink-0"><i class="fas fa-check-circle"></i> Ativa</span>' : '<i class="fas fa-chevron-right text-slate-300 text-xs flex-shrink-0"></i>'}
+        </div>`;
+    }
+
+    if (gruposComClinicas.length === 0 && semGrupo.length === 0) {
         container.innerHTML = '<p class="text-slate-400 text-sm text-center py-4">Nenhuma clínica disponível</p>';
     } else {
         gruposComClinicas.forEach(grupo => {
             const clinicas = allClinicas.filter(c => c.grupo_id === grupo.id && c.ativa && canAccessClinica(c));
-            const grupEl = document.createElement('div');
-            grupEl.innerHTML = `<p class="text-xs font-black text-slate-400 mb-2 uppercase tracking-wider">${grupo.nome}</p>
-            <div class="grid gap-2 sm:grid-cols-2">${clinicas.map(c => `
-                <div onclick="switchClinica(${c.id})" class="clinic-card ${c.id===currentClinica?.id?'active-clinic':''} bg-white border rounded-xl p-3 flex items-center gap-3">
-                    ${c.logo_base64 ? `<img src="${c.logo_base64}" class="h-10 w-10 object-contain rounded-lg bg-slate-50 p-0.5">` : `<div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-black text-lg">${c.nome.charAt(0)}</div>`}
-                    <div><p class="font-bold text-sm">${c.nome}</p><p class="text-xs text-slate-400">${c.cidade||''}</p></div>
-                    ${c.id===currentClinica?.id ? '<span class="ml-auto text-emerald-500 text-xs font-bold">Ativa</span>' : ''}
-                </div>`).join('')}</div>`;
-            container.appendChild(grupEl);
+            const div = document.createElement('div');
+            div.innerHTML = `<p class="text-xs font-black text-purple-500 mb-2 flex items-center gap-1.5 uppercase tracking-wider"><i class="fas fa-layer-group text-purple-400"></i>${grupo.nome}</p>
+                <div class="grid gap-2 sm:grid-cols-2">${clinicas.map(renderCard).join('')}</div>`;
+            container.appendChild(div);
         });
+        if (semGrupo.length > 0) {
+            const div = document.createElement('div');
+            div.innerHTML = `<div class="grid gap-2 sm:grid-cols-2">${semGrupo.map(renderCard).join('')}</div>`;
+            container.appendChild(div);
+        }
     }
     document.getElementById('switch-modal').classList.remove('hidden');
-    
-    // Hide close button if we are in login flow (meaning no clinic is loaded yet)
     const btnClose = document.getElementById('btn-close-switch');
     if (!currentClinica && btnClose) {
         btnClose.classList.add('hidden');
-        document.getElementById('switch-modal-desc').textContent = "Você tem acesso a mais de uma clínica. Qual deseja acessar agora?";
+        document.getElementById('switch-modal-desc').textContent = "Selecione a clínica que deseja acessar";
     } else if (btnClose) {
         btnClose.classList.remove('hidden');
         document.getElementById('switch-modal-desc').textContent = "Selecione a clínica em que deseja trabalhar";
@@ -792,9 +983,12 @@ function closeSwitchModal() {
 
 function canAccessClinica(clinica) {
     if (!currentUser) return false;
+    // super_admin: vê tudo
     if (currentUser.role === 'super_admin') return true;
+    // group_admin: apenas clínicas do seu grupo
     if (currentUser.role === 'group_admin') return clinica.grupo_id === currentUser.grupo_id;
-    return clinica.id === currentUser.clinica_id;
+    // owner / manager / dentist / client: APENAS a própria clínica
+    return String(clinica.id) === String(currentUser.clinica_id);
 }
 
 // ==================== SUPABASE: CARREGAR ====================
@@ -1212,126 +1406,540 @@ function renderTrocarClinicaSection() {
 }
 
 // ==================== AUTH SEGURO ====================
-async function doLogin() {
-    // ── Master Admin: verificação local (funciona offline)
-    const uVal = document.getElementById('login-user').value.trim();
-    const pVal = document.getElementById('login-pass').value.trim();
-    if (uVal === MASTER_USER && pVal === MASTER_PASS) {
-        // Load all grupos and clinicas for super_admin
-        currentUser = { id:0, name:'Super Admin', role:'super_admin', login:'superadmin', clinica_id:null, grupo_id:null };
-        setLoading(true,'Carregando dados master...','Super Admin');
-        try {
+// ══════════════════════════════════════════════════════════════════════
+// LOGIN SEGURO — 4 ETAPAS
+//
+// REGRAS DE SEGURANÇA:
+//  super_admin   → acesso a TODOS grupos e clínicas (hardcoded, off-DB)
+//  group_admin   → acesso a todas as clínicas do SEU grupo econômico
+//  owner         → acessa APENAS a própria clínica (clinica_id fixo)
+//  manager/dentist/client → acessa APENAS a própria clínica
+//
+// FLUXO:
+//  Step 1: Digite o usuário → identifica quem pode ser
+//  Step 2: Selecione a clínica (só aparece para super_admin e group_admin)
+//  Step 3: Digite a senha → validada contra aquela clínica específica
+//  Step 4: Carregando / Sucesso
+//
+// HOMÔNIMOS: Dois "joao" em clínicas diferentes têm credenciais 100% separadas.
+//            O sistema identifica a clínica ANTES de validar a senha.
+// ══════════════════════════════════════════════════════════════════════
+
+let _ls = {
+    step: 1,
+    loginTyped: '',         // login digitado no step 1
+    clinicaChosen: null,    // clínica escolhida no step 2
+    userFound: null,        // registro do usuário validado
+    isMaster: false,        // true se for super_admin hardcoded
+    clinicaOptions: [],     // lista de clínicas para exibir no step 2
+    gruposOptions: [],      // grupos correspondentes
+};
+
+// ── Atualiza a barra de progresso visual
+function _lsUpdateBar(step) {
+    const dotBg   = ['#2563eb','#7c3aed','#16a34a','#16a34a'];
+    const barBg   = ['#2563eb','#7c3aed','#16a34a'];
+    const lblCol  = ['#2563eb','#7c3aed','#16a34a','#16a34a'];
+    for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById('sdot' + i);
+        const lbl = document.getElementById('slbl' + i);
+        if (i < step) {
+            // done
+            dot.style.background = '#16a34a';
+            dot.style.color = 'white';
+            dot.innerHTML = '✓';
+            if (lbl) lbl.style.color = '#16a34a';
+        } else if (i === step) {
+            // active
+            dot.style.background = dotBg[i - 1] || '#2563eb';
+            dot.style.color = 'white';
+            dot.innerHTML = String(i);
+            if (lbl) lbl.style.color = lblCol[i - 1] || '#2563eb';
+        } else {
+            // idle
+            dot.style.background = '#e2e8f0';
+            dot.style.color = '#94a3b8';
+            dot.innerHTML = String(i === 4 ? '✓' : i);
+            if (lbl) lbl.style.color = '#94a3b8';
+        }
+        if (i < 4) {
+            const bar = document.getElementById('sbar' + i);
+            if (bar) bar.style.width = i < step ? '100%' : '0%';
+        }
+    }
+}
+
+function _lsShowStep(n) {
+    _ls.step = n;
+    [1, 2, 3, 4].forEach(i => {
+        const el = document.getElementById('lstep' + i);
+        if (el) {
+            el.style.display = i === n ? 'block' : 'none';
+            if (i === n) el.classList.add('login-step-active');
+        }
+    });
+    _lsUpdateBar(n);
+}
+
+function lsGoBack(fromStep) {
+    _lsHideErrors();
+    if (fromStep === 2) {
+        // Volta ao step 1 (re-digitar usuário)
+        _ls.clinicaChosen = null;
+        _ls.userFound = null;
+        _ls.isMaster = false;
+        _lsShowStep(1);
+        setTimeout(() => document.getElementById('login-user')?.focus(), 100);
+    } else if (fromStep === 3) {
+        // Volta ao step 2 (re-escolher clínica) ou step 1 se não tem opção de clínica
+        _ls.clinicaChosen = null;
+        document.getElementById('login-pass').value = '';
+        if (_ls.clinicaOptions.length > 1) {
+            _lsShowStep(2);
+        } else {
+            _ls.userFound = null;
+            _ls.isMaster = false;
+            _lsShowStep(1);
+            setTimeout(() => document.getElementById('login-user')?.focus(), 100);
+        }
+    }
+}
+
+function _lsHideErrors() {
+    ['login-error','login-error-3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+}
+
+function showLoginError(msg, step = 1) {
+    const id = step === 3 ? 'login-error-3' : 'login-error';
+    const mid = step === 3 ? 'login-error-msg-3' : 'login-error-msg';
+    const el = document.getElementById(id);
+    const mel = document.getElementById(mid);
+    if (mel) mel.textContent = msg;
+    if (el) { el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 5000); }
+}
+
+function lsTogglePass() {
+    const inp = document.getElementById('login-pass');
+    const icon = document.getElementById('eye-icon');
+    if (!inp) return;
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    if (icon) icon.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+
+// ── STEP 1: Usuário digitou o login → identificar quem é
+async function lsStep1Next() {
+    const uVal = (document.getElementById('login-user')?.value || '').trim();
+    if (!uVal) { showLoginError('Digite seu nome de usuário', 1); return; }
+
+    const btn = document.getElementById('btn-ls1');
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="margin-right:8px"></i>Identificando...';
+    btn.disabled = true;
+    _lsHideErrors();
+
+    try {
+        _ls.loginTyped = uVal;
+
+        // ── SUPER ADMIN HARDCODED ─────────────────────────────────────
+        if (uVal.toLowerCase() === MASTER_USER.toLowerCase()) {
+            _ls.isMaster = true;
+            currentUser = { id: 0, name: 'Super Admin', role: 'super_admin', login: MASTER_USER, clinica_id: null, grupo_id: null };
+
+            // Carrega todas as clínicas e grupos
             const [gR, cR] = await Promise.all([
-                sb.from('odonto_grupos').select('*').order('id'),
-                sb.from('odonto_clinicas').select('*').order('nome')
+                sb.from('odonto_grupos').select('*').order('nome'),
+                sb.from('odonto_clinicas').select('*').eq('ativa', true).order('nome')
             ]);
             allGrupos = gR.data || [];
             allClinicas = cR.data || [];
-        } catch(e) { allGrupos=[]; allClinicas=[]; }
-        setLoading(false);
-        document.getElementById('view-login').classList.add('hidden');
-        // Super admin: open switch modal to pick a clinic, or go to gestao
-        if (allClinicas.length > 0) {
-            // Auto-enter first active clinic for viewing
-            const firstActive = allClinicas.find(c=>c.ativa) || allClinicas[0];
-            if (firstActive) {
-                await switchClinica(firstActive.id, true);
-            }
-        } else {
-            // No clinics yet: show app shell with gestao only
-            document.getElementById('main-nav').classList.remove('hidden');
-            document.getElementById('top-bar').classList.remove('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            buildBottomNav(); switchTab('gestao');
-        }
-        showToast('👑 Super Admin — acesso total', 'info');
-        return;
-    }
+            _ls.gruposOptions = allGrupos;
+            _ls.clinicaOptions = allClinicas;
 
-    const btn = document.getElementById('btn-login');
-    btn.textContent='Verificando...'; btn.disabled=true;
-    const u = document.getElementById('login-user').value.trim();
-    const p = document.getElementById('login-pass').value.trim();
-    const errEl = document.getElementById('login-error');
-    errEl.classList.add('hidden');
-
-    try {
-        // Busca do usuário (Global ou na base cacheada local)
-        const {data:users, error: uErr} = await sb.from('odonto_users').select('*').eq('login',u).eq('pass',p);
-        let found = users?.[0];
-        
-        if (!found && db.users) { // Fallback local
-            found = db.users.find(x=>x.login===u && x.pass===p);
-        }
-
-        if (!found) {
-            showLoginError('Usuário ou senha inválidos');
-            btn.textContent='ENTRAR'; btn.disabled=false; return;
-        }
-
-        found.name=(found.name||'').trim(); found.cro=found.cro||'';
-        currentUser = found;
-
-        // Baseado na Role do usuário, carrega apenas o que ele pode ver
-        let gRes, cRes;
-        if (currentUser.role === 'super_admin') {
-            gRes = await sb.from('odonto_grupos').select('*').eq('ativa', true);
-            cRes = await sb.from('odonto_clinicas').select('*').eq('ativa', true);
-        } else if (currentUser.role === 'group_admin') {
-            gRes = await sb.from('odonto_grupos').select('*').eq('id', currentUser.grupo_id).eq('ativa', true);
-            cRes = await sb.from('odonto_clinicas').select('*').eq('grupo_id', currentUser.grupo_id).eq('ativa', true);
-        } else {
-            if (currentUser.clinica_id) {
-                // Usuário vinculado a uma clínica específica
-                cRes = await sb.from('odonto_clinicas').select('*').eq('id', currentUser.clinica_id).eq('ativa', true);
-                if(cRes.data?.[0]) {
-                    gRes = await sb.from('odonto_grupos').select('*').eq('id', cRes.data[0].grupo_id).eq('ativa', true);
-                }
+            if (allClinicas.length === 0) {
+                // Sem clínicas ainda: vai direto para senha e depois gestão
+                _setupStep3Card(null, 'Super Admin');
+                _lsShowStep(3);
+            } else if (allClinicas.length === 1) {
+                _ls.clinicaChosen = allClinicas[0];
+                _setupStep3Card(allClinicas[0], 'Super Admin');
+                _lsShowStep(3);
             } else {
-                // Fallback: clinica_id não definido (ex: usuário admin antigo)
-                // Tenta carregar todas as clínicas ativas — usuário escolhe
-                cRes = await sb.from('odonto_clinicas').select('*').eq('ativa', true).order('nome');
-                if(cRes.data?.length > 0) {
-                    gRes = await sb.from('odonto_grupos').select('*').order('id');
-                }
+                // Mostra picker de clínica
+                _buildStep2(currentUser, allClinicas, allGrupos);
+                _lsShowStep(2);
             }
+            btn.innerHTML = '<i class="fas fa-arrow-right" style="margin-right:8px"></i>PRÓXIMO';
+            btn.disabled = false;
+            return;
         }
 
-        allGrupos = gRes?.data || [];
-        allClinicas = cRes?.data || [];
+        // ── USUÁRIO NORMAL: busca por login SEM senha ainda ──────────
+        // Busca apenas pelo login para identificar role e clínica(s)
+        const { data: userRows, error: uErr } = await sb
+            .from('odonto_users')
+            .select('id,name,role,login,clinica_id,grupo_id,cro,whatsapp,cpf')
+            .eq('login', uVal);
 
-        if (allClinicas.length === 0) {
-            showLoginError('Nenhuma clínica encontrada. Verifique se sua conta está vinculada a uma clínica ativa no Supabase (campo clinica_id em odonto_users).');
-            btn.textContent='ENTRAR'; btn.disabled=false; return;
+        let found = userRows || [];
+        if (uErr && db.users?.length) {
+            found = db.users.filter(u => u.login === uVal).map(u => ({ ...u }));
         }
 
-        // Se tiver mais de uma clínica, mostra Modal. Se for uma só, entra direto.
-        if (allClinicas.length > 1) {
-            document.getElementById('view-login').classList.add('hidden');
-            openSwitchModal(); // Usuário escolhe a clínica e depois entra no sistema
+        if (!found.length) {
+            showLoginError('Usuário não encontrado. Verifique o login.', 1);
+            btn.innerHTML = '<i class="fas fa-arrow-right" style="margin-right:8px"></i>PRÓXIMO';
+            btn.disabled = false;
+            return;
+        }
+
+        // ── Determinar acesso por role ────────────────────────────────
+        const roles = [...new Set(found.map(u => u.role))];
+
+        if (roles.includes('super_admin')) {
+            // Tratar como super_admin
+            _ls.isMaster = false;
+            currentUser = { ...found.find(u => u.role === 'super_admin'), name: 'Super Admin' };
+            const [gR, cR] = await Promise.all([
+                sb.from('odonto_grupos').select('*').order('nome'),
+                sb.from('odonto_clinicas').select('*').eq('ativa', true).order('nome')
+            ]);
+            allGrupos = gR.data || [];
+            allClinicas = cR.data || [];
+            _ls.gruposOptions = allGrupos;
+            _ls.clinicaOptions = allClinicas;
+            // Mostra step 2 para escolher clínica, step 3 para senha
+            _buildStep2(currentUser, allClinicas, allGrupos);
+            _lsShowStep(2);
+
+        } else if (roles.includes('group_admin')) {
+            // group_admin: vê todas as clínicas do seu grupo
+            const ga = found.find(u => u.role === 'group_admin');
+            _ls.userFound = ga;
+            currentUser = { ...ga, name: (ga.name || '').trim() };
+
+            const [gR, cR] = await Promise.all([
+                sb.from('odonto_grupos').select('*').eq('id', ga.grupo_id),
+                sb.from('odonto_clinicas').select('*').eq('grupo_id', ga.grupo_id).eq('ativa', true).order('nome')
+            ]);
+            allGrupos = gR.data || [];
+            allClinicas = cR.data || [];
+            _ls.gruposOptions = allGrupos;
+            _ls.clinicaOptions = allClinicas;
+
+            if (allClinicas.length === 0) {
+                showLoginError('Nenhuma clínica ativa no seu grupo.', 1);
+                btn.innerHTML = '<i class="fas fa-arrow-right" style="margin-right:8px"></i>PRÓXIMO';
+                btn.disabled = false;
+                return;
+            } else if (allClinicas.length === 1) {
+                _ls.clinicaChosen = allClinicas[0];
+                _setupStep3Card(allClinicas[0], ga.name);
+                _lsShowStep(3);
+            } else {
+                _buildStep2(ga, allClinicas, allGrupos);
+                _lsShowStep(2);
+            }
+
         } else {
-            await switchClinica(allClinicas[0].id, true);
+            // owner / manager / dentist / client:
+            // Cada usuário pertence a UMA clínica específica (clinica_id obrigatório)
+            // Se o mesmo login existir em múltiplas clínicas (homônimos), mostrar picker
+            const clinicaIds = [...new Set(found.map(u => u.clinica_id).filter(Boolean))];
+
+            if (!clinicaIds.length) {
+                showLoginError('Usuário sem clínica vinculada. Contate o administrador.', 1);
+                btn.innerHTML = '<i class="fas fa-arrow-right" style="margin-right:8px"></i>PRÓXIMO';
+                btn.disabled = false;
+                return;
+            }
+
+            const cR = await sb.from('odonto_clinicas').select('*').in('id', clinicaIds).eq('ativa', true);
+            const clinicas = cR.data || [];
+
+            if (!clinicas.length) {
+                showLoginError('Clínica vinculada não encontrada ou inativa.', 1);
+                btn.innerHTML = '<i class="fas fa-arrow-right" style="margin-right:8px"></i>PRÓXIMO';
+                btn.disabled = false;
+                return;
+            }
+
+            const grupoIds = [...new Set(clinicas.map(c => c.grupo_id).filter(Boolean))];
+            const gR = grupoIds.length ? await sb.from('odonto_grupos').select('*').in('id', grupoIds) : { data: [] };
+            allGrupos = gR.data || [];
+            allClinicas = clinicas;
+            _ls.gruposOptions = allGrupos;
+            _ls.clinicaOptions = clinicas;
+
+            // Guardar mapa login → userRecord por clínica (para homônimos)
+            _ls._usersByClinica = {};
+            found.forEach(u => { if (u.clinica_id) _ls._usersByClinica[u.clinica_id] = u; });
+
+            if (clinicas.length === 1) {
+                // Uma clínica: vai direto para senha
+                _ls.clinicaChosen = clinicas[0];
+                _ls.userFound = found.find(u => u.clinica_id == clinicas[0].id) || found[0];
+                currentUser = { ..._ls.userFound, name: (_ls.userFound.name || '').trim() };
+                _setupStep3Card(clinicas[0], currentUser.name);
+                _lsShowStep(3);
+            } else {
+                // Homônimos em clínicas diferentes → picker
+                _buildStep2(found[0], clinicas, allGrupos, true /* isHomonymous */);
+                _lsShowStep(2);
+            }
         }
 
     } catch(e) {
-        showLoginError('Erro de conexão. Verifique a rede.');
-        console.error(e);
+        console.error('lsStep1Next error:', e);
+        showLoginError('Erro de conexão. Verifique a rede.', 1);
     }
-    btn.textContent='ENTRAR'; btn.disabled=false;
+
+    btn.innerHTML = '<i class="fas fa-arrow-right" style="margin-right:8px"></i>PRÓXIMO';
+    btn.disabled = false;
 }
 
-function showLoginError(msg) {
-    const el = document.getElementById('login-error');
-    el.textContent=msg; el.classList.remove('hidden');
-    setTimeout(()=>el.classList.add('hidden'),4000);
+// ── Constrói o step 2: cards de clínica para escolha
+function _buildStep2(userRef, clinicas, grupos, isHomonymous = false) {
+    const login = userRef?.login || _ls.loginTyped || '?';
+    const initial = (login[0] || '?').toUpperCase();
+    const role = userRef?.role || '';
+    const ROLE_LABELS = { super_admin:'Super Admin',group_admin:'Admin de Grupo',owner:'Proprietário',manager:'Gerente',dentist:'Dentista',client:'Paciente' };
+    const roleLabel = ROLE_LABELS[role] || role;
+
+    document.getElementById('ls2-avatar').textContent = initial;
+    document.getElementById('ls2-name').textContent   = isHomonymous ? `"${login}" em múltiplas clínicas` : (userRef?.name || login);
+    document.getElementById('ls2-role').textContent   = isHomonymous ? 'Selecione sua clínica para continuar' : `${roleLabel} · selecione a unidade`;
+    document.getElementById('ls2-sub').textContent    = `${clinicas.length} unidade${clinicas.length > 1 ? 's' : ''} disponível${clinicas.length > 1 ? 'is' : ''}`;
+
+    const container = document.getElementById('ls2-clinicas');
+    container.innerHTML = '';
+
+    const gruposComClinicas = grupos.filter(g => clinicas.some(c => c.grupo_id === g.id));
+    const semGrupo          = clinicas.filter(c => !grupos.some(g => g.id === c.grupo_id));
+
+    function makeCard(c) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;border:1.5px solid #e2e8f0;background:white;cursor:pointer;transition:all .18s';
+        wrap.onmouseover = () => { wrap.style.borderColor='#7c3aed'; wrap.style.background='#faf5ff'; wrap.style.transform='translateY(-1px)'; wrap.style.boxShadow='0 4px 14px rgba(124,58,237,.13)'; };
+        wrap.onmouseout  = () => { wrap.style.borderColor='#e2e8f0'; wrap.style.background='white'; wrap.style.transform='none'; wrap.style.boxShadow='none'; };
+        wrap.onclick     = () => _lsStep2ClinicaSelected(c);
+        const logo = c.logo_base64
+            ? `<img src="${c.logo_base64}" style="width:40px;height:40px;object-fit:contain;border-radius:9px;background:#f8fafc;padding:3px;border:1px solid #f1f5f9;flex-shrink:0">`
+            : `<div style="width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#ede9fe,#f5f3ff);color:#7c3aed;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${(c.nome||'?')[0].toUpperCase()}</div>`;
+        wrap.innerHTML = `${logo}
+            <div style="flex:1;min-width:0">
+                <p style="font-size:13px;font-weight:800;color:#1e1b4b;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.nome}</p>
+                <p style="font-size:10px;color:#64748b;margin:2px 0 0">${[c.cidade, c.telefone].filter(Boolean).join(' · ') || 'Sem dados cadastrais'}</p>
+            </div>
+            <i class="fas fa-chevron-right" style="color:#c4b5fd;font-size:11px;flex-shrink:0"></i>`;
+        return wrap;
+    }
+
+    if (gruposComClinicas.length > 0) {
+        gruposComClinicas.forEach(g => {
+            const gc = clinicas.filter(c => c.grupo_id === g.id);
+            const sec = document.createElement('div');
+            const logoG = g.logo_base64
+                ? `<img src="${g.logo_base64}" style="width:14px;height:14px;object-fit:contain;border-radius:3px">`
+                : `<i class="fas fa-layer-group" style="color:#7c3aed;font-size:10px"></i>`;
+            sec.innerHTML = `<div style="display:flex;align-items:center;gap:5px;margin-bottom:7px"><span style="font-size:9px;font-weight:900;color:#7c3aed;letter-spacing:.8px;text-transform:uppercase">${logoG} ${g.nome}</span><span style="font-size:8px;color:#a78bfa;background:#ede9fe;padding:1px 7px;border-radius:20px;font-weight:800">${gc.length} unidade${gc.length>1?'s':''}</span></div>`;
+            gc.forEach(c => { const card = makeCard(c); card.style.marginBottom = '7px'; sec.appendChild(card); });
+            container.appendChild(sec);
+        });
+    }
+    if (semGrupo.length > 0) {
+        const sec = document.createElement('div');
+        if (gruposComClinicas.length > 0) {
+            sec.innerHTML = `<div style="font-size:9px;font-weight:900;color:#64748b;letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px">Outras Clínicas</div>`;
+        }
+        semGrupo.forEach(c => { const card = makeCard(c); card.style.marginBottom = '7px'; sec.appendChild(card); });
+        container.appendChild(sec);
+    }
 }
+
+// ── Step 2: usuário clicou numa clínica → vai para step 3 (senha)
+function _lsStep2ClinicaSelected(clinica) {
+    _ls.clinicaChosen = clinica;
+
+    // Determinar user para essa clínica
+    if (_ls.isMaster) {
+        // super_admin hardcoded — sem usuário no banco para essa clínica
+    } else if (_ls.userFound) {
+        // group_admin já identificado
+        currentUser = { ..._ls.userFound, name: (_ls.userFound.name || '').trim() };
+    } else if (_ls._usersByClinica?.[clinica.id]) {
+        // Homônimo: buscar o user correto para esta clínica
+        const u = _ls._usersByClinica[clinica.id];
+        _ls.userFound = u;
+        currentUser = { ...u, name: (u.name || '').trim() };
+    }
+
+    const displayName = _ls.isMaster ? 'Super Admin' : (currentUser?.name || _ls.loginTyped || '?');
+    _setupStep3Card(clinica, displayName);
+    _lsShowStep(3);
+    setTimeout(() => document.getElementById('login-pass')?.focus(), 150);
+}
+
+// ── Preenche o card da clínica no step 3
+function _setupStep3Card(clinica, userName) {
+    const logoEl  = document.getElementById('ls3-clinica-logo');
+    const nomeEl  = document.getElementById('ls3-clinica-nome');
+    const cidEl   = document.getElementById('ls3-clinica-cidade');
+    if (clinica) {
+        if (clinica.logo_base64 && logoEl) {
+            logoEl.innerHTML = `<img src="${clinica.logo_base64}" style="width:100%;height:100%;object-fit:contain;border-radius:9px">`;
+        } else if (logoEl) {
+            logoEl.textContent = (clinica.nome || '?')[0].toUpperCase();
+        }
+        if (nomeEl) nomeEl.textContent = clinica.nome;
+        if (cidEl)  cidEl.textContent  = [clinica.cidade, clinica.telefone].filter(Boolean).join(' · ') || 'Confirme seu acesso abaixo';
+    } else {
+        if (nomeEl) nomeEl.textContent = 'Super Admin';
+        if (cidEl)  cidEl.textContent  = 'Acesso total ao sistema';
+        if (logoEl) logoEl.innerHTML   = '<i class="fas fa-crown" style="color:#f59e0b;font-size:18px"></i>';
+    }
+}
+
+// ── Step 3: usuário digita a senha → valida e entra
+async function lsStep3Login() {
+    const pVal = (document.getElementById('login-pass')?.value || '').trim();
+    if (!pVal) { showLoginError('Digite sua senha', 3); return; }
+
+    const btn = document.getElementById('btn-ls3');
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="margin-right:8px"></i>Verificando...';
+    btn.disabled = true;
+    document.getElementById('login-error-3').style.display = 'none';
+
+    try {
+        // ── SUPER ADMIN HARDCODED ─────────────────────────────────────
+        if (_ls.isMaster) {
+            if (pVal !== MASTER_PASS) {
+                showLoginError('Senha do Super Admin incorreta.', 3);
+                btn.innerHTML = '<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>ENTRAR NO SISTEMA';
+                btn.disabled = false;
+                return;
+            }
+            await _lsFinalizar(_ls.clinicaChosen);
+            btn.innerHTML = '<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>ENTRAR NO SISTEMA';
+            btn.disabled = false;
+            return;
+        }
+
+        // ── VALIDAÇÃO DO USUÁRIO NORMAL ───────────────────────────────
+        // Valida senha especificamente para a clínica escolhida
+        const clinicaId = _ls.clinicaChosen?.id;
+        let validUser = null;
+
+        if (clinicaId) {
+            // Busca user com login+senha+clinica_id (específico da clínica)
+            const { data: rows } = await sb.from('odonto_users')
+                .select('*')
+                .eq('login', _ls.loginTyped)
+                .eq('pass', pVal)
+                .eq('clinica_id', clinicaId)
+                .limit(1);
+            validUser = rows?.[0] || null;
+
+            // Fallback offline
+            if (!validUser && db.users?.length) {
+                validUser = db.users.find(u =>
+                    u.login === _ls.loginTyped && u.pass === pVal && u.clinica_id == clinicaId
+                ) || null;
+            }
+        } else if (_ls.userFound && currentUser?.role === 'group_admin') {
+            // group_admin: valida senha sem filtro de clínica (registro único)
+            const { data: rows } = await sb.from('odonto_users')
+                .select('*')
+                .eq('login', _ls.loginTyped)
+                .eq('pass', pVal)
+                .eq('id', _ls.userFound.id)
+                .limit(1);
+            validUser = rows?.[0] || null;
+        }
+
+        if (!validUser) {
+            showLoginError('Senha incorreta para esta clínica.', 3);
+            btn.innerHTML = '<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>ENTRAR NO SISTEMA';
+            btn.disabled = false;
+            return;
+        }
+
+        // Atualiza currentUser com os dados completos validados
+        currentUser = { ...validUser, name: (validUser.name || '').trim(), cro: validUser.cro || '' };
+        await _lsFinalizar(_ls.clinicaChosen);
+
+    } catch(e) {
+        console.error('lsStep3Login error:', e);
+        showLoginError('Erro de conexão. Verifique a rede.', 3);
+    }
+    btn.innerHTML = '<i class="fas fa-sign-in-alt" style="margin-right:8px"></i>ENTRAR NO SISTEMA';
+    btn.disabled = false;
+}
+
+// ── Finaliza o login: carrega dados e abre o sistema
+async function _lsFinalizar(clinica) {
+    _lsShowStep(4);
+    document.getElementById('ls4-spinner').style.display = 'block';
+    document.getElementById('ls4-ok').style.display      = 'none';
+    document.getElementById('ls4-msg').textContent       = clinica ? `Carregando ${clinica.nome}...` : 'Iniciando sistema...';
+    document.getElementById('ls4-sub').textContent       = 'Buscando dados da clínica, aguarde';
+
+    currentClinica = clinica || null;
+
+    if (clinica) {
+        // Garante que allClinicas/allGrupos estão populados antes de loadClinicaData
+        if (!allClinicas.find(c => c.id === clinica.id)) allClinicas.push(clinica);
+        await loadClinicaData();
+        updateTopBar();
+    }
+
+    // Sucesso
+    document.getElementById('ls4-spinner').style.display = 'none';
+    document.getElementById('ls4-ok').style.display      = 'block';
+    document.getElementById('ls4-clinica-ok').textContent = clinica ? `Entrando em ${clinica.nome}` : 'Bem-vindo, Super Admin';
+
+    await new Promise(r => setTimeout(r, 750));
+
+    document.getElementById('view-login').classList.add('hidden');
+    document.getElementById('main-nav').classList.remove('hidden');
+    document.getElementById('top-bar').classList.remove('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+
+    if (clinica) {
+        renderAll();
+        buildBottomNav();
+        setupWhatsAppConfig();
+        const firstTab = Object.keys(MODULES).find(mod => hasPermission(mod));
+        switchTab(firstTab || 'client');
+        showToast(`✅ ${clinica.nome}`, 'info');
+    } else {
+        buildBottomNav();
+        switchTab('gestao');
+        showToast('👑 Super Admin — acesso total', 'info');
+    }
+
+    // Reset para próximo login
+    _ls = { step:1, loginTyped:'', clinicaChosen:null, userFound:null, isMaster:false, clinicaOptions:[], gruposOptions:[] };
+    _lsShowStep(1);
+}
+
+// Compatibilidade: doLogin é chamado em alguns lugares antigos
+function doLogin() { lsStep1Next(); }
+
 function doLogout() {
-    currentUser=null; currentClinica=null;
-    ['main-nav','top-bar','main-content'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    currentUser = null; currentClinica = null;
+    allGrupos = []; allClinicas = [];
+    _ls = { step:1, loginTyped:'', clinicaChosen:null, userFound:null, isMaster:false, clinicaOptions:[], gruposOptions:[] };
+    ['main-nav','top-bar','main-content'].forEach(id => document.getElementById(id).classList.add('hidden'));
     document.getElementById('view-login').classList.remove('hidden');
-    document.getElementById('login-user').value='';
-    document.getElementById('login-pass').value='';
+    const uf = document.getElementById('login-user'); if (uf) uf.value = '';
+    const pf = document.getElementById('login-pass'); if (pf) pf.value = '';
+    _lsHideErrors();
+    _lsShowStep(1);
+    setTimeout(() => document.getElementById('login-user')?.focus(), 200);
 }
+
 
 // ==================== PERMISSIONS ====================
 function hasPermission(module, action=null) {
