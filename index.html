@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>OdontoPersonalité v9.0 | Multi-Tenant Seguro</title>
+    <title>UP Sistemas da Informação | Multi-Tenant Seguro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
@@ -56,6 +56,17 @@
         .role-dentist { background: #d1fae5; color: #065f46; }
         .role-client { background: #f1f5f9; color: #475569; }
         input[type="file"] { display: none; }
+        .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+        .active\\:scale-98:active { transform:scale(0.98); }
+        /* Roadmap Kanban */
+        #rm-lane-sugestao, #rm-lane-analisado, #rm-lane-planejamento, #rm-lane-entregue {
+            transition: background .2s;
+        }
+        .rm-move-btn { transition: all .15s; }
+        .rm-move-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+        /* Language switcher */
+        .lang-btn { transition: all .15s; }
+        .lang-btn:active { transform: scale(0.92); }
     </style>
 </head>
 <body>
@@ -63,7 +74,7 @@
 <div id="loading-overlay" class="loading-overlay">
     <div class="spinner mb-5"></div>
     <p class="text-white font-bold text-sm" id="loading-msg">Iniciando sistema...</p>
-    <p class="text-slate-400 text-xs mt-1" id="loading-sub">OdontoPersonalité v9.0</p>
+    <p class="text-slate-400 text-xs mt-1" id="loading-sub">UP Sistemas da Informação</p>
 </div>
 
 <div id="view-login" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden" style="background:linear-gradient(135deg,#020818 0%,#0a1628 40%,#0d1f3c 70%,#070d1a 100%)">
@@ -86,7 +97,7 @@
         <!-- Logo -->
         <div class="text-center mb-5">
             <div id="login-default-logo" class="font-black text-white" style="font-size:1.75rem;letter-spacing:-1px">
-                Odonto<span style="color:#60a5fa">Personalité</span>
+                <img src="data:image/png;base64,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" style="height:44px;object-fit:contain" alt="UP Sistemas">
             </div>
             <p style="font-size:9px;color:#334155;font-weight:800;letter-spacing:2.5px;margin-top:4px">MULTI-TENANT · ACESSO SEGURO</p>
         </div>
@@ -285,7 +296,7 @@
             <img id="topbar-logo" src="" class="h-8 w-8 object-contain rounded-lg" onerror="this.parentElement.style.display='none'">
         </div>
         <div>
-            <div class="font-black text-base leading-none">Odonto<span class="text-blue-600">Personalité</span></div>
+            <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAB6AZYDASIAAhEBAxEB/8QAHQABAAEFAQEBAAAAAAAAAAAAAAECBQYHCAQDCf/EAEUQAAEDAwIEBAUBBAUJCQAAAAECAwQABREGBxITITEIQVFhFCJxgZEyFUJSoRYjsbLBFyQzZHJ0dZLhGCUmNkRTYoLR/8QAGwEBAAMBAQEBAAAAAAAAAAAAAAECAwQFBgf/xAAxEQACAgECBAQFBAEFAAAAAAAAAQIDEQQhEjFBUQUTcZEUImGBoTKx0fDxBiMzweH/2gAMAwEAAhEDEQA/AOx6eVKUApSlATSoFTQgUpShIpWvt0939GbdtFu8zubO4eJENj5nD9fStLzPGDbw+BD0m+prPUuP4OPxXRXpbrFmMSrkkdU0rQ+33if0PqOciBdGn7I+4oJQp8gtkn38q3qw81IZQ8w4lxtYylSTkEVnZVOt4msEpp8iulKVmSKUqQKAgUqaUBFKnzqKAUpTFAKUpQClBSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoCKmlKEEUpQUApUUoSTQUxTtQE0pShApSlCRWvt/twU7c7ezL0ylty4LHKhNr/SXT2JHmB3NbBrk7x9ypBd03AC1BghbhT5FXXrXTo6lbdGL5FZvCycsXu5XG+XWRdrvMdmTZKyt1505Kif7B7DpV8sm3et7zblXG2aanyIoTxBwNkBQ9vWrtsTp6BqXdrT9mujYchvSOJ1tXZYSOLhPscV+kEVhmNHQxHaQ00hISlCEgAD2Ar2tbrPhmoRRjCHFuz8qpcKTCluRJsZyPIaVwuNOpwpJ9xXVPgr3TmvT/8AJ5fJCnkFtTltecVlQwMlsnzGAcfSvr48NMWtqFZdUx2Gmbgp8xnlJGC6ggkZ9SDjr6VoLZZ96Hu1peQwtSVpubIyD3BWAR+KtLh1emcsf5Q3hLB+lWKmieqQfapr5o6BSlKAUqK+D0yIysodkstqHcKWAaEH3NRUJUlaQpKgpJ7EHvRa0NtlbiglIGSScAUJKqV8GJkR9fAzJZcV6JWCa+9CCKkCgpQDyqKmhoSRSmK+MuZEhtlyVJaZSPNagKA++KirbC1FYprnLiXeG8seSHQTVy7jIORUtNcyEyTUUqcVBJFKnFMUAqKnFMUBFKUoBSlWm+6lsFiW2i8XaJCU7+hLzgSTUpN7IF2pVvfvdpZtC7u5cI4gITxqf4xwAeuaqsd3tt7gJn2qW1LjKOEuNqyk0wwe6lKVAFKUoBUZqaihA86GpqKAUpilCSaVGakUIFKUoSKUpQCud/HHpr4/QkLUbYHHbZCUOHz4Fnh/tNdEVoXxu3pqFtSi0Zy9cZbYSM9glQUT/KuvQ8XxEOHuUsxwvJxxpi8T9Oahg321ucEyE8l1onsSD2PsexrvvZPdGBuRpKRd24bsJ+CQ3MaWcgKxnKT5ivz1bWD0X+a6q8GyVt7b61dSDw8XykeZ5Rr3fFaISp43zRz0yecGpvEZuo/uVqFpmPHMWz25ahGbUfmWrsVq/ngVT4WNOp1DvXZkO/6GATNX9WxlI/5gK12Yrq5DnykfOck/WtueF64Mae3btLz6+BqTxRlH1K0lKc/cisddq6NJT5NfPl6fVnPLUxjYk3zZ3XimKkdRmlfOnpkUqaYoCK4E8YM2a1vne22ZkhtCYrBCUOkAfJ6Cu+8V+fvjHON9r7/usf8AuGvQ8NSd2/Y59S2obHbO1ClL25sK1qUpRhN5JOSelW3xALW1stq1xpakLTanylSTgg8B7VcNpDnbWwH/AFJv+7Vs8QvTZLV3/Cn/AO4a5F/y/c2fI5Y8FEuW9vOht6U+4j9nunhW4SM49DXchIHcgVwn4Izne1H/AA57+ys58auqtSaf1haGrNeZkFp2OStLLpSCftXfqafN1PAnjY56rOGriZ1kSkDJIA9aIWhf6VpV9DXDMHVW8u6Ol7fp3SDVzeYt8cInSEPcvnOeqnCf5ZrFI+pt1NqdVJauMu7QZjagpcaW4pTbyc9cZ6KSfUVReHSeVxLPYl6lLfGx+idKxPaXWcPX2g7dqWJhJkI4Xmwclp0fqQfcGssrz5RcW0zoTyYDvnuRA2z0U7eH0penPHkwY5P+ldI6fYdSfYGuH5V03K3f1OpDa7ld5azkR2CoNMpJ9B0Sn3rYHjovkiZuhCs6lf5tboYUlOf3l9Sf5fzrd3g40xFs208a6BgJm3NZddWR1I8h9K9Wrh01CsxmTOSebbeDOEjl7UOzG6mlLau7S7LKRHbHE45Ef5hbHckhPUD3rafhb3xu6dQRNGasnOTY0tXLhynlcS2146IKj3BxgZrq+fcrZGJYmzIzRUOqHXAMj6GtIN7D7TjUqb4zdVtSEzEym225uEJWFBQAAPbIqvxcboONy9GiypcJJwZvwdRmiloR1UoJ+prCd49fwNt9CSL7JTz3UgNRWv8A3HD0T9vM1xzEuO8+9l6ku2aRPkoZVxLS1J5DDGewySBn271y0aV2pybwu7NLLVF45s78SpKhlKgfoaqrgdjVG8Oympo0W/vTkIX/AFnw0h/nMyEfvcKskE/Tt0rrtO49uf2df3DjJ5jDcFUnlg/vgfp/PSl2klVhp5T5Cu1TyuTRna1oQMrUlI9zUJWhYyhaVfQ1+f8AAvW7G92sXYdquUpTgSXi0mTyWY7eQMnqB5jp3r03pO8uy19jOTrpLbDxy0r4nnMP47gjJ/BrdeHv9PEuLsU+I6pbHfGQO5FcUaL393Mue51ts0y9MrgP3Mx1tiI0Pk4iMZCc+VbR3FuG4m5e0mnr3oOJNjXJxzMxpD3IIwOvcjIziuPrGxeJGqYsO1JcN5VKKGQlYCudk+frnPWt9HpocE+PGf25lLrmnHhP1GQcoScg9K5a1bsJrHcfdm8XnWNwNssykq+BcaeQ8sAEBKAk54RjJP0rNPDnF3F0rp3Us7c34vgbSh6NzpAdPClKivGCceVaA1ZubuhutrFdk02/NbbfcUiLAiKLfyjzUfoOpNYaaqcZy8trbqaWzjwpyRk87w97rx1r0xbdQtTNOPOArUZpS2BnOVNE9SPYV1FtXo6JoTREHTkRwuiOn51/xLPc1xHqqzb1bT/CXi8zblb233eU0+3PDyCvBVwnhUQDgHv6V1b4ZtypO4uiVyLklIuUFzkyCP3+nRX3q+t811ptpx+hFLjxNYwza9Uc5ri4eajPpxVyT4nN+b2xqOTpHR04w2Yh4Jcto/Otf8IPlitbM7db7vWb+lCYl8Mbg54UZuHinvxBvPF79qxhoW4qU5JZLO9JtJZwfoFSuQ/DTvxeU6li6R1jMdmsTF8qNJd6rac8kqPp0I+tdeDqMjzrnvolTLhkaQmprKFKUrEuKipp1oQKUpQEUFRShJVmlRQUBNSBXju9zt9ogOz7nMZiRWhlbrqwlI/NaA3K8SDUfmwdEQPjHOwmSBwN/UA9T+K6NPpLtQ8VrJjdqK6f1vBvbVWobLpezP3e/XGPAhMJypx1YTn2HqT5AdTXA2/u5Tu5WsDNZS43a4wLcNtfQ8P8RHkTVq13fNZavnGbqG4PTiDlLYX8iPomsTWgt55gKOHvxdMV9LofDFpXxyeZHDLWxu2g9i86G0ledZ6ij2GxRg9LePUqOEtp81KPkBXb22OltN7YaBTou76ltqJcwuF0vSENKcU53CQSCcZ6Vrzwc6UuVk0ffNWSrS8zJktkQuajhU4gDOQD1AJFc+Xq5Trzd5FzuUlyTKecKluLUSc5/lXjeL66U5+THkv3Itv+FgpYy2bH3g2Xueh4xvUKSLnZ1L+Z1I+ZnJ6cQ9PetZRnHGH23mFltxtQUhQPUEdjXTXhmduGrtrdR6aualSIrJ+Hiqd64C0Hpk+QNc9agsVx0/fJNnukVyPJYWUlKxjiGehHqPcV4D33PO1VUVGNsFhS/B19sTunbdZWZm3TpLbF7YQEuMuKALuB+pOf1fatp1+d9tYmoeQ/E5jbiCFIcSeEg+oNbm0DvLrCxcuLeWRd4acDiKwHUj6+dRHVRjtNnZpfFV+m1fc6qpWL6I11YNWx0m3ygiTjKozvyuJ+3n9qyiuqM4zWYvJ7EJxmsxeUK/PnxkpV/l4vgIOTFjkf8hr9Bq5S8bW2twnTo+vrNDXJDbPJuCGk8S+EfpXgdwB0rv8AD5qN2/Uy1MW69jf2zrrbu2On3GlhaDCbwQcg9KtfiOdba2P1apxQSDbHUgk+ZSQB+TXJWz3iE1FoKxosbkJq621rPISpeFN+wPpXk3r331BuPaRZFxm7ZaVLStxlCsqdUCCkE+mQDit14fb530yZ/FQcM9S6+CBCjvWlQBITbXSfbpWQ+Pb/AM6WP/dlf4VmXgs21uNhYl6zvUVyK/NZ5MRpxPCoNkgkkeWcCsN8eiv/ABnYx/qyv8K0U1LW7dEVw46fc3V4QYMSHshanYwSXJCluPKHcqz1B+la/wDHvCiKsNguJ4EykSS2D5qSUnI/xrXWx+9d32u08za7tZnJ1lmFT0NxCsFJ/eA9etYrvjurdN1b3Dxb1Rosc8MWGj51qWemenc9cYq1WlsWp4+hWd0HTjqdBeAqY+7t/e4SwQxHnhTR8iVglX8xXR9at8MGiJOhtq4kK4I4J8tapUhPmgq6hP2raNeZqpKV0muR11JqCTOFvG/b5EbeISnGyGZkFBaV/Fw9FfjNdG+Eu7M3TZa1JQ4hTsXLLqUnPCR5GvF4rtrpG4Ojm51naC75asuR0di8g/qbz79x7gVyjtTubq7aa8SorEc8tS8S7fKSUEEHqcHsa9CEPitMox5o5pS8m1yfJnQ/iJ2J1XuJrpu+2e421iOmOGiiQtYVkfQVypqWxP6U14qwSZbEmRBmNtuuR1ko4uMZA+lbx1T4sdQTrQuLZrE1bpTieAPqc4ynPTKR5n0rRd3td5t+pYir826idMcalr5ueM8agcqz2NdWljdGHDZjHQxvsg3mJ0T46JDp05o+MFENKPERnoSGzWt9mNfbqaR0quForSc+4252QtxUlm1OvhS/McaUkdPTNdD+KPb6brTaqFLtLCpFxtSESG2kDKnE8OFADzOCelaG8PW+D22EGXp272x6XblPl0IR0cYcP6gQfWufTtS0+EstPkbWfLam3hNHn3X1BvDuRboUO/6AvoTDe5zSmbE+lQPCU4zwdsGty+HPSF7vPh3v2jtQwbjaXJbjzTCZsdbSkgj5SEqAOM4rX+43ic1PerpDiaGiLtrfMwA4gOOyFHoEhIrebEjdRGw8i6OLaVq/lCQ20G+yQQSjH8XDn71TUymq4x4VHctXwuTabZybI0juxtBqhyZBtl2jutpKBNhMLeZcb/8AkpAIA6A4NZlpzxRaqYkNDUFrt94ZaIB+QJcT6kH1q5bZ+Ja+2q6TY24DDtyjqPDwtNBLjCh3BSawnxF7haX3Au9vkacsKrepkFLry20pW8T2ThPeupQlZLhthn6ox4lCOYS+x21tnrC1a40lD1DZwUR3xhTSgAppQ7pOPMVwDtac762c9v8AvtXf/aVXYnhE01dNO7TMC7sORnpjypCGXBhSEntkeRNca6gauO3+8sousES7TdC+lCxgOJ4sgj2IJ61zaSMVK2uP95ml0toSZ+kF1lw7faJE64uJbiMMqceUrsEgZNcm6i8SkROo1o0FohhclWWWJKmcvO5PZKUgkg47VmMbcq4bz7Ma2hW6yuQ5sKIhKW0r4i7nJOP+Wud/D5ri27ba/cvN7tbkxlUVcZSUJBWyoqSeIA+fy4+9U0+l4VLjWWuha23eKT2fUyzePVW82rNAKlaw04/a9PNvtrWpyPyCVZwn5VYV3I8qzTwHrW3A1qtBOUoaKR78K6xbxD71u7m6aXaNNWiazZITrci4SXUj+LhQk46D5lJ9+lZh4BEoWnVrZ655GR7Hire5NaV5jj6fdGaeb44eTRG2rSL7vvZm7seaiTfCt7i/eKVKUM/dKa/SEJSkBASAkDAHliuAd/NFXbbLdBV3jMrahOzEzLfJCfkCwoKCc+uR2+tbP/7Wi/6McsacX+2OXwhZWOVxY/V/0rPU0S1ChOvdYLVWKtyjPY0puVHYtG/13j21IbZjX9HJSjoB86D0+5NfopaVqXa4q1/qUykn64FcB7F6KvO526TVzlNvOxGpfxtwlqB4eIK4gnPmScdPQV+gbSEttJbT0SgAD7Vl4jiLjDO6RfSvKcu5XSoqa806RUVNRQEilKUBTSlKEivLeLjFtNrkXKa6G48dsuOKPkAK9Vaq8UU1+Nto5HYUU/FPobXjzSSMittPV51sYd2Yam7yapWdkc8bs6/umvLytx51xq2tKPw0YK+UD1I8zWEtRX3VFMeO88U9w22VY/FXS1W9cy4x4bfRT7iWwfTJxXbejNG2HTNkYt8GAxlKBzHVIBU4rzJNfWarWV6CuMIx9EfLaPT2eIWSlKXqzha12+dcp6IECG/KlLVwhptBKs+/p963vobZnT2norGqNy3YqFMkONQ1HKcjtxfxH2Fbg149Z9C6euOrIFhiLnJCU5QgJKiogDJ8h18q5f1PqW96puCpt4lqdUf0tp6IQPQCsqr7vEI/J8kOr6/YtqJVeFy3+afNdEvqzd9/3oNsukZNs0+5IsqFcL60EBxKPVKPP6Vi142/2e1jcFX+16xjWlEhZW/G4kp+bPUBKiCmrJAa4oLCyO7YJ/FYprnQzs9hy6WqG8JCE8TiG2zhwevTzr53WaLhy4dDz9H/AKgnbLy9VFST5dMGyr1uro7a60Q9M7exmrty3OKS5xEJPX5iVY+ZR/FXqNfdvN7LaiJPR+zL00Byi6AFpV6BXZQ9s1ykGFtLLbra23B3StOCPsav+nyUReY0tSHAvIUk4Ix71490+CGeZ7D8Qm3wtJx7Gf670Ne9HzFInRiuHk8uU2MoI9/T71Y47Dym+cGHS1jPM4Dw/ntW6tgtaXHU772ktRMt3FluMXEPOjKikHHCoef1rdDdqtiI4jIt8ZLIGODljGK41oVcuKEsI3q8PheuOuWEciWpT8J9uTFdWy8ghSHEHBB9a6R2l1irUlrVGmqH7QjABwj98fxVrHebTcOwX9p2A2GmJaSrljslXnivjs5Jdh66hhBPC/xNr+mDXm6a2zSargl3wxpuPTXcD9GdG1S4hDiChxKVJIwQoZBqoVhN71be3NRybHpeytXB6GlJlOvv8pCCR0A6Ek19bXXKbwj27LY1pOXU8OpNldsr/Ncm3DScEyXDlbjaeAq/FVaZ2Z2007ObnWzSkFMpv9DrieMp/Ne216vudxsV3UizfDXq2ZQuK+5wtrVjphzGOH3rJIk8JtMeXdVx4bjiAVgvDhSo+QV51tJ3RXC2/cpCyue6PchKUpCUpCQOgAHQVxr49Un+mtjIH/plf4V1hq3U1t05p169ynEustp4kpbWCXP9nr1rC9ytrdC7pGHfL7OmoSw1hC4stCEgH1JBq+kl5U1ZJbEWuNidae5hXhn0fpjWfh+tcPUtmi3FpuS9wB1OSk8Xka2RpPaHbrS1yTcbNpiExLR+h4p4lJ+maue2WltPaK0k1YdOSnH7eytbgW6+l1WVdTlQAFX9NwgKdQ0mbGLixlCQ6nKh7DPWq23TlOXC3hl4KMYpHpHp5VOK+DEyG88plmUw46j9SEOAqH1FQ9PgsyBHemx23ldm1OgKP2rnwzTiXc9FYfrbbPQ2snA7qDTsOW+kYS9wcKx9xWVypMeMyXpL7TLY7rcWEj8mkd9iS0HY7zbzZ7KQoKB+4qYuUfmWweHsa+0tsntppy4N3C3aZjGW0eJt14cZQfbNXfUe2Wg9R3hN4vemYE2ekJAfcSeIcPb8VlEqVGiNc2VIaYb/AInFhI/nVjtupPjdZyrE202phmMl9L6HOLiyQMY/61opWyzLL2M2644i+pkCEIQ2ltCQEJHCkegrCdXbS7eaqmmbetLwX5RGC8EcKj+KzBufBckGO3NjLeHdtLoKh9s1NwfMWBIkhPEWmlLxnGcAms4uUXtsy7cWjEdI7U7faUmCbY9LwI0oDAe4OJYH1NZsAMYwKsOjNQIvumYV3kIbiKlA4bLmevoCcZ7VdmZsN5K1My2HA3+socBCfr6VaxT4mp80VrnCUU48mYhq7afb3VUwzb1peC/KIwXgjhUfxXx0xs/tvpucidatKwGpSP0uqRxKH5r7aX1lM1Dq2ZChRoP7LiLU0t4yf65SgO4RjqM+eay9EyIuQY6JTCnh3bDgKh9u9Xm7q/kbfuVrsrsXFE+wAAAAAArF9Z7eaL1itDmpNPQrg63+hxxHzD7isjflxWAovyWWuAZVxrAwPU5ql2dBaSVuzY6EjHVToA69vOsouUXmJo2upYtEaE0nopqS1pmzR7cmSQXuWP147Z/NWXVGzW22pLkq43XS0JyUs5W4lPCVfXFZu5OhNqbS5MjoLv8AowpwDj+nrVcmTHitc2TIaZb/AInFhI/JqynYpcWXlj5cGMRtt9DR9LO6Xb0zbxaHikuxuX8rhSQRnzOCAa9WjdD6S0cZB0xYYdqMnHO5CSOPHbP5q/R32JDQdYebdbPZSFBQP3FfNmdCefUwzLjuOp7oS4Cofaoc5tNZY+U899s1qvtvct94t8edFcBStp5AUCDWvzsBtLz+d/RCH3/R14fxV91Jqq9Wm9qjtWVh+EBgOKmIQ4tRHThSfL71k1tkvqtLMq5oaiulHE6kOZQj/wC3StP92qKaeE+zKKyE5OPYosFltVht7dvs8CPBitjCW2UBIFXCvjFlRZSOOLIZfSOnE2sKH8q+1YvOdzRY6ClKZqAKimaUBIpUUoMEUpShJNa58Q9neu23cgsJ4lxVpfx7JOT/ACrY1fOQw1JYWw8gLbcSUqSexBrWi11WRmujMNTT59Mq+6OFI3MjympDPRxpYWk+4NdY6L3P05eLKy7MnNwpiUAPNOnGFeePUVqbcza+fYLg9OtrKpVrcVxI4BlTWfIj/GtfrjHi4VIII8iK+tuoo8RrjJP2Pz+vxLU+E3ShKPqn1+qNt786+tt7tA07ZXhIbW4lch0D5flOQB9xWmokN2RIbjtJJW4oJSAPM1codvkSHUtR47jqz2ShOa3ntBtkbY6i+X1pJk4ywwRnl+596SnT4bRwp/y2ZQlqvGtVlL1fRI9+3OgWkRWZ15a4sJHKjnyHqr/8rY7UOI0gIbjMpSBjAQK+9K+RttlbLikffaLw6jRVqFa9X1Zg24u1+mNY2t5l6E1EmlJ5UtlACkK8ifUe1cn3LTF30fqCTYLyyUug8TLgHyOp9Umu6TWNa+0badYWv4We2EPt9WJCR87SvUe3tXHqKXZBpcyus0MblxR2l+5zLtle3NKatiXgJUtpOW32091NqGD9x3HuK6ai680q/CEpN2ZSkpzwq6KH2rnDVGkrxpmeqNcYyikH5HkJJQseorwRmgpWSkZ+leBHxC3Stxx9mebp9TZpswx7md7naja1TfUuxAfhI6eFokdVepr17P2x2TrGO+lPyRgXFH7YrHNP2e43SUmPBiOPLUcdsAe5Nb90HphnTds4CQ5KdGXljtn0HtWGhpt1mp82XJPLf/R0aaud1vmSMkrXt2sce76ouNw0rqZ6zXpkpampDQcbXjtxIJH5BrYNYzqDRVpu9xNxU5Lhy1JCVuxXigrA9fI19rRNQlu8fn3R6GqqlZFJLP3x7NcmYPc73eZGkNZ2K/GI5cbfDUr4uIkpS6hSTgkdcK+5qbtb7k+NNXBqAzfIrFvCXrcqSW15IH9YB2OPes6h6MsUWyzbUhhxbU5JTKcW4VOOZGOqqpuujLPcG4iSZUdcRvlNOMPFCgn0J8661qak9l/cY77HC9FdLeT6Lr2bfVb7e5rfUjNiuW0d8MWHNbcgrJ5EtfEqOvPUJI8q9uuEGCvSdlttuTIgSSXHYqXy0l5YQSElfXAz1x51sKLpKyR9PyrImMpcWWCH+NZKl57kn1rzvaJsj1jatDyJDjLKw404p48xtQ7EK7ii1VafXGX+UJaG2UemWl+Hnt1X+DErDFusbUM1z9ks2eC5b3A9GTM5uVcPRQGBisaRpyC3s1BvbZkJua1trTJDp40ZWBgegwe1bVsWj7RaPiVsmS+9IbLbjr7xWopPkPSvQnTFpGm2dP8AKX8Czw8CeLr8pyOv1FPjIqW3dfjP1ZPwE5R+btL3ePouxgl7s8PTuqNGyrQlcd6XK5ElXGTzUFCiQrPuKtt4XZ7lHv8AcbVp6dcVBTnMuMqWG0oWkHojHUAeXStqXSxW+4ybdIktqUu3u82OQrHCrBHX16GrI7t3p5cmQ5/naGZCit2Mh8hoqPc4qK9VXs55z/7nuLdHblqGMP8AhLszDbjEvF8sek7g2GLoiO0pci1vSC2ZPykBQVg5Ke+KyXauXaDJusCBDuFuksuBUiFIcC0NE/wEeVXafoiyy7dChgSI/wACMR3WXSlaARgjNezTGmrZp5L5hJdU9IOXnnVla1kepqtuorlU4r7e+f71L06W2Fym/v7Y22yvfH3MU1HHj3vdeHZ7vldvZhKfaZKiEuOZHU+uMnpVst7Vnseu9Ult9xmC1a8ucpeVNDz4Sex9KzvVGlbVqFbDs0PNyI5y0+w4ULT69RXntuiNPwUyw3GccMxgsSFOOFRcSe+T61MNRWoYbfLGPvzInpLfMcklzzn7Ywalux+Ah2G52jT71uaVPZDc+RN4n3kqWAeJAGDkH1reV2+awzCe5ir/ALhrGkbcadCWUuCY8iO4lxlLkgqDZScjA+1Za80h2MuOsEtrQUEexGKrqr67OHh6Z/vNltHprquPj6pf3kjSUiP8RtzoaJzXWkPXVDay2rB4SFgj8VlH7GhWXdW1Qbc0Wodxtz6JbXGSlfDjB+tZWNJ2ZNvtsEMK5NtfD8YcZ+VYzgn17mrhItUJ+9xbw42TLitrbaVnoEq79PtV7NZGWyzj5vzyMqfD7IbvGfl/GEzVmmrfHs+mdaXa2RUsz4y5CWHE5ygcJ7fTvS82e1WraRGo4cpQu7LLcluZzCVOO8QOCM9Qe2Petn26y2+A1MaYZ/q5jilvJUchRV0NWFjbnTrUltwplOMNOcxuKt4llKu/6amOrg5Zk3zT9foHobFXwpJ7Nejb5mPi1RtT7gtC781TP7KQ65HCylK1Hh74+tfNGnLbeN37zBuDTjsJi2MltjmEIByRnp54NbEatEJq9Lu6EESVtBknPThHlj7UYtEFi+yL022RLkNJacVnoUg5HSs/i8Zx2wvU2eibxnH6sv6rDNP6d0/Dl7YXy4zi/ImQnX2orq3TxMpb6oCavc+ZbLinTcKdAuF5uXwZdTEbdCGSMAFa89yPL61nkbTVrjWSZZ2WlpiTFrW8ni6kr/V1rw3PQ9jnCEoiQw7CbLTTrDpQvgPdJPmK0lq4Tm2883j2MoaK2utRWM4Sf1wzXFjudwt1h1+zEYMJMNTXIjtvcwMceQohXsOv2rKbTpHS8a12O6tXF6DMQ4hwSm3/AJpClDqhWcgg57Vktj0fYrOi4NxIyii4gCSHFlfHgEef1NYVpjSbEfcNxlcOZItMUF+IXlkNxnB0AAJPF0USO2MVZ3Qt4nFtdfXZIzjp7KeBTSlnb03bzy7Y9j5XxduuF2vT9t07IvbjQKJMiVNDTTJAPRGASPxVntk2VdrBou13KW4i3yZTiZHzn+sCEqKUFXpn84rZUvQdhkXCRLUmU38SrifabfKW3D6kCvqrROn1adbsJiqERpfMawshbavUK7iqrU0qKW/9WO/8Fnor3Jttfzun2z7tmNiLF09ula4VjPKYmxnPioyFEp+XBSrHl/1rZFY9pvSNpsUpcyNz35a08BfkOFawn0B8hWQE1yXzjNrG+Fz7noaauUE+LbLzjsTSoqSawOgilKUJApSlCBSq+EelOEelCSilV8I9KcI9KA+ZAUkpUAUnoQR3qzTNJaamO82RZYi1+vBj+yr7gUwKtGcobxeDOymu1YnFP1WS2WyxWe2YMC3Ro5HmlHX896uIqrApgVEpOTy2TCEYLhisL6FNKqwKYFQXKaVVgUwKA88uLGltFqUw0+2f3XEhQ/nVo/ofpjm839ixQrvnhNX/AAKYFUnVCf6kmVcIy5o8sOFDho4IkZphPohIFeiqsCmBVkklhFksFNKqwKYFSCilV4FMCgKBTyqvApgUBRSq+EelOEelAUVNVcI9KYFAU0qrApgUBTUVXgUwKAop2qvApgelAUUqvA9KYFAUCpNVYFMCgKcVGKrwKYFAUYqcVVgUwKAoxU1VgUwKAoNKrwKYFAUUqvA9KYHpQFAoar4R6UwPSgKKVXwj0pwj0oD50r6cI9KUBNKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKAUpSgFKUoBSlKA//2Q==" style="height:28px;object-fit:contain" alt="UP Sistemas">
             <div id="topbar-clinica-info" class="text-[10px] text-slate-400 font-bold leading-none mt-0.5 hidden">
                 <span id="topbar-clinica-nome"></span>
                 <span class="text-slate-300 mx-1">•</span>
@@ -293,10 +304,18 @@
             </div>
         </div>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1.5">
+        <!-- Language switcher -->
+        <div class="flex items-center gap-0.5 bg-slate-100 rounded-lg p-0.5">
+            <button class="lang-btn text-[8px] font-black px-1 py-0.5 rounded-md transition-all bg-blue-600 text-white" data-lang="pt" onclick="setLanguage('pt')" title="Português">PT</button>
+            <button class="lang-btn text-[8px] font-black px-1 py-0.5 rounded-md transition-all bg-slate-100 text-slate-600" data-lang="es" onclick="setLanguage('es')" title="Español">ES</button>
+            <button class="lang-btn text-[8px] font-black px-1 py-0.5 rounded-md transition-all bg-slate-100 text-slate-600" data-lang="en" onclick="setLanguage('en')" title="English">EN</button>
+            <button class="lang-btn text-[8px] font-black px-1 py-0.5 rounded-md transition-all bg-slate-100 text-slate-600" data-lang="zh" onclick="setLanguage('zh')" title="中文">中</button>
+            <button class="lang-btn text-[8px] font-black px-1 py-0.5 rounded-md transition-all bg-slate-100 text-slate-600" data-lang="ja" onclick="setLanguage('ja')" title="日本語">日</button>
+        </div>
         <div id="sync-status" class="flex items-center gap-1 text-[10px] font-black text-emerald-500">
             <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-            <span>Supabase</span>
+            <span class="hidden sm:inline">Supabase</span>
         </div>
         <button onclick="openSwitchModal()" id="btn-switch-clinica" class="hidden text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-bold" title="Trocar clínica">
             <i class="fas fa-exchange-alt"></i>
@@ -491,25 +510,26 @@
                     <input type="text" id="wa-session" placeholder="Session ID" class="w-full p-2 border rounded-lg text-sm">
                 </div>
             </div>
+
             <!-- ══ TWILIO CONFIG ══ -->
-            <div id="twilio-config" class="hidden space-y-2 p-3 bg-red-50 border border-red-100 rounded-xl">
-                <div class="flex items-center gap-2 mb-1">
-                    <img src="https://www.vectorlogo.zone/logos/twilio/twilio-icon.svg" alt="Twilio" class="w-5 h-5" onerror="this.style.display='none'">
+            <div id="twilio-config" class="hidden space-y-3 p-3 rounded-xl" style="background:#fff5f5;border:1px solid #fecaca">
+                <div class="flex items-center gap-2">
+                    <svg viewBox="0 0 64 64" class="w-5 h-5 flex-shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="32" fill="#F22F46"/><circle cx="32" cy="32" r="13" fill="white"/><circle cx="23" cy="23" r="5" fill="white"/><circle cx="41" cy="23" r="5" fill="white"/><circle cx="41" cy="41" r="5" fill="white"/><circle cx="23" cy="41" r="5" fill="white"/></svg>
                     <span class="text-sm font-bold text-red-700">Twilio WhatsApp</span>
-                    <a href="https://console.twilio.com" target="_blank" class="ml-auto text-[10px] text-red-500 underline">Abrir Console</a>
+                    <a href="https://console.twilio.com" target="_blank" class="ml-auto text-xs text-red-500 underline">Abrir Console ↗</a>
                 </div>
-                <input type="text" id="twilio-account-sid" placeholder="Account SID (ACxxxxxxxxxxxxxxxx)" class="w-full p-2 border rounded-lg text-sm font-mono">
+                <input type="text" id="twilio-account-sid" placeholder="Account SID  (ACxxxxxxxxxxxxxxxx)" class="w-full p-2 border rounded-lg text-sm font-mono">
                 <input type="password" id="twilio-auth-token" placeholder="Auth Token" class="w-full p-2 border rounded-lg text-sm font-mono">
-                <input type="text" id="twilio-from" placeholder="Número Twilio (whatsapp:+14155238886)" class="w-full p-2 border rounded-lg text-sm font-mono">
-                <p class="text-[10px] text-red-500 leading-relaxed">
+                <input type="text" id="twilio-from" placeholder="Número de origem  (whatsapp:+14155238886)" class="w-full p-2 border rounded-lg text-sm font-mono">
+                <p class="text-xs text-red-500 leading-relaxed">
                     <i class="fas fa-info-circle mr-1"></i>
-                    Use o número do <strong>Sandbox</strong> para testes ou seu número aprovado para produção.<br>
-                    Formato do campo "De": <code class="bg-red-100 px-1 rounded">whatsapp:+14155238886</code>
+                    Para testes use o <strong>Sandbox</strong>: o destinatário deve enviar um código para <code class="bg-red-100 rounded px-1">+1 415 523 8886</code> no WhatsApp.<br>
+                    As credenciais são salvas de forma segura e enviadas via Edge Function Supabase — nunca expostas no browser.
                 </p>
-                <button onclick="salvarTwilioConfig()" class="w-full bg-red-600 text-white py-2 rounded-xl text-sm font-bold hover:bg-red-700">
+                <button onclick="salvarTwilioConfig()" class="w-full py-2 rounded-xl text-sm font-bold text-white" style="background:#F22F46">
                     <i class="fas fa-save mr-1"></i>Salvar Credenciais Twilio
                 </button>
-                <div id="twilio-status" class="hidden text-xs font-bold p-2 rounded-lg"></div>
+                <div id="twilio-status" class="hidden text-xs font-bold p-2 rounded-lg text-center"></div>
             </div>
             <button onclick="testWhatsApp()" id="test-api-btn" class="hidden w-full bg-green-600 text-white py-2 rounded-xl text-sm font-bold">Testar API</button>
             <div id="wa-status" class="text-xs mt-1"></div>
@@ -752,7 +772,196 @@
     <!-- Modal de câmera canvas (captura) -->
     <canvas id="camera-canvas" class="hidden"></canvas>
 
+    <!-- ═══════════════════════════════════════════════════════════
+         ABA ROADMAP — Kanban de Sugestões e Votação
+    ══════════════════════════════════════════════════════════════ -->
+    <section id="view-roadmap" class="hidden space-y-4">
+
+        <!-- Header do Roadmap -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <div>
+                    <h2 class="text-lg font-black flex items-center gap-2">
+                        <i class="fas fa-map-signs text-indigo-600"></i>
+                        <span id="rm-title">Roadmap de Sugestões</span>
+                    </h2>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Sugira, vote e acompanhe melhorias do sistema</p>
+                </div>
+                <button onclick="openRoadmapModal()"
+                    class="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-indigo-700 transition-all active:scale-95">
+                    <i class="fas fa-plus"></i><span id="rm-newbtn">+ Nova Sugestão</span>
+                </button>
+            </div>
+            <!-- Filtros -->
+            <div class="flex flex-wrap gap-2">
+                <input type="text" id="rm-search" placeholder="Buscar sugestões..."
+                    class="flex-1 min-w-[140px] p-2 border rounded-xl text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    oninput="renderRoadmap()">
+                <select id="rm-filter-cat" onchange="renderRoadmap()"
+                    class="p-2 border rounded-xl text-xs bg-slate-50 focus:outline-none">
+                    <option value="">Todas as categorias</option>
+                </select>
+                <select id="rm-filter-profile" onchange="renderRoadmap()"
+                    class="p-2 border rounded-xl text-xs bg-slate-50 focus:outline-none">
+                    <option value="">Todos os perfis</option>
+                    <option value="super_admin">Super Admin</option>
+                    <option value="group_admin">Admin Grupo</option>
+                    <option value="owner">Proprietário</option>
+                    <option value="manager">Gerente</option>
+                    <option value="dentist">Dentista</option>
+                    <option value="client">Cliente</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="overflow-x-auto pb-4">
+            <div class="flex gap-3 min-w-[900px]">
+
+                <!-- Col 1: Sugestões -->
+                <div class="flex-1 min-w-[210px]">
+                    <div class="flex items-center gap-2 mb-2 px-1">
+                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <span id="rm-col1" class="text-xs font-black text-slate-600 uppercase tracking-wider">💡 Sugestões</span>
+                        <span id="rm-cnt1" class="ml-auto text-[10px] bg-yellow-100 text-yellow-700 font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="rm-lane-sugestao" class="bg-slate-100 rounded-2xl p-2 min-h-[400px] space-y-2"></div>
+                </div>
+
+                <!-- Col 2: Em Análise -->
+                <div class="flex-1 min-w-[210px]">
+                    <div class="flex items-center gap-2 mb-2 px-1">
+                        <div class="w-3 h-3 rounded-full bg-blue-400"></div>
+                        <span id="rm-col2" class="text-xs font-black text-slate-600 uppercase tracking-wider">🔍 Em Análise</span>
+                        <span id="rm-cnt2" class="ml-auto text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="rm-lane-analisado" class="bg-slate-100 rounded-2xl p-2 min-h-[400px] space-y-2"></div>
+                </div>
+
+                <!-- Col 3: Planejado -->
+                <div class="flex-1 min-w-[210px]">
+                    <div class="flex items-center gap-2 mb-2 px-1">
+                        <div class="w-3 h-3 rounded-full bg-purple-400"></div>
+                        <span id="rm-col3" class="text-xs font-black text-slate-600 uppercase tracking-wider">📋 Planejado</span>
+                        <span id="rm-cnt3" class="ml-auto text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="rm-lane-planejamento" class="bg-slate-100 rounded-2xl p-2 min-h-[400px] space-y-2"></div>
+                </div>
+
+                <!-- Col 4: Entregue -->
+                <div class="flex-1 min-w-[210px]">
+                    <div class="flex items-center gap-2 mb-2 px-1">
+                        <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+                        <span id="rm-col4" class="text-xs font-black text-slate-600 uppercase tracking-wider">✅ Entregue</span>
+                        <span id="rm-cnt4" class="ml-auto text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="rm-lane-entregue" class="bg-slate-100 rounded-2xl p-2 min-h-[400px] space-y-2"></div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
 </main>
+
+<!-- ═══ ROADMAP MODALS ═══ -->
+
+<!-- Modal: Nova Sugestão -->
+<div id="rm-new-modal" class="modal hidden">
+    <div class="modal-content" style="max-width:520px">
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-lg font-black flex items-center gap-2">
+                <i class="fas fa-lightbulb text-yellow-500"></i>
+                <span id="rm-modal-title">Nova Sugestão</span>
+            </h2>
+            <button onclick="closeRoadmapModal()" class="text-slate-400 text-2xl hover:text-slate-600">&times;</button>
+        </div>
+        <div class="space-y-3">
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1" id="rm-lbl-title">TÍTULO *</label>
+                <input type="text" id="rm-new-title" maxlength="100"
+                    class="w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="Descreva sua sugestão em poucas palavras...">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1" id="rm-lbl-desc">DESCRIÇÃO</label>
+                <textarea id="rm-new-desc" rows="3" maxlength="500"
+                    class="w-full p-2.5 border rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="Detalhe o problema ou oportunidade de melhoria..."></textarea>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1" id="rm-lbl-cat">CATEGORIA</label>
+                <select id="rm-new-cat" class="w-full p-2.5 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    <option value="Funcionalidade">💡 Funcionalidade</option>
+                    <option value="Melhoria">⚡ Melhoria</option>
+                    <option value="Correção">🔧 Correção</option>
+                    <option value="Integração">🔗 Integração</option>
+                    <option value="Relatório">📊 Relatório</option>
+                    <option value="Outro">📌 Outro</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="saveRoadmapSuggestion()"
+            class="w-full mt-5 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-black text-sm transition-all active:scale-95">
+            <i class="fas fa-paper-plane mr-2"></i><span id="rm-submit-btn">Enviar Sugestão</span>
+        </button>
+    </div>
+</div>
+
+<!-- Modal: Detalhe / Comentários / Mover -->
+<div id="rm-detail-modal" class="modal hidden">
+    <div class="modal-content" style="max-width:560px">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-base font-black flex items-center gap-2" id="rm-detail-title">Sugestão</h2>
+            <button onclick="closeRoadmapDetail()" class="text-slate-400 text-2xl">&times;</button>
+        </div>
+
+        <!-- Meta -->
+        <div id="rm-detail-meta" class="text-xs text-slate-400 mb-3"></div>
+        <div id="rm-detail-desc" class="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl mb-4"></div>
+
+        <!-- Votos -->
+        <div class="flex items-center gap-3 mb-4">
+            <button id="rm-vote-btn" onclick="voteRoadmap()"
+                class="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-sm px-4 py-2 rounded-xl transition-all">
+                <i class="fas fa-thumbs-up"></i> <span id="rm-vote-label">Votar</span>
+            </button>
+            <span class="text-sm text-slate-500"><span id="rm-vote-count">0</span> <span id="rm-votes-label">votos</span></span>
+        </div>
+
+        <!-- Mover coluna (só gerência+) -->
+        <div id="rm-move-section" class="hidden mb-4 p-3 bg-slate-50 rounded-xl">
+            <p class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Mover para coluna</p>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="moveRoadmapCard('sugestao')"   class="rm-move-btn text-xs font-bold px-3 py-1.5 rounded-lg border border-yellow-300 text-yellow-700 bg-yellow-50 hover:bg-yellow-100">💡 Sugestão</button>
+                <button onclick="moveRoadmapCard('analisado')"  class="rm-move-btn text-xs font-bold px-3 py-1.5 rounded-lg border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100">🔍 Em Análise</button>
+                <button onclick="moveRoadmapCard('planejamento')" class="rm-move-btn text-xs font-bold px-3 py-1.5 rounded-lg border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100">📋 Planejado</button>
+                <button onclick="moveRoadmapCard('entregue')"   class="rm-move-btn text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100">✅ Entregue</button>
+            </div>
+            <!-- Testado por usuários-chave -->
+            <div id="rm-key-users-section" class="hidden mt-2">
+                <label class="text-xs font-bold text-slate-400 block mb-1">TESTADO POR USUÁRIOS-CHAVE</label>
+                <input type="text" id="rm-key-users-input" placeholder="Nomes dos usuários que testaram..."
+                    class="w-full p-2 border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400">
+            </div>
+        </div>
+
+        <!-- Comentários -->
+        <div>
+            <p class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Comentários</p>
+            <div id="rm-comments-list" class="space-y-2 max-h-48 overflow-y-auto mb-3"></div>
+            <div class="flex gap-2">
+                <input type="text" id="rm-comment-input" placeholder="Adicionar comentário..."
+                    class="flex-1 p-2 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    onkeydown="if(event.key==='Enter')saveRoadmapComment()">
+                <button onclick="saveRoadmapComment()"
+                    class="bg-indigo-600 text-white text-xs font-bold px-4 rounded-xl hover:bg-indigo-700">
+                    <span id="rm-comment-btn">Comentar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div id="orcamento-modal" class="modal hidden">
     <div class="modal-content">
@@ -808,7 +1017,7 @@ const SUPABASE_KEY = 'sb_publishable_1PvwLJYujxsSr51sgQXeYA_ZYy2iLu_';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ==================== ESTADO GLOBAL ====================
-let db = { users: [], appointments: [], blocks: [], npsResponses: [], config: { whatsapp: { provider:"desktop",instance:"",token:"",device:"",session:"" }, permissions: {} }, procedimentos: [], orcamentos: [] };
+let db = { users: [], appointments: [], blocks: [], npsResponses: [], config: { whatsapp: { provider:"desktop",instance:"",token:"",device:"",session:"",twilioSid:"",twilioToken:"",twilioFrom:"" }, permissions: {} }, procedimentos: [], orcamentos: [] };
 let currentUser = null, currentClinica = null, currentGrupo = null;
 let allGrupos = [], allClinicas = [];
 let selectedDate = null, selectedTime = null, isBlockMode = false;
@@ -826,22 +1035,105 @@ const MODULES = {
     budgets: { name:"Orçamentos",icon:"fa-folder-open" },
     gestao:  { name:"Gestão",    icon:"fa-building" },
     prontuario:{ name:"Prontuário", icon:"fa-notes-medical" },
+    roadmap: { name:"Roadmap",   icon:"fa-map-signs" },
     settings:{ name:"Ajustes",   icon:"fa-cog" }
 };
 
+// ==================== i18n MULTILÍNGUE ====================
+let _lang = localStorage.getItem('up_lang') || 'pt';
+
+const I18N = {
+    pt: {
+        appName:'UP Sistemas da Informação', appSub:'Multi-Tenant · Acesso Seguro',
+        nav:{ client:'Agendar', manager:'Fluxo', dentist:'Agenda', nps:'NPS', budgets:'Orçamentos', gestao:'Gestão', prontuario:'Prontuário', roadmap:'Roadmap', settings:'Ajustes' },
+        login:{ user:'Usuário', pass:'Senha', next:'PRÓXIMO', enter:'ENTRAR NO SISTEMA', step1:'Bem-vindo de volta', step1sub:'Informe seu usuário para identificar sua clínica', step2:'Em qual clínica vai atuar?', step3:'Digite sua senha', step4:'Carregando...', identified:'IDENTIFICADO', secureNote:'Dados 100% isolados por clínica · LGPD' },
+        roadmap:{ title:'Roadmap de Sugestões', newBtn:'+ Nova Sugestão', col1:'💡 Sugestões', col2:'🔍 Em Análise', col3:'📋 Planejado', col4:'✅ Entregue', voteBtn:'Votar', votes:'votos', modalTitle:'Nova Sugestão', titleLabel:'Título', descLabel:'Descrição', catLabel:'Categoria', submitBtn:'Enviar Sugestão', categories:['Funcionalidade','Melhoria','Correção','Integração','Relatório','Outro'], profileLabel:'Perfil', byLabel:'por', addComment:'Adicionar comentário...', saveComment:'Comentar', keyUsers:'Testado por usuários-chave', markDelivered:'Marcar como Entregue', moveTo:'Mover para', filterAll:'Todos os perfis', filterCat:'Todas as categorias', searchPlaceholder:'Buscar sugestões...' },
+        toast:{ saved:'✅ Salvo!', error:'❌ Erro', noClinic:'Clínica não encontrada', denied:'⛔ Acesso negado', vote:'✅ Voto registrado!', suggestion:'✅ Sugestão enviada!' }
+    },
+    es: {
+        appName:'UP Sistemas de Información', appSub:'Multi-Tenant · Acceso Seguro',
+        nav:{ client:'Agendar', manager:'Flujo', dentist:'Agenda', nps:'NPS', budgets:'Presupuestos', gestao:'Gestión', prontuario:'Historia', roadmap:'Roadmap', settings:'Ajustes' },
+        login:{ user:'Usuario', pass:'Contraseña', next:'SIGUIENTE', enter:'INGRESAR AL SISTEMA', step1:'Bienvenido de nuevo', step1sub:'Ingresa tu usuario para identificar tu clínica', step2:'¿En qué clínica trabajarás?', step3:'Escribe tu contraseña', step4:'Cargando...', identified:'IDENTIFICADO', secureNote:'Datos 100% aislados por clínica · LGPD' },
+        roadmap:{ title:'Roadmap de Sugerencias', newBtn:'+ Nueva Sugerencia', col1:'💡 Sugerencias', col2:'🔍 En Análisis', col3:'📋 Planificado', col4:'✅ Entregado', voteBtn:'Votar', votes:'votos', modalTitle:'Nueva Sugerencia', titleLabel:'Título', descLabel:'Descripción', catLabel:'Categoría', submitBtn:'Enviar Sugerencia', categories:['Funcionalidad','Mejora','Corrección','Integración','Reporte','Otro'], profileLabel:'Perfil', byLabel:'por', addComment:'Agregar comentario...', saveComment:'Comentar', keyUsers:'Probado por usuarios clave', markDelivered:'Marcar como Entregado', moveTo:'Mover a', filterAll:'Todos los perfiles', filterCat:'Todas las categorías', searchPlaceholder:'Buscar sugerencias...' },
+        toast:{ saved:'✅ Guardado!', error:'❌ Error', noClinic:'Clínica no encontrada', denied:'⛔ Acceso denegado', vote:'✅ Voto registrado!', suggestion:'✅ Sugerencia enviada!' }
+    },
+    en: {
+        appName:'UP Information Systems', appSub:'Multi-Tenant · Secure Access',
+        nav:{ client:'Schedule', manager:'Flow', dentist:'Agenda', nps:'NPS', budgets:'Budgets', gestao:'Management', prontuario:'Records', roadmap:'Roadmap', settings:'Settings' },
+        login:{ user:'Username', pass:'Password', next:'NEXT', enter:'ENTER SYSTEM', step1:'Welcome back', step1sub:'Enter your username to identify your clinic', step2:'Which clinic will you work in?', step3:'Enter your password', step4:'Loading...', identified:'IDENTIFIED', secureNote:'Data 100% isolated per clinic · LGPD' },
+        roadmap:{ title:'Suggestions Roadmap', newBtn:'+ New Suggestion', col1:'💡 Suggestions', col2:'🔍 Under Review', col3:'📋 Planned', col4:'✅ Delivered', voteBtn:'Vote', votes:'votes', modalTitle:'New Suggestion', titleLabel:'Title', descLabel:'Description', catLabel:'Category', submitBtn:'Submit Suggestion', categories:['Feature','Improvement','Bug Fix','Integration','Report','Other'], profileLabel:'Profile', byLabel:'by', addComment:'Add a comment...', saveComment:'Comment', keyUsers:'Tested by key users', markDelivered:'Mark as Delivered', moveTo:'Move to', filterAll:'All profiles', filterCat:'All categories', searchPlaceholder:'Search suggestions...' },
+        toast:{ saved:'✅ Saved!', error:'❌ Error', noClinic:'Clinic not found', denied:'⛔ Access denied', vote:'✅ Vote registered!', suggestion:'✅ Suggestion submitted!' }
+    },
+    zh: {
+        appName:'UP信息系统', appSub:'多租户 · 安全访问',
+        nav:{ client:'预约', manager:'流程', dentist:'日程', nps:'NPS', budgets:'预算', gestao:'管理', prontuario:'病历', roadmap:'路线图', settings:'设置' },
+        login:{ user:'用户名', pass:'密码', next:'下一步', enter:'进入系统', step1:'欢迎回来', step1sub:'输入您的用户名以识别您的诊所', step2:'您将在哪个诊所工作？', step3:'输入您的密码', step4:'加载中...', identified:'已识别', secureNote:'数据按诊所100%隔离 · LGPD' },
+        roadmap:{ title:'建议路线图', newBtn:'+ 新建议', col1:'💡 建议', col2:'🔍 审核中', col3:'📋 已计划', col4:'✅ 已交付', voteBtn:'投票', votes:'票', modalTitle:'新建议', titleLabel:'标题', descLabel:'描述', catLabel:'类别', submitBtn:'提交建议', categories:['功能','改进','修复','集成','报告','其他'], profileLabel:'角色', byLabel:'由', addComment:'添加评论...', saveComment:'评论', keyUsers:'经关键用户测试', markDelivered:'标记为已交付', moveTo:'移动到', filterAll:'所有角色', filterCat:'所有类别', searchPlaceholder:'搜索建议...' },
+        toast:{ saved:'✅ 已保存!', error:'❌ 错误', noClinic:'未找到诊所', denied:'⛔ 拒绝访问', vote:'✅ 投票已记录!', suggestion:'✅ 建议已提交!' }
+    },
+    ja: {
+        appName:'UPシステムズ', appSub:'マルチテナント・セキュアアクセス',
+        nav:{ client:'予約', manager:'フロー', dentist:'スケジュール', nps:'NPS', budgets:'見積り', gestao:'管理', prontuario:'カルテ', roadmap:'ロードマップ', settings:'設定' },
+        login:{ user:'ユーザー名', pass:'パスワード', next:'次へ', enter:'システムに入る', step1:'おかえりなさい', step1sub:'クリニックを識別するためにユーザー名を入力してください', step2:'どのクリニックで作業しますか？', step3:'パスワードを入力してください', step4:'読み込み中...', identified:'確認済み', secureNote:'データはクリニックごとに100%分離 · LGPD' },
+        roadmap:{ title:'提案ロードマップ', newBtn:'+ 新しい提案', col1:'💡 提案', col2:'🔍 審査中', col3:'📋 計画済み', col4:'✅ 納品済み', voteBtn:'投票', votes:'票', modalTitle:'新しい提案', titleLabel:'タイトル', descLabel:'説明', catLabel:'カテゴリ', submitBtn:'提案を送信', categories:['機能','改善','修正','統合','レポート','その他'], profileLabel:'役割', byLabel:'投稿者', addComment:'コメントを追加...', saveComment:'コメント', keyUsers:'主要ユーザーによるテスト済み', markDelivered:'納品済みとしてマーク', moveTo:'移動先', filterAll:'全ての役割', filterCat:'全カテゴリ', searchPlaceholder:'提案を検索...' },
+        toast:{ saved:'✅ 保存されました!', error:'❌ エラー', noClinic:'クリニックが見つかりません', denied:'⛔ アクセス拒否', vote:'✅ 投票が登録されました!', suggestion:'✅ 提案が送信されました!' }
+    }
+};
+
+function t(path) {
+    const keys = path.split('.');
+    let obj = I18N[_lang] || I18N['pt'];
+    for (const k of keys) { obj = obj?.[k]; if (obj === undefined) break; }
+    // Fallback to pt
+    if (obj === undefined) {
+        obj = I18N['pt'];
+        for (const k of keys) { obj = obj?.[k]; if (obj === undefined) break; }
+    }
+    return obj || path;
+}
+
+function setLanguage(lang) {
+    _lang = lang;
+    localStorage.setItem('up_lang', lang);
+    applyI18n();
+}
+
+function applyI18n() {
+    // Nav labels
+    const nav = document.getElementById('bottom-nav');
+    if (nav) {
+        nav.querySelectorAll('a[id^="tab-"]').forEach(a => {
+            const mod = a.id.replace('tab-','');
+            const span = a.querySelector('span');
+            if (span && t(`nav.${mod}`)) span.textContent = t(`nav.${mod}`);
+        });
+    }
+    // Language buttons
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('bg-blue-600', btn.dataset.lang === _lang);
+        btn.classList.toggle('text-white', btn.dataset.lang === _lang);
+        btn.classList.toggle('bg-slate-100', btn.dataset.lang !== _lang);
+        btn.classList.toggle('text-slate-600', btn.dataset.lang !== _lang);
+    });
+    // Roadmap if open
+    if (!document.getElementById('view-roadmap')?.classList.contains('hidden')) {
+        renderRoadmap();
+    }
+}
+
 const DEFAULT_PERMISSIONS = {
-    super_admin: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, settings:true,
-        actions:{agendar:true,mover_cards:true,ver_agenda:true,bloquear_horarios:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:true,gerenciar_procedimentos:true,fazer_orcamento:true,gerenciar_grupos:true,gerenciar_clinicas:true,trocar_clinica:true,editar_minha_clinica:true}},
-    group_admin: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, settings:true,
-        actions:{mover_cards:true,ver_agenda:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:false,gerenciar_procedimentos:true,fazer_orcamento:false,gerenciar_grupos:false,gerenciar_clinicas:true,trocar_clinica:true,editar_minha_clinica:true}},
-    owner: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, settings:true,
-        actions:{agendar:true,mover_cards:true,ver_agenda:true,bloquear_horarios:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:true,gerenciar_procedimentos:true,fazer_orcamento:true,gerenciar_grupos:false,gerenciar_clinicas:false,trocar_clinica:false,editar_minha_clinica:true}},
-    manager: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:false, prontuario:true, settings:true,
-        actions:{mover_cards:true,ver_agenda:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:false,gerenciar_procedimentos:false,fazer_orcamento:false}},
-    dentist: { client:false, manager:false, dentist:true, nps:false, budgets:false, gestao:false, prontuario:true, settings:false,
-        actions:{ver_agenda:true,bloquear_horarios:true,fazer_orcamento:true}},
-    client:  { client:true, manager:false, dentist:false, nps:false, budgets:false, gestao:false, settings:false,
-        actions:{agendar:true}}
+    super_admin: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, roadmap:true, settings:true,
+        actions:{agendar:true,mover_cards:true,ver_agenda:true,bloquear_horarios:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:true,gerenciar_procedimentos:true,fazer_orcamento:true,gerenciar_grupos:true,gerenciar_clinicas:true,trocar_clinica:true,editar_minha_clinica:true,mover_roadmap:true}},
+    group_admin: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, roadmap:true, settings:true,
+        actions:{mover_cards:true,ver_agenda:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:false,gerenciar_procedimentos:true,fazer_orcamento:false,gerenciar_grupos:false,gerenciar_clinicas:true,trocar_clinica:true,editar_minha_clinica:true,mover_roadmap:true}},
+    owner: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, roadmap:true, settings:true,
+        actions:{agendar:true,mover_cards:true,ver_agenda:true,bloquear_horarios:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:true,gerenciar_procedimentos:true,fazer_orcamento:true,gerenciar_grupos:false,gerenciar_clinicas:false,trocar_clinica:false,editar_minha_clinica:true,mover_roadmap:true}},
+    manager: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:false, prontuario:true, roadmap:true, settings:true,
+        actions:{mover_cards:true,ver_agenda:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:false,gerenciar_procedimentos:false,fazer_orcamento:false,mover_roadmap:true}},
+    dentist: { client:false, manager:false, dentist:true, nps:false, budgets:false, gestao:false, prontuario:true, roadmap:true, settings:false,
+        actions:{ver_agenda:true,bloquear_horarios:true,fazer_orcamento:true,mover_roadmap:false}},
+    client:  { client:true, manager:false, dentist:false, nps:false, budgets:false, gestao:false, roadmap:true, settings:false,
+        actions:{agendar:true,mover_roadmap:false}}
 };
 
 const DEFAULT_PROCEDIMENTOS = [
@@ -1014,7 +1306,7 @@ function canAccessClinica(clinica) {
 
 // ==================== SUPABASE: CARREGAR ====================
 async function loadFromSupabase() {
-    setLoading(true, 'Conectando ao banco...', 'OdontoPersonalité v9.0');
+    setLoading(true, 'Conectando ao banco...', 'UP Sistemas da Informação');
     try {
         // Ping Supabase to check connection
         const { error } = await sb.from('odonto_grupos').select('id').limit(1);
@@ -2086,7 +2378,7 @@ async function gerarPDF(orcamento) {
     const nomeDentista=dentista?.name||orcamento.dentistaNome||orcamento.dentista_nome;
     const croDentista=dentista?.cro||orcamento.dentistaCro||orcamento.dentista_cro;
     const diasAfas=orcamento.diasAfastamento||orcamento.dias_afastamento||1;
-    const clinicaNome=currentClinica?.nome||'OdontoPersonalité';
+    const clinicaNome=currentClinica?.nome||'UP Sistemas';
     const clinicaEnd=currentClinica?.endereco||'Rua das Flores, 123 — Centro';
     const clinicaCidade=currentClinica?.cidade||'São Paulo/SP';
     const clinicaTel=currentClinica?.telefone||'';
@@ -2094,7 +2386,7 @@ async function gerarPDF(orcamento) {
     const grupoNome=currentGrupo?.nome||'';
     const logoBase64=currentClinica?.logo_base64||currentGrupo?.logo_base64||null;
     const logoHtml=logoBase64?`<img src="${logoBase64}" style="height:60px;max-width:180px;object-fit:contain;">`:
-        `<div style="font-size:26px;font-weight:900;color:#1e40af;">🦷 ${clinicaNome}</div>`;
+        `<div style="font-size:26px;font-weight:900;color:#1e40af;">🏥 ${clinicaNome}</div>`;
 
     const htmlContent=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
     *{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Times New Roman',serif;background:white;padding:36px;max-width:1050px;margin:0 auto;}
@@ -2164,7 +2456,7 @@ function visualizarOrcamento(id){ const o=db.orcamentos.find(x=>x.id==id); if(!o
 function closeModal(){ document.getElementById('orcamento-modal').classList.add('hidden'); currentEditingOrcamentoId=null; }
 
 // ==================== WHATSAPP ====================
-function enviarWhatsAppDesktop(){ const n=prompt("WhatsApp (com DDD):",currentUser?.whatsapp||"5511999999999"); if(!n) return; const m=prompt("Mensagem:","🧪 Teste OdontoPersonalité!"); if(!m) return; window.open(`https://wa.me/${n.replace(/\D/g,'')}?text=${encodeURIComponent(m)}`,'_blank'); }
+function enviarWhatsAppDesktop(){ const n=prompt("WhatsApp (com DDD):",currentUser?.whatsapp||"5511999999999"); if(!n) return; const m=prompt("Mensagem:","🧪 Teste UP Sistemas!"); if(!m) return; window.open(`https://wa.me/${n.replace(/\D/g,'')}?text=${encodeURIComponent(m)}`,'_blank'); }
 function setupWhatsAppConfig(){
     const ps=document.getElementById('wa-provider');
     const dc=document.getElementById('desktop-config');
@@ -2175,10 +2467,9 @@ function setupWhatsAppConfig(){
     if(!ps) return;
     const wa=db.config.whatsapp||{};
     if(wa.provider) ps.value=wa.provider;
-    // pré-preencher campos Twilio
-    if(wa.twilioSid) document.getElementById('twilio-account-sid').value=wa.twilioSid;
+    if(wa.twilioSid)   document.getElementById('twilio-account-sid').value=wa.twilioSid;
     if(wa.twilioToken) document.getElementById('twilio-auth-token').value=wa.twilioToken;
-    if(wa.twilioFrom) document.getElementById('twilio-from').value=wa.twilioFrom;
+    if(wa.twilioFrom)  document.getElementById('twilio-from').value=wa.twilioFrom;
     const upd=()=>{
         const isTwilio=ps.value==='twilio';
         const isDesktop=ps.value==='desktop';
@@ -2196,50 +2487,51 @@ async function salvarTwilioConfig(){
     const tok=document.getElementById('twilio-auth-token').value.trim();
     const frm=document.getElementById('twilio-from').value.trim();
     const statusEl=document.getElementById('twilio-status');
-    if(!sid||!tok||!frm){
-        statusEl.className='text-xs font-bold p-2 rounded-lg bg-red-100 text-red-700';
-        statusEl.textContent='⚠️ Preencha Account SID, Auth Token e número de origem.';
-        statusEl.classList.remove('hidden'); return;
-    }
-    if(!sid.startsWith('AC')){
-        statusEl.className='text-xs font-bold p-2 rounded-lg bg-red-100 text-red-700';
-        statusEl.textContent='⚠️ Account SID inválido. Deve começar com "AC".';
-        statusEl.classList.remove('hidden'); return;
-    }
+    const show=(msg,ok)=>{statusEl.className='text-xs font-bold p-2 rounded-lg text-center '+(ok?'bg-green-100 text-green-700':'bg-red-100 text-red-700');statusEl.textContent=msg;statusEl.classList.remove('hidden');setTimeout(()=>statusEl.classList.add('hidden'),4500);};
+    if(!sid||!tok||!frm)  return show('⚠️ Preencha Account SID, Auth Token e número de origem.',false);
+    if(!sid.startsWith('AC')) return show('⚠️ Account SID inválido — deve começar com "AC".',false);
     const fromFmt=frm.startsWith('whatsapp:')?frm:'whatsapp:'+frm;
     db.config.whatsapp={...db.config.whatsapp,provider:'twilio',twilioSid:sid,twilioToken:tok,twilioFrom:fromFmt};
     await saveConfig();
-    statusEl.className='text-xs font-bold p-2 rounded-lg bg-green-100 text-green-700';
-    statusEl.textContent='✅ Credenciais Twilio salvas com sucesso!';
-    statusEl.classList.remove('hidden');
+    show('✅ Credenciais Twilio salvas com sucesso!',true);
     showToast('✅ Twilio configurado!','success');
-    setTimeout(()=>statusEl.classList.add('hidden'),4000);
 }
-async function testWhatsApp(){ const pv=document.getElementById('wa-provider').value; if(pv==='desktop'){enviarWhatsAppDesktop();return;} if(pv==='twilio'){await salvarTwilioConfig();return;} const ins=document.getElementById('wa-instance')?.value.trim()||""; const tok=document.getElementById('wa-token')?.value.trim()||""; if(!ins||!tok){showToast('Preencha URL e Token','error');return;} db.config.whatsapp={provider:pv,instance:ins,token:tok,device:document.getElementById('wa-device')?.value.trim()||"",session:document.getElementById('wa-session')?.value.trim()||""}; await saveConfig(); showToast('⚙️ Config salva!'); }
+async function testWhatsApp(){
+    const pv=document.getElementById('wa-provider').value;
+    if(pv==='desktop'){enviarWhatsAppDesktop();return;}
+    if(pv==='twilio'){await salvarTwilioConfig();return;}
+    const ins=document.getElementById('wa-instance')?.value.trim()||"";
+    const tok=document.getElementById('wa-token')?.value.trim()||"";
+    if(!ins||!tok){showToast('Preencha URL e Token','error');return;}
+    db.config.whatsapp={provider:pv,instance:ins,token:tok,device:document.getElementById('wa-device')?.value.trim()||"",session:document.getElementById('wa-session')?.value.trim()||""};
+    await saveConfig();
+    showToast('⚙️ Config salva!');
+}
 async function sendWhatsAppAPI(to, msg){
     const wa=db.config.whatsapp;
     try{
         if(wa.provider==="twilio"){
-            // Twilio envia via API REST — requer proxy ou backend; aqui chamamos diretamente via fetch
-            const toFmt=to.replace(/\D/g,'');
-            const destino='whatsapp:+'+toFmt;
-            const credentials=btoa(`${wa.twilioSid}:${wa.twilioToken}`);
-            const body=new URLSearchParams({From:wa.twilioFrom||'whatsapp:+14155238886',To:destino,Body:msg});
-            const resp=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${wa.twilioSid}/Messages.json`,{
+            // Chama Edge Function Supabase — proxy seguro para a API Twilio (evita CORS e protege credenciais)
+            const resp=await fetch(`${SUPABASE_URL}/functions/v1/send-whatsapp`,{
                 method:'POST',
-                headers:{'Authorization':`Basic ${credentials}`,'Content-Type':'application/x-www-form-urlencoded'},
-                body:body.toString()
+                headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},
+                body:JSON.stringify({to,message:msg,clinicaId:cid()})
             });
-            if(!resp.ok){ const err=await resp.json(); console.error('Twilio error:',err); showToast('❌ Twilio: '+(err.message||'Erro ao enviar'),'error'); return false; }
+            const result=await resp.json();
+            if(!resp.ok){showToast('❌ Twilio: '+(result.error||'Erro ao enviar'),'error');return false;}
             return true;
-        }else if(wa.provider==="poppap"){await fetch(`https://api.poppap.com.br/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${wa.token}`,'X-Device-Id':wa.device||"odonto"},body:JSON.stringify({number:to.replace(/\D/g,''),message:msg,device:wa.device||"odonto",session:wa.session||"default"})});
-        }else if(wa.provider==="evolution"){await fetch(`${wa.instance}/message/sendText/${wa.instance.split('/').pop()}`,{method:'POST',headers:{'Content-Type':'application/json','Client-Token':wa.token},body:JSON.stringify({number:to,text:msg})});
-        }else{await fetch(`https://api.z-api.io/instances/${wa.instance}/token/${wa.token}/send-text`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:to,message:msg})});}
+        }else if(wa.provider==="poppap"){
+            await fetch(`https://api.poppap.com.br/v1/messages`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${wa.token}`,'X-Device-Id':wa.device||"odonto"},body:JSON.stringify({number:to.replace(/\D/g,''),message:msg,device:wa.device||"odonto",session:wa.session||"default"})});
+        }else if(wa.provider==="evolution"){
+            await fetch(`${wa.instance}/message/sendText/${wa.instance.split('/').pop()}`,{method:'POST',headers:{'Content-Type':'application/json','Client-Token':wa.token},body:JSON.stringify({number:to,text:msg})});
+        }else{
+            await fetch(`https://api.z-api.io/instances/${wa.instance}/token/${wa.token}/send-text`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:to,message:msg})});
+        }
         return true;
-    }catch(e){ console.error('sendWhatsAppAPI error:',e); return false; }
+    }catch(e){console.error('sendWhatsAppAPI:',e);return false;}
 }
-async function sendAppointmentConfirmation(app){ const dent=db.users.find(u=>u.name===app.dentist); if(!dent?.whatsapp) return; const patient=db.users.find(u=>u.id===(app.patientId||app.patient_id)); const msg=`🦷 *${currentClinica?.nome||'OdontoPersonalité'} — Novo Agendamento*\nPaciente: ${patient?.name}\nData: ${app.date}\nHorário: ${app.time}`; if(db.config.whatsapp?.provider==='desktop') window.open(`https://wa.me/${dent.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank'); else await sendWhatsAppAPI(dent.whatsapp,msg); }
-async function sendNpsSurvey(app){ const patient=db.users.find(u=>u.id===(app.patientId||app.patient_id)); if(!patient?.whatsapp) return; const msg=`🦷 *${currentClinica?.nome||'OdontoPersonalité'}*\nSua consulta com ${app.dentist} foi finalizada!\nDê uma nota de 0 a 10:`; if(db.config.whatsapp?.provider==='desktop') window.open(`https://wa.me/${patient.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank'); else await sendWhatsAppAPI(patient.whatsapp,msg); const nota=prompt(`Nota NPS para ${patient.name} (0-10):`); if(nota!==null&&!isNaN(nota)&&nota>=0&&nota<=10){ const npsEntry={patientId:patient.id,appointmentId:app.id,score:parseInt(nota),date:new Date().toISOString(),clinica_id:cid()}; db.npsResponses.push(npsEntry); saveLocalCache(); try{await sb.from('odonto_nps').insert([{patient_id:npsEntry.patientId,appointment_id:npsEntry.appointmentId,score:npsEntry.score,date:npsEntry.date,clinica_id:cid()}])}catch(e){} updateNPSChart(); showToast(`Nota ${nota} registrada!`); } }
+async function sendAppointmentConfirmation(app){ const dent=db.users.find(u=>u.name===app.dentist); if(!dent?.whatsapp) return; const patient=db.users.find(u=>u.id===(app.patientId||app.patient_id)); const msg=`🦷 *${currentClinica?.nome||'UP Sistemas'} — Novo Agendamento*\nPaciente: ${patient?.name}\nData: ${app.date}\nHorário: ${app.time}`; if(db.config.whatsapp?.provider==='desktop') window.open(`https://wa.me/${dent.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank'); else await sendWhatsAppAPI(dent.whatsapp,msg); }
+async function sendNpsSurvey(app){ const patient=db.users.find(u=>u.id===(app.patientId||app.patient_id)); if(!patient?.whatsapp) return; const msg=`🦷 *${currentClinica?.nome||'UP Sistemas'}*\nSua consulta com ${app.dentist} foi finalizada!\nDê uma nota de 0 a 10:`; if(db.config.whatsapp?.provider==='desktop') window.open(`https://wa.me/${patient.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank'); else await sendWhatsAppAPI(patient.whatsapp,msg); const nota=prompt(`Nota NPS para ${patient.name} (0-10):`); if(nota!==null&&!isNaN(nota)&&nota>=0&&nota<=10){ const npsEntry={patientId:patient.id,appointmentId:app.id,score:parseInt(nota),date:new Date().toISOString(),clinica_id:cid()}; db.npsResponses.push(npsEntry); saveLocalCache(); try{await sb.from('odonto_nps').insert([{patient_id:npsEntry.patientId,appointment_id:npsEntry.appointmentId,score:npsEntry.score,date:npsEntry.date,clinica_id:cid()}])}catch(e){} updateNPSChart(); showToast(`Nota ${nota} registrada!`); } }
 
 // ==================== RENDER GERAL ====================
 function renderAll(){
@@ -2262,7 +2554,8 @@ function renderAll(){
 // ==================== NAVEGAÇÃO ====================
 function buildBottomNav(){
     const nav=document.getElementById('bottom-nav'); nav.innerHTML='';
-    for(let mod in MODULES){ if(hasPermission(mod)){ const btn=document.createElement('a'); btn.href='#'; btn.className='flex flex-col items-center py-1 px-2 rounded-full text-slate-500 transition-colors'; btn.innerHTML=`<i class="fas ${MODULES[mod].icon} text-lg"></i><span class="text-[9px] mt-0.5">${MODULES[mod].name}</span>`; btn.onclick=(e)=>{e.preventDefault();switchTab(mod);}; btn.id=`tab-${mod}`; nav.appendChild(btn); } }
+    for(let mod in MODULES){ if(hasPermission(mod)){ const btn=document.createElement('a'); btn.href='#'; btn.className='flex flex-col items-center py-1 px-2 rounded-full text-slate-500 transition-colors'; btn.innerHTML=`<i class="fas ${MODULES[mod].icon} text-lg"></i><span class="text-[9px] mt-0.5">${t('nav.'+mod)||MODULES[mod].name}</span>`; btn.onclick=(e)=>{e.preventDefault();switchTab(mod);}; btn.id=`tab-${mod}`; nav.appendChild(btn); } }
+    applyI18n();
 }
 function switchTab(tabId){
     document.querySelectorAll('main > section').forEach(s=>s.classList.add('hidden'));
@@ -2276,6 +2569,7 @@ function switchTab(tabId){
     if(tabId==='budgets') filterBudgets();
     if(tabId==='gestao') loadGestaoSection();
     if(tabId==='prontuario') { initProntuario(); checkProntuarioSetup(); }
+    if(tabId==='roadmap') initRoadmap();
     if(tabId==='settings'){renderPermissionsTree();loadUsersTable();renderProcedimentosList();}
     applyUIPermissions();
 }
@@ -3090,9 +3384,398 @@ async function checkProntuarioSetup() {
     }
 }
 
+
+// ══════════════════════════════════════════════════════════════════════
+// ROADMAP KANBAN — Sugestões, Votação e Comentários
+// Colunas: sugestao → analisado → planejamento → entregue
+// Todos os perfis: podem ver + sugerir + votar
+// super_admin / group_admin / owner / manager: podem mover cards
+// ══════════════════════════════════════════════════════════════════════
+
+// Armazenamento: localStorage com chave global (roadmap é cross-clinic)
+const RM_KEY = 'up_roadmap_data';
+let _rmItems   = [];   // lista de sugestões
+let _rmCurrent = null; // item aberto no modal de detalhe
+
+// ── Carregar do localStorage
+function _rmLoad() {
+    try { _rmItems = JSON.parse(localStorage.getItem(RM_KEY) || '[]'); }
+    catch(e) { _rmItems = []; }
+}
+
+// ── Salvar no localStorage
+function _rmSave() {
+    localStorage.setItem(RM_KEY, JSON.stringify(_rmItems));
+}
+
+// ── Permissão para mover cards (gerência+)
+function _rmCanMove() {
+    return ['super_admin','group_admin','owner','manager'].includes(currentUser?.role);
+}
+
+// ── Inicializar a aba Roadmap
+function initRoadmap() {
+    _rmLoad();
+    _rmApplyI18n();
+    _rmPopulateCategories();
+    renderRoadmap();
+}
+
+// ── Aplicar textos i18n no Roadmap
+function _rmApplyI18n() {
+    const R = I18N[_lang]?.roadmap || I18N.pt.roadmap;
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
+    set('rm-title',      R.title);
+    set('rm-newbtn',     R.newBtn);
+    set('rm-col1',       R.col1);
+    set('rm-col2',       R.col2);
+    set('rm-col3',       R.col3);
+    set('rm-col4',       R.col4);
+    set('rm-modal-title', R.modalTitle);
+    set('rm-lbl-title',  R.titleLabel);
+    set('rm-lbl-desc',   R.descLabel);
+    set('rm-lbl-cat',    R.catLabel);
+    set('rm-submit-btn', R.submitBtn);
+    set('rm-vote-label', R.voteBtn);
+    set('rm-votes-label',R.votes);
+    set('rm-comment-btn',R.saveComment);
+    const search = document.getElementById('rm-search');
+    if (search) search.placeholder = R.searchPlaceholder;
+    const catSel = document.getElementById('rm-new-cat');
+    if (catSel) {
+        catSel.innerHTML = R.categories.map((c,i) => {
+            const icons = ['💡','⚡','🔧','🔗','📊','📌'];
+            return `<option value="${c}">${icons[i]||'•'} ${c}</option>`;
+        }).join('');
+    }
+}
+
+// ── Popular select de categorias no filtro
+function _rmPopulateCategories() {
+    const R = I18N[_lang]?.roadmap || I18N.pt.roadmap;
+    const sel = document.getElementById('rm-filter-cat');
+    if (!sel) return;
+    sel.innerHTML = `<option value="">${R.filterCat||'Todas as categorias'}</option>` +
+        R.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+// ── Renderizar as 4 colunas Kanban
+function renderRoadmap() {
+    _rmLoad();
+    _rmApplyI18n();
+    _rmPopulateCategories();
+
+    const R         = I18N[_lang]?.roadmap || I18N.pt.roadmap;
+    const search    = (document.getElementById('rm-search')?.value || '').toLowerCase();
+    const filterCat = document.getElementById('rm-filter-cat')?.value || '';
+    const filterPrf = document.getElementById('rm-filter-profile')?.value || '';
+
+    const cols = ['sugestao','analisado','planejamento','entregue'];
+    const counts = {sugestao:0, analisado:0, planejamento:0, entregue:0};
+
+    cols.forEach(col => {
+        const lane = document.getElementById(`rm-lane-${col}`);
+        if (!lane) return;
+
+        let items = _rmItems.filter(it => it.status === col);
+
+        // Filtros
+        if (search)    items = items.filter(it => (it.title+' '+it.desc).toLowerCase().includes(search));
+        if (filterCat) items = items.filter(it => it.category === filterCat);
+        if (filterPrf) items = items.filter(it => it.authorRole === filterPrf);
+
+        // Ordenar por votos desc
+        items.sort((a, b) => (b.votes||0) - (a.votes||0));
+        counts[col] = items.length;
+
+        const colColors = {
+            sugestao:    { bg:'bg-yellow-50',  badge:'bg-yellow-100 text-yellow-700',  border:'border-yellow-200' },
+            analisado:   { bg:'bg-blue-50',    badge:'bg-blue-100 text-blue-700',      border:'border-blue-200'   },
+            planejamento:{ bg:'bg-purple-50',  badge:'bg-purple-100 text-purple-700',  border:'border-purple-200' },
+            entregue:    { bg:'bg-emerald-50', badge:'bg-emerald-100 text-emerald-700',border:'border-emerald-200'},
+        };
+        const cc = colColors[col];
+        const ROLE_LABELS = {
+            super_admin:'Super Admin', group_admin:'Admin Grupo', owner:'Proprietário',
+            manager:'Gerente', dentist:'Dentista', client:'Cliente'
+        };
+
+        if (items.length === 0) {
+            lane.innerHTML = `<div class="text-center text-slate-300 py-10 text-xs font-bold">
+                <i class="fas fa-inbox text-2xl block mb-2 opacity-40"></i>Nenhuma sugestão
+            </div>`;
+            return;
+        }
+
+        lane.innerHTML = items.map(it => {
+            const hasVoted = (it.voters || []).includes(currentUser?.id || currentUser?.login || '');
+            const commentCount = (it.comments || []).length;
+            const isDelivered  = it.status === 'entregue';
+            return `<div onclick="openRoadmapDetail('${it.id}')"
+                class="bg-white rounded-xl p-3 shadow-sm border ${cc.border} cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 active:scale-98 select-none">
+
+                <!-- Header do card -->
+                <div class="flex items-start justify-between gap-2 mb-1.5">
+                    <p class="font-bold text-sm text-slate-800 leading-tight flex-1">${_rmEscape(it.title)}</p>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${cc.badge}">${_rmEscape(it.category||'')}</span>
+                </div>
+
+                ${it.desc ? `<p class="text-[11px] text-slate-500 mb-2 line-clamp-2 leading-relaxed">${_rmEscape(it.desc)}</p>` : ''}
+
+                ${isDelivered && it.keyUsers ? `<div class="text-[9px] bg-emerald-50 text-emerald-700 font-bold px-2 py-1 rounded-lg mb-2 flex items-center gap-1">
+                    <i class="fas fa-users"></i> ${_rmEscape(it.keyUsers)}
+                </div>` : ''}
+
+                <!-- Footer do card -->
+                <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
+                    <div class="flex items-center gap-1 ${hasVoted?'text-indigo-600':'text-slate-400'} font-bold text-[11px]">
+                        <i class="fas fa-thumbs-up text-[10px]"></i>${it.votes||0}
+                    </div>
+                    ${commentCount > 0 ? `<div class="flex items-center gap-1 text-slate-400 text-[11px]">
+                        <i class="fas fa-comment text-[10px]"></i>${commentCount}
+                    </div>` : ''}
+                    <div class="ml-auto text-[9px] text-slate-400 font-bold truncate max-w-[80px]" title="${_rmEscape(ROLE_LABELS[it.authorRole]||'')}">
+                        ${_rmEscape(it.authorName||'')}
+                    </div>
+                    <span class="text-[8px] text-slate-300 flex-shrink-0">${_rmFormatDate(it.createdAt)}</span>
+                </div>
+            </div>`;
+        }).join('');
+    });
+
+    // Atualizar contadores
+    const cntMap = { sugestao:'rm-cnt1', analisado:'rm-cnt2', planejamento:'rm-cnt3', entregue:'rm-cnt4' };
+    Object.entries(cntMap).forEach(([col, id]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = counts[col];
+    });
+}
+
+// ── Abrir modal nova sugestão
+function openRoadmapModal() {
+    _rmApplyI18n();
+    document.getElementById('rm-new-title').value = '';
+    document.getElementById('rm-new-desc').value  = '';
+    document.getElementById('rm-new-modal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('rm-new-title')?.focus(), 100);
+}
+function closeRoadmapModal() {
+    document.getElementById('rm-new-modal').classList.add('hidden');
+}
+
+// ── Salvar nova sugestão
+function saveRoadmapSuggestion() {
+    const title = (document.getElementById('rm-new-title')?.value || '').trim();
+    const desc  = (document.getElementById('rm-new-desc')?.value  || '').trim();
+    const cat   = document.getElementById('rm-new-cat')?.value || 'Outro';
+    if (!title) { showToast('Digite um título para a sugestão', 'error'); return; }
+
+    _rmLoad();
+    const item = {
+        id:         'rm_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+        title,
+        desc,
+        category:   cat,
+        status:     'sugestao',
+        votes:      0,
+        voters:     [],
+        comments:   [],
+        keyUsers:   '',
+        authorName: currentUser?.name || currentUser?.login || 'Anônimo',
+        authorRole: currentUser?.role || 'client',
+        createdAt:  new Date().toISOString(),
+        clinicaId:  currentClinica?.id || null,
+    };
+    _rmItems.unshift(item);
+    _rmSave();
+    closeRoadmapModal();
+    renderRoadmap();
+    showToast(I18N[_lang]?.toast?.suggestion || '✅ Sugestão enviada!');
+}
+
+// ── Abrir modal de detalhe
+function openRoadmapDetail(id) {
+    _rmLoad();
+    _rmCurrent = _rmItems.find(it => it.id === id);
+    if (!_rmCurrent) return;
+    _renderRoadmapDetail();
+    document.getElementById('rm-detail-modal').classList.remove('hidden');
+}
+function closeRoadmapDetail() {
+    document.getElementById('rm-detail-modal').classList.add('hidden');
+    _rmCurrent = null;
+}
+
+function _renderRoadmapDetail() {
+    const it = _rmCurrent;
+    if (!it) return;
+    const R = I18N[_lang]?.roadmap || I18N.pt.roadmap;
+    const ROLE_LABELS = { super_admin:'Super Admin', group_admin:'Admin Grupo', owner:'Proprietário', manager:'Gerente', dentist:'Dentista', client:'Cliente' };
+    const STATUS_LABELS = { sugestao: R.col1, analisado: R.col2, planejamento: R.col3, entregue: R.col4 };
+
+    document.getElementById('rm-detail-title').textContent = it.title;
+    document.getElementById('rm-detail-meta').innerHTML =
+        `<span class="font-bold text-indigo-600">${it.category}</span> &nbsp;·&nbsp; `+
+        `${R.byLabel||'por'} <span class="font-bold">${_rmEscape(it.authorName)}</span> `+
+        `<span class="bg-slate-100 px-1.5 py-0.5 rounded-full">${ROLE_LABELS[it.authorRole]||it.authorRole}</span>`+
+        ` &nbsp;·&nbsp; ${_rmFormatDate(it.createdAt)}`+
+        ` &nbsp;·&nbsp; <span class="font-bold">${STATUS_LABELS[it.status]||it.status}</span>`;
+    document.getElementById('rm-detail-desc').textContent = it.desc || '—';
+
+    // Votos
+    const uid = currentUser?.id || currentUser?.login || '';
+    const hasVoted = (it.voters||[]).includes(uid);
+    const voteBtn = document.getElementById('rm-vote-btn');
+    if (voteBtn) {
+        voteBtn.className = `flex items-center gap-2 font-bold text-sm px-4 py-2 rounded-xl transition-all ${hasVoted ? 'bg-indigo-600 text-white' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700'}`;
+    }
+    document.getElementById('rm-vote-count').textContent = it.votes || 0;
+    document.getElementById('rm-vote-label').textContent = hasVoted ? '✓ Votado' : (R.voteBtn||'Votar');
+    document.getElementById('rm-votes-label').textContent = R.votes || 'votos';
+
+    // Mover (só gerência+)
+    const moveSection = document.getElementById('rm-move-section');
+    if (moveSection) moveSection.classList.toggle('hidden', !_rmCanMove());
+
+    // Key users section (só quando mover para entregue)
+    const kuSection = document.getElementById('rm-key-users-section');
+    if (kuSection) kuSection.classList.toggle('hidden', it.status !== 'entregue');
+    const kuInput = document.getElementById('rm-key-users-input');
+    if (kuInput) kuInput.value = it.keyUsers || '';
+
+    // Comentários
+    const list = document.getElementById('rm-comments-list');
+    if (list) {
+        const comments = it.comments || [];
+        if (comments.length === 0) {
+            list.innerHTML = '<p class="text-xs text-slate-300 text-center py-3">Nenhum comentário ainda</p>';
+        } else {
+            list.innerHTML = comments.map(c => `
+                <div class="bg-slate-50 rounded-xl p-2.5">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-[9px] flex-shrink-0">
+                            ${(c.authorName||'?')[0].toUpperCase()}
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-600">${_rmEscape(c.authorName||'Anônimo')}</span>
+                        <span class="text-[9px] text-slate-300 ml-auto">${_rmFormatDate(c.createdAt)}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 pl-7">${_rmEscape(c.text)}</p>
+                </div>`).join('');
+        }
+    }
+    document.getElementById('rm-comment-input').value = '';
+    document.getElementById('rm-comment-btn').textContent = R.saveComment || 'Comentar';
+}
+
+// ── Votar numa sugestão
+function voteRoadmap() {
+    if (!_rmCurrent) return;
+    _rmLoad();
+    const it = _rmItems.find(x => x.id === _rmCurrent.id);
+    if (!it) return;
+    const uid = currentUser?.id || currentUser?.login || 'anon';
+    if ((it.voters||[]).includes(uid)) {
+        // Remover voto
+        it.voters = it.voters.filter(v => v !== uid);
+        it.votes  = Math.max(0, (it.votes||0) - 1);
+    } else {
+        // Adicionar voto
+        it.voters = [...(it.voters||[]), uid];
+        it.votes  = (it.votes||0) + 1;
+        showToast(I18N[_lang]?.toast?.vote || '✅ Voto registrado!');
+    }
+    _rmCurrent = it;
+    _rmSave();
+    _renderRoadmapDetail();
+    renderRoadmap();
+}
+
+// ── Mover card para outra coluna (só gerência+)
+function moveRoadmapCard(newStatus) {
+    if (!_rmCanMove()) { showToast('⛔ Sem permissão para mover cards', 'error'); return; }
+    if (!_rmCurrent)   return;
+    _rmLoad();
+    const it = _rmItems.find(x => x.id === _rmCurrent.id);
+    if (!it) return;
+    it.status = newStatus;
+    it.movedAt    = new Date().toISOString();
+    it.movedBy    = currentUser?.name || currentUser?.login || '?';
+    // Se mover para "entregue", capturar usuários-chave
+    if (newStatus === 'entregue') {
+        const ku = document.getElementById('rm-key-users-input')?.value.trim();
+        it.keyUsers = ku || '';
+        const kuSection = document.getElementById('rm-key-users-section');
+        if (kuSection) kuSection.classList.remove('hidden');
+    }
+    _rmCurrent = it;
+    _rmSave();
+    _renderRoadmapDetail();
+    renderRoadmap();
+    showToast(`✅ Movido para ${newStatus}`, 'info');
+}
+
+// ── Salvar comentário
+function saveRoadmapComment() {
+    const text = (document.getElementById('rm-comment-input')?.value || '').trim();
+    if (!text || !_rmCurrent) return;
+    _rmLoad();
+    const it = _rmItems.find(x => x.id === _rmCurrent.id);
+    if (!it) return;
+    const comment = {
+        id:         'cmt_' + Date.now(),
+        text,
+        authorName: currentUser?.name || currentUser?.login || 'Anônimo',
+        authorRole: currentUser?.role || 'client',
+        createdAt:  new Date().toISOString(),
+    };
+    it.comments = [...(it.comments||[]), comment];
+    _rmCurrent = it;
+    _rmSave();
+    _renderRoadmapDetail();
+    renderRoadmap();
+}
+
+// ── Helpers
+function _rmEscape(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function _rmFormatDate(iso) {
+    if (!iso) return '';
+    try {
+        const d = new Date(iso);
+        return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) +
+               ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    } catch(e) { return ''; }
+}
+
+// ── Hook no applyI18n para atualizar roadmap se estiver aberto
+const _origApplyI18n = window.applyI18n || function(){};
+window.applyI18n = function() {
+    _origApplyI18n();
+    if (!document.getElementById('view-roadmap')?.classList.contains('hidden')) {
+        _rmApplyI18n();
+        _rmPopulateCategories();
+        renderRoadmap();
+    }
+    // Atualizar nav labels imediatamente
+    document.querySelectorAll('#bottom-nav a[id^="tab-"]').forEach(a => {
+        const mod = a.id.replace('tab-','');
+        const span = a.querySelector('span');
+        const label = t(`nav.${mod}`);
+        if (span && label) span.textContent = label;
+    });
+    // Atualizar botões de idioma
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        const isActive = btn.dataset.lang === _lang;
+        btn.className = `lang-btn text-[8px] font-black px-1 py-0.5 rounded-md transition-all ${isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`;
+    });
+};
+
 // ==================== INIT ====================
 window.addEventListener('DOMContentLoaded', () => {
     loadFromSupabase();
+    // Aplicar idioma salvo
+    setTimeout(() => applyI18n(), 300);
 });
 </script>
 </body>
