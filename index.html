@@ -67,6 +67,14 @@
         /* Language switcher */
         .lang-btn { transition: all .15s; }
         .lang-btn:active { transform: scale(0.92); }
+        /* Time slot modal animations */
+        #time-slot-modal .modal-content { animation: slideUp .25s ease; }
+        @keyframes slideUp { from { opacity:0; transform:translateY(16px) scale(0.97); } to { opacity:1; transform:none; } }
+        /* Booking photo upload zone */
+        #booking-photo-input:focus + label, label:has(#booking-photo-input):hover { border-color:#3b82f6; background:#eff6ff; }
+        /* Appointment photo thumbnails */
+        .photo-thumb { width:2.5rem; height:2.5rem; object-fit:cover; border-radius:0.5rem; border:1px solid #e2e8f0; flex-shrink:0; cursor:pointer; transition:opacity .15s; }
+        .photo-thumb:hover { opacity:.8; }
     </style>
 </head>
 <body>
@@ -350,14 +358,50 @@
 
     <section id="view-client" class="hidden space-y-4">
         <div class="bg-white p-4 rounded-2xl shadow-sm space-y-4">
-            <h2 class="text-xl font-black">1. Dentista e Data</h2>
-            <select id="c-dentist" class="w-full p-3 border rounded-xl bg-slate-50" onchange="initClientCalendar()"></select>
+
+            <!-- Step 1: Dentista -->
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center">1</div>
+                <h2 class="text-base font-black">Dentista e Data</h2>
+            </div>
+            <select id="c-dentist" class="w-full p-3 border rounded-xl bg-slate-50 text-sm font-medium" onchange="initClientCalendar()"></select>
             <div id="client-mini-calendar" class="border rounded-xl p-2 bg-slate-50"></div>
-            <h2 class="text-xl font-black">2. Horário</h2>
-            <div id="time-slots" class="grid grid-cols-3 gap-2"></div>
-            <h2 class="text-xl font-black">3. Procedimentos (opcional)</h2>
+
+            <!-- Resumo de data/hora selecionados -->
+            <div id="booking-datetime-summary" class="hidden bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-blue-500 font-bold uppercase tracking-wide">Agendado para</p>
+                    <p id="booking-summary-text" class="text-sm font-black text-blue-700 mt-0.5"></p>
+                </div>
+                <button onclick="clearBookingDateTime()" class="text-blue-400 hover:text-blue-600 text-xs font-bold flex items-center gap-1">
+                    <i class="fas fa-times-circle"></i> Alterar
+                </button>
+            </div>
+
+            <!-- Step 2: Procedimentos -->
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center">2</div>
+                <h2 class="text-base font-black">Procedimentos <span class="text-slate-400 font-normal text-sm">(opcional)</span></h2>
+            </div>
             <div id="client-procedimentos" class="space-y-2 max-h-40 overflow-y-auto"></div>
-            <button onclick="confirmBooking()" id="btn-confirm-booking" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed" disabled>CONFIRMAR AGENDAMENTO</button>
+
+            <!-- Step 3: Fotos -->
+            <div class="flex items-center gap-2 mb-1">
+                <div class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center">3</div>
+                <h2 class="text-base font-black">Fotos <span class="text-slate-400 font-normal text-sm">(opcional)</span></h2>
+            </div>
+            <div>
+                <label for="booking-photo-input" class="cursor-pointer flex items-center justify-center gap-2 w-full border-2 border-dashed border-slate-200 rounded-xl py-3 text-sm text-slate-500 font-medium hover:border-blue-400 hover:bg-blue-50 transition-all">
+                    <i class="fas fa-camera text-blue-500 text-lg"></i>
+                    Tirar foto ou selecionar da galeria
+                    <input type="file" id="booking-photo-input" accept="image/*" multiple onchange="handleBookingPhotoUpload(event)">
+                </label>
+                <div id="booking-photos-preview" class="grid grid-cols-3 gap-2 mt-2"></div>
+            </div>
+
+            <button onclick="confirmBooking()" id="btn-confirm-booking" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed text-sm" disabled>
+                <i class="fas fa-calendar-check mr-2"></i>CONFIRMAR AGENDAMENTO
+            </button>
         </div>
     </section>
 
@@ -863,6 +907,53 @@
     </section>
 
 </main>
+
+<!-- ═══ MODAL: Seleção de Horário ═══ -->
+<div id="time-slot-modal" class="modal hidden">
+    <div class="modal-content" style="max-width:420px;padding:0;overflow:hidden">
+        <!-- Header do Modal -->
+        <div style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);padding:1.25rem 1.5rem 1rem">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-0.5">Agendamento</p>
+                    <h2 class="text-white font-black text-lg leading-tight">Escolha o Horário</h2>
+                    <p id="time-modal-date-display" class="text-blue-200 text-sm mt-1 font-medium"></p>
+                </div>
+                <button onclick="closeTimeSlotModal()" class="text-blue-200 hover:text-white text-2xl leading-none ml-4 mt-0.5">&times;</button>
+            </div>
+        </div>
+
+        <div style="padding:1.25rem 1.5rem 1.5rem">
+            <!-- Legenda -->
+            <div class="flex items-center gap-4 mb-4 text-[10px] font-bold text-slate-500">
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-slate-100 border border-slate-300 inline-block"></span>Disponível</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>Selecionado</span>
+                <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-200 inline-block"></span>Ocupado</span>
+            </div>
+
+            <!-- Manhã -->
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">☀️ Manhã</p>
+            <div id="time-slots-modal-manha" class="grid grid-cols-4 gap-2 mb-4"></div>
+
+            <!-- Tarde -->
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">🌤️ Tarde</p>
+            <div id="time-slots-modal-tarde" class="grid grid-cols-4 gap-2 mb-5"></div>
+
+            <button onclick="confirmTimeSelection()" id="btn-confirm-time-modal" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-black text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-check-circle mr-2"></i>Confirmar Horário
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: Visualizar Foto do Agendamento ═══ -->
+<div id="booking-photo-modal" class="modal hidden">
+    <div class="relative max-w-xl w-full">
+        <button onclick="document.getElementById('booking-photo-modal').classList.add('hidden')"
+            class="absolute top-2 right-2 z-10 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold">&times;</button>
+        <img id="booking-photo-modal-img" src="" class="w-full rounded-2xl max-h-screen object-contain">
+    </div>
+</div>
 
 <!-- ═══ ROADMAP MODALS ═══ -->
 
@@ -2541,7 +2632,7 @@ function renderAll(){
     if(cDentist) cDentist.innerHTML=dts.map(d=>`<option value="${d.name}">${d.name}</option>`).join('');
     const dSel=document.getElementById('dentist-select');
     if(dSel){ const prev=dSel.value; dSel.innerHTML='<option value="">Selecione</option>'+dts.map(d=>`<option value="${d.name}">${d.name}</option>`).join(''); if(currentUser?.role==='dentist'){dSel.value=currentUser.name;dSel.disabled=true}else{dSel.disabled=false;if(prev)dSel.value=prev;} }
-    const card=(a)=>{ const p=db.users.find(u=>u.id===(a.patientId||a.patient_id)); return`<div class="bg-white p-3 rounded-xl shadow-sm border" data-id="${a.id}"><p class="font-bold text-sm">${a.dentist}</p><p class="text-xs text-slate-400">${a.date} ${a.time}</p><p class="text-[10px] text-slate-500">Paciente: ${p?.name||'?'}</p></div>`; };
+    const card=(a)=>{ const p=db.users.find(u=>u.id===(a.patientId||a.patient_id)); const photos=a.photos||[]; return`<div class="bg-white p-3 rounded-xl shadow-sm border" data-id="${a.id}"><p class="font-bold text-sm">${a.dentist}</p><p class="text-xs text-slate-400">${a.date} ${a.time}</p><p class="text-[10px] text-slate-500">Paciente: ${p?.name||'?'}</p>${photos.length>0?`<div class='flex gap-1 mt-2 overflow-x-auto'>${photos.slice(0,3).map((ph,i)=>`<img src='${ph.dataUrl}' onclick='viewManagerPhoto("${a.id}",${i})' class='w-10 h-10 object-cover rounded-lg border border-slate-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-all'>`).join('')}${photos.length>3?`<span class='w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 font-bold flex-shrink-0'>+${photos.length-3}</span>`:''}</div>`:''}</div>`; };
     const pD=document.getElementById('list-pending'); const aD=document.getElementById('list-active'); const dD=document.getElementById('list-done');
     if(pD) pD.innerHTML=db.appointments.filter(a=>a.status==='pending').map(card).join('');
     if(aD) aD.innerHTML=db.appointments.filter(a=>a.status==='active').map(card).join('');
@@ -2606,10 +2697,155 @@ function updateNPSChart(){ const r=db.npsResponses||[]; const avg=r.length?(r.re
 function initKanban(){ ['list-pending','list-active','list-done'].forEach(id=>{const el=document.getElementById(id); if(el){ new Sortable(el,{group:'tasks',animation:200,onEnd:async(evt)=>{ const appId=evt.item.dataset.id; const newStatus=evt.to.id.replace('list-',''); const app=db.appointments.find(a=>a.id==appId); if(app&&app.status!==newStatus){app.status=newStatus;saveLocalCache();try{await upsertAppointment(app)}catch(e){}if(newStatus==='done')await sendNpsSurvey(app);renderAll();if(dentistCalendar)dentistCalendar.refetchEvents();}}}); } }); }
 
 // ==================== CALENDÁRIOS ====================
-function initClientCalendar(){ const el=document.getElementById('client-mini-calendar'); if(clientCalendar)clientCalendar.destroy(); if(el){clientCalendar=new FullCalendar.Calendar(el,{initialView:'dayGridMonth',locale:'pt-br',height:'auto',dateClick:(info)=>{selectedDate=info.dateStr;renderTimeSlots();document.querySelectorAll('.fc-daygrid-day').forEach(d=>d.classList.remove('fc-daygrid-day-highlight'));info.dayEl.classList.add('fc-daygrid-day-highlight');}}); clientCalendar.render();} }
-function renderTimeSlots(){ if(!selectedDate) return; const times=["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00"]; const dentist=(document.getElementById('c-dentist')?.value||'').trim(); const occ=db.appointments.filter(a=>a.dentist===dentist&&a.date===selectedDate).map(a=>a.time); const blk=db.blocks.filter(b=>b.dentist===dentist&&b.date===selectedDate).map(b=>b.time); const unavail=[...occ,...blk]; const c=document.getElementById('time-slots'); if(c) c.innerHTML=times.map(t=>{const isU=unavail.includes(t),isS=selectedTime===t;let cls='p-2 rounded-xl font-bold text-sm transition-all ';if(isU)cls+='bg-red-100 text-slate-400 cursor-not-allowed opacity-50';else if(isS)cls+='time-slot-selected';else cls+='bg-slate-100 active:scale-95';return`<button onclick="selectTime('${t}')" class="${cls}" ${isU?'disabled':''}>${t}</button>`;}).join(''); }
-function selectTime(t){ selectedTime=t; const btn=document.getElementById('btn-confirm-booking'); if(btn){btn.disabled=false;btn.classList.remove('opacity-40');} renderTimeSlots(); }
-async function confirmBooking(){ if(!selectedDate||!selectedTime) return alert("Selecione data e horário"); const dentist=(document.getElementById('c-dentist')?.value||'').trim(); if(db.appointments.find(a=>a.dentist===dentist&&a.date===selectedDate&&a.time===selectedTime)) return alert("Horário já ocupado"); if(db.blocks.find(b=>b.dentist===dentist&&b.date===selectedDate&&b.time===selectedTime)) return alert("Horário bloqueado"); const procs=selectedClientProcedures.map(p=>{const pr=db.procedimentos.find(x=>x.id==p.id);return{nome:p.nome,valor:pr?parseFloat(pr.valor):0}}); const app={id:Date.now(),dentist,date:selectedDate,time:selectedTime,status:'pending',patientId:currentUser.id,selectedProcedures:procs}; db.appointments.push(app); saveLocalCache(); try{const s=await upsertAppointment(app);if(s){const idx=db.appointments.findIndex(a=>a.id===app.id);if(idx>=0)db.appointments[idx]=s;}showToast('✅ Agendamento confirmado!')}catch(e){showToast('⚠️ Salvo localmente','warning')} await sendAppointmentConfirmation(app); selectedClientProcedures=[]; selectedTime=null; renderTimeSlots(); loadClientProcedimentos(); if(dentistCalendar)dentistCalendar.refetchEvents(); }
+let bookingPhotos = []; // array of {dataUrl, name}
+
+function initClientCalendar(){
+    const el=document.getElementById('client-mini-calendar');
+    if(clientCalendar)clientCalendar.destroy();
+    if(el){
+        clientCalendar=new FullCalendar.Calendar(el,{
+            initialView:'dayGridMonth',
+            locale:'pt-br',
+            height:'auto',
+            dateClick:(info)=>{
+                selectedDate=info.dateStr;
+                document.querySelectorAll('.fc-daygrid-day').forEach(d=>d.classList.remove('fc-daygrid-day-highlight'));
+                info.dayEl.classList.add('fc-daygrid-day-highlight');
+                openTimeSlotModal(info.dateStr);
+            }
+        });
+        clientCalendar.render();
+    }
+}
+
+function openTimeSlotModal(dateStr){
+    const modal=document.getElementById('time-slot-modal');
+    if(!modal) return;
+
+    // Format the date nicely
+    const d=new Date(dateStr+'T12:00:00');
+    const opts={weekday:'long',year:'numeric',month:'long',day:'numeric'};
+    const label=d.toLocaleDateString('pt-BR',opts);
+    const el=document.getElementById('time-modal-date-display');
+    if(el) el.textContent=label.charAt(0).toUpperCase()+label.slice(1);
+
+    // Reset confirm button
+    const btn=document.getElementById('btn-confirm-time-modal');
+    if(btn) btn.disabled=true;
+
+    renderTimeSlotsInModal(dateStr);
+    modal.classList.remove('hidden');
+}
+
+function closeTimeSlotModal(){
+    document.getElementById('time-slot-modal')?.classList.add('hidden');
+}
+
+function renderTimeSlotsInModal(dateStr){
+    const manha=["08:00","09:00","10:00","11:00"];
+    const tarde=["13:00","14:00","15:00","16:00","17:00","18:00"];
+    const dentist=(document.getElementById('c-dentist')?.value||'').trim();
+    const occ=db.appointments.filter(a=>a.dentist===dentist&&a.date===dateStr).map(a=>a.time);
+    const blk=db.blocks.filter(b=>b.dentist===dentist&&b.date===dateStr).map(b=>b.time);
+    const unavail=[...occ,...blk];
+
+    function makeSlotBtn(t){
+        const isU=unavail.includes(t);
+        const isS=selectedTime===t;
+        let cls='py-2.5 rounded-xl font-black text-xs transition-all relative ';
+        if(isU) cls+='bg-red-100 text-red-300 cursor-not-allowed';
+        else if(isS) cls+='bg-emerald-500 text-white shadow-md scale-105 ring-2 ring-emerald-300';
+        else cls+='bg-slate-100 hover:bg-blue-100 hover:text-blue-700 active:scale-95 text-slate-700';
+        return `<button onclick="selectTimeInModal('${t}')" class="${cls}" ${isU?'disabled':''}>${t}${isU?'<span class=\'absolute -top-1 -right-1 text-[8px] bg-red-400 text-white rounded-full w-3 h-3 flex items-center justify-center\'>✕</span>':''}</button>`;
+    }
+
+    const mEl=document.getElementById('time-slots-modal-manha');
+    const tEl=document.getElementById('time-slots-modal-tarde');
+    if(mEl) mEl.innerHTML=manha.map(makeSlotBtn).join('');
+    if(tEl) tEl.innerHTML=tarde.map(makeSlotBtn).join('');
+}
+
+function selectTimeInModal(t){
+    selectedTime=t;
+    const btn=document.getElementById('btn-confirm-time-modal');
+    if(btn) btn.disabled=false;
+    // Re-render to update selected state
+    renderTimeSlotsInModal(selectedDate);
+}
+
+function confirmTimeSelection(){
+    if(!selectedDate||!selectedTime) return;
+    closeTimeSlotModal();
+    // Show summary card
+    const summary=document.getElementById('booking-datetime-summary');
+    const text=document.getElementById('booking-summary-text');
+    const d=new Date(selectedDate+'T12:00:00');
+    const dateLabel=d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+    if(text) text.textContent=`${dateLabel} às ${selectedTime}`;
+    if(summary) summary.classList.remove('hidden');
+    // Enable confirm booking
+    const btn=document.getElementById('btn-confirm-booking');
+    if(btn){ btn.disabled=false; btn.classList.remove('opacity-40'); }
+}
+
+function clearBookingDateTime(){
+    selectedDate=null; selectedTime=null;
+    document.getElementById('booking-datetime-summary')?.classList.add('hidden');
+    const btn=document.getElementById('btn-confirm-booking');
+    if(btn){ btn.disabled=true; btn.classList.add('opacity-40'); }
+    document.querySelectorAll('.fc-daygrid-day').forEach(d=>d.classList.remove('fc-daygrid-day-highlight'));
+}
+
+// kept for backward compat but no longer called directly
+function renderTimeSlots(){}
+function selectTime(t){ selectTimeInModal(t); }
+
+// ── Photo attachment in booking ──────────────────────────────
+function handleBookingPhotoUpload(event){
+    const files=Array.from(event.target.files||[]);
+    files.forEach(file=>{
+        if(file.size>5*1024*1024){showToast('Imagem muito grande (max 5MB)','error');return;}
+        const reader=new FileReader();
+        reader.onload=(e)=>{
+            bookingPhotos.push({dataUrl:e.target.result,name:file.name});
+            renderBookingPhotosPreview();
+        };
+        reader.readAsDataURL(file);
+    });
+    event.target.value='';
+}
+
+function renderBookingPhotosPreview(){
+    const container=document.getElementById('booking-photos-preview');
+    if(!container) return;
+    container.innerHTML=bookingPhotos.map((p,i)=>`
+        <div class="relative group">
+            <img src="${p.dataUrl}" onclick="viewBookingPhoto(${i})" class="w-full h-20 object-cover rounded-xl cursor-pointer border border-slate-200 hover:opacity-90 transition-all">
+            <button onclick="removeBookingPhoto(${i})" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+        </div>`).join('');
+}
+
+function removeBookingPhoto(i){
+    bookingPhotos.splice(i,1);
+    renderBookingPhotosPreview();
+}
+
+function viewBookingPhoto(i){
+    const modal=document.getElementById('booking-photo-modal');
+    const img=document.getElementById('booking-photo-modal-img');
+    if(modal&&img){ img.src=bookingPhotos[i]?.dataUrl||''; modal.classList.remove('hidden'); }
+}
+
+function viewManagerPhoto(appointmentId, photoIndex){
+    const app=db.appointments.find(a=>String(a.id)===String(appointmentId));
+    if(!app) return;
+    const photo=(app.photos||[])[photoIndex];
+    if(!photo) return;
+    const modal=document.getElementById('booking-photo-modal');
+    const img=document.getElementById('booking-photo-modal-img');
+    if(modal&&img){ img.src=photo.dataUrl||''; modal.classList.remove('hidden'); }
+}
+async function confirmBooking(){ if(!selectedDate||!selectedTime) return alert("Selecione data e horário"); const dentist=(document.getElementById('c-dentist')?.value||'').trim(); if(db.appointments.find(a=>a.dentist===dentist&&a.date===selectedDate&&a.time===selectedTime)) return alert("Horário já ocupado"); if(db.blocks.find(b=>b.dentist===dentist&&b.date===selectedDate&&b.time===selectedTime)) return alert("Horário bloqueado"); const procs=selectedClientProcedures.map(p=>{const pr=db.procedimentos.find(x=>x.id==p.id);return{nome:p.nome,valor:pr?parseFloat(pr.valor):0}}); const photos=bookingPhotos.map(p=>({dataUrl:p.dataUrl,name:p.name})); const app={id:Date.now(),dentist,date:selectedDate,time:selectedTime,status:'pending',patientId:currentUser.id,selectedProcedures:procs,photos}; db.appointments.push(app); saveLocalCache(); try{const s=await upsertAppointment(app);if(s){const idx=db.appointments.findIndex(a=>a.id===app.id);if(idx>=0)db.appointments[idx]=s;}showToast('✅ Agendamento confirmado!')}catch(e){showToast('⚠️ Salvo localmente','warning')} await sendAppointmentConfirmation(app); selectedClientProcedures=[]; selectedTime=null; bookingPhotos=[]; renderBookingPhotosPreview(); clearBookingDateTime(); loadClientProcedimentos(); if(dentistCalendar)dentistCalendar.refetchEvents(); }
 function loadDentistCalendar(){ const dn=(document.getElementById('dentist-select')?.value||''); if(!dn){if(dentistCalendar)dentistCalendar.destroy();const cEl=document.getElementById('dentist-calendar');if(cEl)cEl.innerHTML='<div class="p-5 text-center text-slate-400">Selecione um dentista</div>';currentDentistForCalendar=null;return;} currentDentistForCalendar=dn;const cEl=document.getElementById('dentist-calendar');if(dentistCalendar)dentistCalendar.destroy(); dentistCalendar=new FullCalendar.Calendar(cEl,{initialView:'timeGridWeek',locale:'pt-br',slotMinTime:'08:00',slotMaxTime:'18:00',allDaySlot:false,headerToolbar:{left:'prev,next today',center:'title',right:'timeGridWeek,dayGridMonth'},events:(fi,sc)=>{const evs=[];db.appointments.filter(a=>a.dentist===dn).forEach(a=>{const p=db.users.find(u=>u.id===(a.patientId||a.patient_id));evs.push({id:'app-'+a.id,title:p?p.name:'Paciente',start:a.date+'T'+a.time+':00',color:'#3b82f6',extendedProps:{appointmentId:a.id}});});db.blocks.filter(b=>b.dentist===dn).forEach(b=>{evs.push({id:'block-'+b.id,title:'🚫 BLOQUEADO',start:b.date+'T'+b.time+':00',color:'#ef4444'});});sc(evs);},eventClick:(info)=>{if(info.event.extendedProps.appointmentId)abrirOrcamento(info.event.extendedProps.appointmentId);},dateClick:async(info)=>{if(!isBlockMode||!hasPermission('dentist','bloquear_horarios'))return;const date=info.dateStr.split('T')[0];const time=info.dateStr.split('T')[1]?.substring(0,5)||'08:00';const ex=db.blocks.find(b=>b.dentist===dn&&b.date===date&&b.time===time);if(ex){if(confirm('Remover bloqueio?')){db.blocks=db.blocks.filter(b=>b.id!==ex.id);saveLocalCache();try{await deleteBlockDB(ex.id)}catch(e){}dentistCalendar.refetchEvents();}}else{if(confirm(`Bloquear ${time} em ${date}?`)){const nb={id:Date.now(),dentist:dn,date,time};db.blocks.push(nb);saveLocalCache();try{const s=await upsertBlock(nb);if(s){const idx=db.blocks.findIndex(b=>b.id===nb.id);if(idx>=0)db.blocks[idx]=s;}}catch(e){}dentistCalendar.refetchEvents();}}}}); dentistCalendar.render(); }
 function forceRefreshCalendar(){ if(currentDentistForCalendar){loadDentistCalendar();showToast('🔄 Calendário atualizado!')}else alert("Selecione um dentista."); }
 function toggleBlockMode(){ isBlockMode=!isBlockMode;const btn=document.getElementById('btn-block-mode');if(btn){btn.textContent=`Bloqueio: ${isBlockMode?'ON':'OFF'}`;btn.classList.toggle('bg-red-600',isBlockMode);btn.classList.toggle('bg-slate-800',!isBlockMode);}if(dentistCalendar)dentistCalendar.refetchEvents(); }
