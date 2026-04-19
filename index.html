@@ -4585,57 +4585,253 @@ function gerarRelatorioFinanceiro() {
 
 async function exportarRelatorioFinanceiroPDF() {
     gerarRelatorioFinanceiro();
+
     const start = document.getElementById('fin-rel-start').value;
     const end   = document.getElementById('fin-rel-end').value;
-    const clinica = db.clinicaAtiva?.nome || currentUser?.clinica || 'Clínica';
+    const dent  = document.getElementById('fin-rel-dentista').value;
+
+    // Dados da clínica
+    const clinica      = currentClinica || db.clinicaAtiva || {};
+    const clinicaNome  = clinica.nome || db.clinicaAtiva?.nome || currentUser?.clinica || 'Clínica';
+    const clinicaEnd   = clinica.endereco || '';
+    const clinicaLogo  = clinica.logo_base64 || null;
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text(`${clinica} — Prestação de Contas Financeira`, 14, 16);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Período: ${start || 'início'} a ${end || 'fim'} | Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 14, 22);
+    const pageW  = doc.internal.pageSize.getWidth();
+    const pageH  = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    let y = margin;
 
-    // Totais
-    const tg = document.getElementById('rel-total-geral').textContent;
-    const tp = document.getElementById('rel-total-pago').textContent;
-    const tr = document.getElementById('rel-total-repasse').textContent;
-    const tpend = document.getElementById('rel-total-pendente').textContent;
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total Emitido: ${tg}   Recebido: ${tp}   Repassado: ${tr}   Pendente: ${tpend}`, 14, 30);
+    // ── Função auxiliar: nova página com rodapé ──────────────────
+    function addFooter() {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(148, 163, 184);
+        doc.text('Documento gerado pelo sistema UP Sistemas da Informação', pageW / 2, pageH - 6, { align: 'center' });
+        doc.text(`Página ${doc.internal.getCurrentPageInfo().pageNumber}`, pageW - margin, pageH - 6, { align: 'right' });
+    }
 
-    // Tabela
+    // ── CABEÇALHO ────────────────────────────────────────────────
+    // Faixa azul topo
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, pageW, 2, 'F');
+
+    // Logo
+    if (clinicaLogo) {
+        try { doc.addImage(clinicaLogo, 'JPEG', margin, y, 22, 22); } catch(e) {}
+        const tx = margin + 26;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(30, 64, 175);
+        doc.text(clinicaNome, tx, y + 8);
+        if (clinicaEnd) {
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
+            doc.text(clinicaEnd, tx, y + 14);
+        }
+    } else {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(30, 64, 175);
+        doc.text(clinicaNome, margin, y + 8);
+        if (clinicaEnd) {
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
+            doc.text(clinicaEnd, margin, y + 14);
+        }
+    }
+    y += 28;
+
+    // Linha divisória
+    doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.4);
+    doc.line(margin, y, pageW - margin, y); y += 6;
+
+    // Título do relatório
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(15, 23, 42);
+    doc.text('PRESTAÇÃO DE CONTAS — REPASSE FINANCEIRO', margin, y); y += 5;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
+    doc.text(`Período: ${start || 'início'} a ${end || 'fim'}   |   Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, margin, y);
+    y += 8;
+
+    // ── CAIXAS DE TOTAIS ─────────────────────────────────────────
+    const tg   = document.getElementById('rel-total-geral').textContent;
+    const tp   = document.getElementById('rel-total-pago').textContent;
+    const trep = document.getElementById('rel-total-repasse').textContent;
+    const tpend= document.getElementById('rel-total-pendente').textContent;
+
+    const boxes = [
+        { label:'Total Emitido', value:tg,    cor:[37,99,235],   bg:[239,246,255] },
+        { label:'Recebido',      value:tp,    cor:[22,163,74],   bg:[240,253,244] },
+        { label:'Repassado',     value:trep,  cor:[124,58,237],  bg:[245,243,255] },
+        { label:'Pendente',      value:tpend, cor:[220,38,38],   bg:[254,242,242] },
+    ];
+    const bW = (pageW - margin * 2 - 9) / 4;
+    boxes.forEach((b, i) => {
+        const bx = margin + i * (bW + 3);
+        doc.setFillColor(...b.bg); doc.roundedRect(bx, y, bW, 16, 2, 2, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...b.cor);
+        doc.text(b.value, bx + bW / 2, y + 7, { align: 'center' });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(100,116,139);
+        doc.text(b.label, bx + bW / 2, y + 13, { align: 'center' });
+    });
+    y += 22;
+
+    // ── TABELA ───────────────────────────────────────────────────
     const tbody = document.getElementById('fin-rel-tbody');
-    const rows  = tbody.querySelectorAll('tr');
+    const rowEls = tbody.querySelectorAll('tr');
     const tableData = [];
-    rows.forEach(tr => {
-        const cells = [...tr.querySelectorAll('td')];
-        tableData.push(cells.map(td => td.textContent.trim()));
+    rowEls.forEach(row => {
+        const cells = [...row.querySelectorAll('td')];
+        const r = cells.map(td => td.textContent.trim());
+        // [0]=Nº [1]=Data [2]=Paciente [3]=Dentista [4]=Valor [5]=Status [6]=CompPgto [7]=Repasse [8]=CompRep
+        tableData.push([r[0], r[1], r[2], r[3], r[4], r[5], r[7]]);
     });
 
     if (typeof doc.autoTable === 'function') {
         doc.autoTable({
-            head: [['Nº','Data','Paciente','Dentista','Valor','Status Pgto','Comp.Pgto','Repasse','Comp.Rep.']],
+            head: [['Nº','Data','Paciente','Dentista','Valor','Status','Repasse']],
             body: tableData,
-            startY: 36,
-            styles: { fontSize: 8 },
-            headStyles: { fillColor: [37, 99, 235] }
+            startY: y,
+            styles: { fontSize: 8, cellPadding: 3, textColor:[15,23,42] },
+            headStyles: { fillColor:[30,64,175], textColor:[255,255,255], fontStyle:'bold', fontSize:8 },
+            alternateRowStyles: { fillColor:[248,250,252] },
+            columnStyles: { 0:{fontStyle:'bold', textColor:[30,64,175]}, 4:{fontStyle:'bold', textColor:[22,163,74]}, 6:{textColor:[124,58,237]} },
+            margin: { left: margin, right: margin },
         });
+        y = doc.lastAutoTable.finalY + 8;
     } else {
-        doc.setFontSize(8);
-        let y = 38;
+        doc.setFontSize(8); doc.setTextColor(15,23,42);
+        let yt = y;
         tableData.forEach(row => {
-            doc.text(row.join(' | '), 14, y);
-            y += 6;
-            if (y > 190) { doc.addPage(); y = 16; }
+            doc.text(row.join(' | '), margin, yt); yt += 6;
+            if (yt > pageH - 40) { addFooter(); doc.addPage(); yt = 16; }
         });
+        y = yt + 4;
     }
 
-    doc.save(`Prestacao_Contas_${start}_${end}.pdf`);
-    showToast('📄 PDF de prestação de contas gerado!');
+    // ── COMPROVANTES ─────────────────────────────────────────────
+    // Recolher orçamentos do filtro atual
+    let orcs = db.orcamentos.filter(o => {
+        const d = o.data || '';
+        if (start && d < start) return false;
+        if (end   && d > end)   return false;
+        if (dent  && (o.dentistaNome || o.dentista_nome) !== dent) return false;
+        return true;
+    });
+
+    const comps = [];
+    orcs.forEach(orc => {
+        const pag = db.pagamentos.find(p => p.orcamentoId === orc.id);
+        if (pag?.comprovantePagamento || pag?.comprovanteRepasse) {
+            comps.push({
+                numero:   orc.numero,
+                paciente: orc.pacienteNome || orc.paciente_nome || '—',
+                dentista: orc.dentistaNome || orc.dentista_nome || '—',
+                valor:    (orc.itens || []).reduce((s,i) => s + parseFloat(i.valor||0), 0),
+                compPgto: pag?.comprovantePagamento || null,
+                compRep:  pag?.comprovanteRepasse  || null,
+            });
+        }
+    });
+
+    if (comps.length > 0) {
+        if (y > pageH - 80) { addFooter(); doc.addPage(); y = 14; }
+        doc.setDrawColor(226,232,240); doc.setLineWidth(0.4);
+        doc.line(margin, y, pageW - margin, y); y += 6;
+
+        doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(30,64,175);
+        doc.text('COMPROVANTES ANEXADOS', margin, y); y += 7;
+
+        for (const c of comps) {
+            if (y > pageH - 80) { addFooter(); doc.addPage(); y = 14; }
+
+            // Label do registro
+            doc.setFillColor(239,246,255); doc.roundedRect(margin, y-4, pageW-margin*2, 8, 2, 2, 'F');
+            doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(30,64,175);
+            doc.text(`#${c.numero}`, margin+2, y);
+            doc.setTextColor(15,23,42);
+            doc.text(`${c.paciente}  |  ${c.dentista}  |  R$ ${c.valor.toFixed(2)}`, margin+14, y);
+            y += 8;
+
+            const imgH = 52, imgW = 72;
+
+            if (c.compPgto && c.compRep) {
+                // Dois comprovantes lado a lado
+                if (y + imgH + 12 > pageH - 20) { addFooter(); doc.addPage(); y = 14; }
+                doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(22,163,74);
+                doc.text('Comprovante de Pagamento', margin, y); 
+                doc.setTextColor(124,58,237);
+                doc.text('Comprovante de Repasse', margin + imgW + 10, y);
+                y += 3;
+                try { doc.addImage(c.compPgto, 'JPEG', margin, y, imgW, imgH); } catch(e){}
+                try { doc.addImage(c.compRep,  'JPEG', margin + imgW + 10, y, imgW, imgH); } catch(e){}
+                y += imgH + 8;
+            } else if (c.compPgto) {
+                if (y + imgH + 10 > pageH - 20) { addFooter(); doc.addPage(); y = 14; }
+                doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(22,163,74);
+                doc.text('Comprovante de Pagamento', margin, y); y += 3;
+                try { doc.addImage(c.compPgto, 'JPEG', margin, y, imgW, imgH); } catch(e){}
+                y += imgH + 8;
+            } else if (c.compRep) {
+                if (y + imgH + 10 > pageH - 20) { addFooter(); doc.addPage(); y = 14; }
+                doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(124,58,237);
+                doc.text('Comprovante de Repasse', margin, y); y += 3;
+                try { doc.addImage(c.compRep, 'JPEG', margin, y, imgW, imgH); } catch(e){}
+                y += imgH + 8;
+            }
+        }
+    }
+
+    // ── BLOCO DE QUITAÇÃO / ASSINATURAS ──────────────────────────
+    if (y > pageH - 75) { addFooter(); doc.addPage(); y = 14; }
+
+    doc.setDrawColor(226,232,240); doc.setLineWidth(0.4);
+    doc.line(margin, y, pageW - margin, y); y += 7;
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(15,23,42);
+    doc.text('DECLARAÇÃO DE QUITAÇÃO DE REPASSE', margin, y); y += 6;
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(71,85,105);
+    const dentNome = dent || (orcs.length > 0 ? (orcs[0].dentistaNome || orcs[0].dentista_nome || '') : '');
+    const decl1 = `Declaro que recebi da ${clinicaNome} o valor total de repasse de ${trep}, referente ao período`;
+    const decl2 = `de ${start||'—'} a ${end||'—'}, conforme demonstrativo acima, dando plena, rasa e irrevogável quitação.`;
+    doc.text(decl1, margin, y); y += 5;
+    doc.text(decl2, margin, y); y += 12;
+
+    // Cidade e data
+    const cidade = clinicaEnd ? clinicaEnd.split(',')[0] : '';
+    const dataExt = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+    doc.setFontSize(8); doc.setTextColor(100,116,139);
+    doc.text(`${cidade ? cidade+', ' : ''}${dataExt}`, margin, y); y += 14;
+
+    // Linhas de assinatura
+    const sigW = (pageW - margin * 2 - 20) / 2;
+
+    // Gerente (esquerda)
+    doc.setDrawColor(100,116,139); doc.setLineWidth(0.4);
+    doc.line(margin, y, margin + sigW, y);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+    doc.text('Gerente / Responsável Financeiro', margin + sigW / 2, y + 5, { align:'center' });
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
+    doc.text(clinicaNome, margin + sigW / 2, y + 10, { align:'center' });
+
+    // Dentista (direita)
+    const sx2 = pageW - margin - sigW;
+    doc.line(sx2, y, sx2 + sigW, y);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+    doc.text('Dentista / Profissional', sx2 + sigW / 2, y + 5, { align:'center' });
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
+    doc.text(dentNome || 'CRO: ______________', sx2 + sigW / 2, y + 10, { align:'center' });
+
+    // Rodapé em todas as páginas
+    const totalPgs = doc.internal.getNumberOfPages();
+    for (let pg = 1; pg <= totalPgs; pg++) {
+        doc.setPage(pg);
+        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(148,163,184);
+        doc.text('Documento gerado pelo sistema UP Sistemas da Informação', pageW / 2, pageH - 6, { align:'center' });
+        doc.text(`${pg} / ${totalPgs}`, pageW - margin, pageH - 6, { align:'right' });
+        // Faixa inferior
+        doc.setFillColor(30,64,175); doc.rect(0, pageH - 2, pageW, 2, 'F');
+    }
+
+    doc.save(`Prestacao_Contas_${clinicaNome}_${start}_${end}.pdf`);
+    showToast('📄 PDF gerado com comprovantes, logotipo e assinaturas!');
 }
 
 // ── Hook saveLocalCache: persistir pagamentos
