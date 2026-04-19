@@ -58,6 +58,22 @@
         input[type="file"] { display: none; }
         .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
         .active\\:scale-98:active { transform:scale(0.98); }
+        /* ── Financeiro Kanban ── */
+        .fin-lane { min-height:160px; transition:background .2s; }
+        .fin-card { background:#fff; border-radius:14px; border:1.5px solid #e2e8f0; padding:12px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,.06); transition:transform .15s,box-shadow .15s; }
+        .fin-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.10); }
+        .fin-lane-header { border-radius:12px 12px 0 0; padding:10px 14px; font-size:11px; font-weight:900; letter-spacing:.5px; display:flex; align-items:center; justify-content:space-between; }
+        .fin-upload-zone { border:2px dashed #cbd5e1; border-radius:10px; padding:12px; text-align:center; cursor:pointer; transition:all .2s; margin-top:8px; }
+        .fin-upload-zone:hover { border-color:#2563eb; background:#eff6ff; }
+        .fin-tab-btn { padding:8px 16px; border-radius:20px; font-size:12px; font-weight:700; cursor:pointer; border:none; background:#f1f5f9; color:#64748b; transition:all .2s; }
+        .fin-tab-btn.active { background:#2563eb; color:#fff; }
+        .fin-badge { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; font-size:10px; font-weight:900; }
+        /* Relatórios */
+        .rel-card { background:#fff; border-radius:16px; padding:16px; box-shadow:0 2px 12px rgba(0,0,0,.06); }
+        .rel-stat { text-align:center; padding:12px; background:#f8fafc; border-radius:12px; }
+        .rel-stat .val { font-size:1.4rem; font-weight:900; color:#1e40af; }
+        .rel-stat .lbl { font-size:10px; color:#64748b; font-weight:700; margin-top:2px; }
+
         /* Roadmap Kanban */
         #rm-lane-sugestao, #rm-lane-analisado, #rm-lane-planejamento, #rm-lane-entregue {
             transition: background .2s;
@@ -645,8 +661,211 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         ABA PRONTUÁRIO — Odontograma + Mídia
+         ABA FINANCEIRO — Kanban Contas a Receber + Relatórios
     ══════════════════════════════════════════════════════════════ -->
+    <section id="view-financeiro" class="hidden space-y-4">
+
+        <!-- Tabs internas -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <h2 class="text-xl font-black flex items-center gap-2">
+                    <i class="fas fa-dollar-sign text-emerald-600"></i> Financeiro
+                </h2>
+                <div class="flex gap-2">
+                    <button class="fin-tab-btn active" id="fin-tab-kanban" onclick="switchFinTab('kanban')">
+                        <i class="fas fa-columns mr-1"></i>Contas a Receber
+                    </button>
+                    <button class="fin-tab-btn" id="fin-tab-relatorios" onclick="switchFinTab('relatorios')">
+                        <i class="fas fa-chart-bar mr-1"></i>Relatórios
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── PAINEL KANBAN ── -->
+        <div id="fin-panel-kanban">
+            <!-- Info de sincronização -->
+            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-3 flex items-center gap-3 text-xs text-blue-700">
+                <i class="fas fa-info-circle text-blue-500 text-base"></i>
+                <span>Os <strong>orçamentos efetivados</strong> aparecem automaticamente em <em>Orçamentos Finalizados</em>. Mova os cards pelas etapas e anexe comprovantes para avançar o fluxo de pagamento.</span>
+            </div>
+
+            <!-- Kanban horizontal scroll -->
+            <div class="overflow-x-auto pb-4">
+                <div class="flex gap-4" style="min-width:900px">
+
+                    <!-- Coluna 1: Orçamentos Finalizados -->
+                    <div class="flex-1 min-w-[175px]">
+                        <div class="fin-lane-header" style="background:#dbeafe;color:#1e40af;">
+                            <span>📋 Finalizados</span>
+                            <span class="fin-badge bg-blue-200 text-blue-800" id="fin-count-finalizados">0</span>
+                        </div>
+                        <div class="fin-lane bg-blue-50 rounded-b-2xl p-3" id="fin-lane-finalizados"></div>
+                    </div>
+
+                    <!-- Coluna 2: Em Processo de Pagamento -->
+                    <div class="flex-1 min-w-[175px]">
+                        <div class="fin-lane-header" style="background:#fef3c7;color:#92400e;">
+                            <span>⏳ Aguard. Pgto</span>
+                            <span class="fin-badge bg-yellow-200 text-yellow-800" id="fin-count-aguardando">0</span>
+                        </div>
+                        <div class="fin-lane bg-yellow-50 rounded-b-2xl p-3" id="fin-lane-aguardando"></div>
+                    </div>
+
+                    <!-- Coluna 3: Pagos -->
+                    <div class="flex-1 min-w-[175px]">
+                        <div class="fin-lane-header" style="background:#dcfce7;color:#166534;">
+                            <span>✅ Pagos</span>
+                            <span class="fin-badge bg-emerald-200 text-emerald-800" id="fin-count-pagos">0</span>
+                        </div>
+                        <div class="fin-lane bg-emerald-50 rounded-b-2xl p-3" id="fin-lane-pagos"></div>
+                    </div>
+
+                    <!-- Coluna 4: Em Processo de Repasse -->
+                    <div class="flex-1 min-w-[175px]">
+                        <div class="fin-lane-header" style="background:#ede9fe;color:#5b21b6;">
+                            <span>🔄 Em Repasse</span>
+                            <span class="fin-badge bg-purple-200 text-purple-800" id="fin-count-repasse">0</span>
+                        </div>
+                        <div class="fin-lane bg-purple-50 rounded-b-2xl p-3" id="fin-lane-repasse"></div>
+                    </div>
+
+                    <!-- Coluna 5: Repasse Finalizado -->
+                    <div class="flex-1 min-w-[175px]">
+                        <div class="fin-lane-header" style="background:#f0fdf4;color:#065f46;">
+                            <span>🏁 Repasse Finalizado</span>
+                            <span class="fin-badge bg-green-200 text-green-900" id="fin-count-repasse-ok">0</span>
+                        </div>
+                        <div class="fin-lane bg-green-50 rounded-b-2xl p-3" id="fin-lane-repasse-ok"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ── PAINEL RELATÓRIOS ── -->
+        <div id="fin-panel-relatorios" class="hidden space-y-4">
+
+            <!-- Filtro de período -->
+            <div class="rel-card">
+                <h3 class="font-black text-sm mb-3 flex items-center gap-2">
+                    <i class="fas fa-filter text-slate-400"></i> Período para Prestação de Contas
+                </h3>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 block mb-1">DATA INÍCIO</label>
+                        <input type="date" id="fin-rel-start" class="w-full p-2 border rounded-xl text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 block mb-1">DATA FIM</label>
+                        <input type="date" id="fin-rel-end" class="w-full p-2 border rounded-xl text-sm">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <select id="fin-rel-dentista" class="flex-1 p-2 border rounded-xl bg-slate-50 text-sm">
+                        <option value="">Todos os dentistas</option>
+                    </select>
+                    <button onclick="gerarRelatorioFinanceiro()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold">
+                        <i class="fas fa-search mr-1"></i>Gerar
+                    </button>
+                    <button onclick="exportarRelatorioFinanceiroPDF()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold">
+                        <i class="fas fa-file-pdf mr-1"></i>PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards de totais -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="fin-rel-totais">
+                <div class="rel-stat"><div class="val" id="rel-total-geral">R$ 0</div><div class="lbl">TOTAL EMITIDO</div></div>
+                <div class="rel-stat"><div class="val text-emerald-600" id="rel-total-pago">R$ 0</div><div class="lbl">TOTAL RECEBIDO</div></div>
+                <div class="rel-stat"><div class="val text-purple-600" id="rel-total-repasse">R$ 0</div><div class="lbl">TOTAL REPASSADO</div></div>
+                <div class="rel-stat"><div class="val text-amber-600" id="rel-total-pendente">R$ 0</div><div class="lbl">PENDENTE</div></div>
+            </div>
+
+            <!-- Tabela de prestação de contas -->
+            <div class="rel-card overflow-x-auto">
+                <h3 class="font-black text-sm mb-3 flex items-center gap-2">
+                    <i class="fas fa-table text-blue-500"></i> Detalhamento por Orçamento
+                </h3>
+                <table class="table-orcamentos w-full" id="fin-rel-table">
+                    <thead>
+                        <tr>
+                            <th>Nº</th><th>Data</th><th>Paciente</th><th>Dentista</th>
+                            <th>Valor</th><th>Status Pgto</th><th>Comprovante</th>
+                            <th>Repasse</th><th>Comp. Repasse</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fin-rel-tbody">
+                        <tr><td colspan="9" class="text-center text-slate-400 py-6">Selecione o período e clique em Gerar</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Resumo por dentista -->
+            <div class="rel-card">
+                <h3 class="font-black text-sm mb-3 flex items-center gap-2">
+                    <i class="fas fa-user-md text-blue-500"></i> Resumo por Dentista
+                </h3>
+                <div id="fin-rel-por-dentista" class="space-y-2">
+                    <p class="text-xs text-slate-400 text-center py-4">Gere o relatório para ver o resumo por dentista</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Modal: Comprovante de Pagamento / Repasse -->
+    <div id="fin-comprovante-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-black text-base" id="fin-modal-title">Comprovante de Pagamento</h3>
+                <button onclick="closeComprovanteModal()" class="text-slate-400 text-2xl leading-none">&times;</button>
+            </div>
+            <p class="text-sm text-slate-500 mb-4" id="fin-modal-desc">Após anexar o comprovante, o card será movido automaticamente para a próxima etapa.</p>
+
+            <!-- Opção 1: Upload de arquivo -->
+            <div class="mb-3">
+                <label class="text-xs font-bold text-slate-500 block mb-1">📎 ANEXAR FOTO / ARQUIVO</label>
+                <label for="fin-upload-input" class="fin-upload-zone block">
+                    <i class="fas fa-cloud-upload-alt text-2xl text-slate-400 mb-1 block"></i>
+                    <span class="text-sm font-bold text-slate-500">Clique para selecionar</span>
+                    <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF • Máx. 5 MB</p>
+                    <input type="file" id="fin-upload-input" accept="image/*,application/pdf" onchange="handleComprovanteUpload(event)">
+                </label>
+            </div>
+
+            <!-- Opção 2: Câmera -->
+            <div class="mb-4">
+                <label class="text-xs font-bold text-slate-500 block mb-1">📷 TIRAR FOTO COM CÂMERA</label>
+                <div id="fin-camera-section" class="hidden space-y-2 mb-2">
+                    <video id="fin-camera-video" autoplay muted playsinline class="w-full max-h-48 rounded-xl bg-black object-cover"></video>
+                    <div class="flex gap-2">
+                        <button onclick="finCapturePhoto()" class="flex-1 bg-blue-600 text-white text-xs font-bold py-2 rounded-xl">
+                            <i class="fas fa-camera mr-1"></i>Tirar Foto
+                        </button>
+                        <button onclick="finStopCamera()" class="px-4 bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl">Fechar</button>
+                    </div>
+                </div>
+                <button id="fin-camera-btn" onclick="finStartCamera()" class="w-full border-2 border-dashed border-slate-300 text-slate-500 text-sm font-bold py-2 rounded-xl hover:border-blue-400 hover:text-blue-500 transition-colors">
+                    <i class="fas fa-camera mr-1"></i> Abrir Câmera
+                </button>
+            </div>
+
+            <!-- Preview do comprovante -->
+            <div id="fin-preview-area" class="hidden mb-4">
+                <label class="text-xs font-bold text-emerald-600 block mb-1">✅ COMPROVANTE CARREGADO</label>
+                <img id="fin-preview-img" class="w-full max-h-40 object-contain rounded-xl border border-emerald-300 bg-emerald-50">
+                <div id="fin-preview-pdf" class="hidden bg-emerald-50 border border-emerald-300 rounded-xl p-3 text-sm text-emerald-700 flex items-center gap-2">
+                    <i class="fas fa-file-pdf text-xl"></i><span id="fin-preview-pdf-name"></span>
+                </div>
+                <button onclick="finConfirmarComprovante()" class="w-full mt-3 bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm">
+                    <i class="fas fa-check-circle mr-1"></i>Confirmar e Avançar
+                </button>
+            </div>
+
+            <canvas id="fin-camera-canvas" class="hidden"></canvas>
+        </div>
+    </div>
     <section id="view-prontuario" class="hidden space-y-4">
 
         <!-- Cabeçalho + seletor de paciente -->
@@ -1108,7 +1327,7 @@ const SUPABASE_KEY = 'sb_publishable_1PvwLJYujxsSr51sgQXeYA_ZYy2iLu_';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ==================== ESTADO GLOBAL ====================
-let db = { users: [], appointments: [], blocks: [], npsResponses: [], config: { whatsapp: { provider:"desktop",instance:"",token:"",device:"",session:"",twilioSid:"",twilioToken:"",twilioFrom:"" }, permissions: {} }, procedimentos: [], orcamentos: [] };
+let db = { users: [], appointments: [], blocks: [], npsResponses: [], config: { whatsapp: { provider:"desktop",instance:"",token:"",device:"",session:"",twilioSid:"",twilioToken:"",twilioFrom:"" }, permissions: {} }, procedimentos: [], orcamentos: [], pagamentos: [] };
 let currentUser = null, currentClinica = null, currentGrupo = null;
 let allGrupos = [], allClinicas = [];
 let selectedDate = null, selectedTime = null, isBlockMode = false;
@@ -1126,6 +1345,7 @@ const MODULES = {
     budgets: { name:"Orçamentos",icon:"fa-folder-open" },
     gestao:  { name:"Gestão",    icon:"fa-building" },
     prontuario:{ name:"Prontuário", icon:"fa-notes-medical" },
+    financeiro:{ name:"Financeiro", icon:"fa-dollar-sign" },
     roadmap: { name:"Roadmap",   icon:"fa-map-signs" },
     settings:{ name:"Ajustes",   icon:"fa-cog" }
 };
@@ -1136,21 +1356,21 @@ let _lang = localStorage.getItem('up_lang') || 'pt';
 const I18N = {
     pt: {
         appName:'UP Sistemas da Informação', appSub:'Multi-Tenant · Acesso Seguro',
-        nav:{ client:'Agendar', manager:'Fluxo', dentist:'Agenda', nps:'NPS', budgets:'Orçamentos', gestao:'Gestão', prontuario:'Prontuário', roadmap:'Roadmap', settings:'Ajustes' },
+        nav:{ client:'Agendar', manager:'Fluxo', dentist:'Agenda', nps:'NPS', budgets:'Orçamentos', gestao:'Gestão', prontuario:'Prontuário', financeiro:'Financeiro', roadmap:'Roadmap', settings:'Ajustes' },
         login:{ user:'Usuário', pass:'Senha', next:'PRÓXIMO', enter:'ENTRAR NO SISTEMA', step1:'Bem-vindo de volta', step1sub:'Informe seu usuário para identificar sua clínica', step2:'Em qual clínica vai atuar?', step3:'Digite sua senha', step4:'Carregando...', identified:'IDENTIFICADO', secureNote:'Dados 100% isolados por clínica · LGPD' },
         roadmap:{ title:'Roadmap de Sugestões', newBtn:'+ Nova Sugestão', col1:'💡 Sugestões', col2:'🔍 Em Análise', col3:'📋 Planejado', col4:'✅ Entregue', voteBtn:'Votar', votes:'votos', modalTitle:'Nova Sugestão', titleLabel:'Título', descLabel:'Descrição', catLabel:'Categoria', submitBtn:'Enviar Sugestão', categories:['Funcionalidade','Melhoria','Correção','Integração','Relatório','Outro'], profileLabel:'Perfil', byLabel:'por', addComment:'Adicionar comentário...', saveComment:'Comentar', keyUsers:'Testado por usuários-chave', markDelivered:'Marcar como Entregue', moveTo:'Mover para', filterAll:'Todos os perfis', filterCat:'Todas as categorias', searchPlaceholder:'Buscar sugestões...' },
         toast:{ saved:'✅ Salvo!', error:'❌ Erro', noClinic:'Clínica não encontrada', denied:'⛔ Acesso negado', vote:'✅ Voto registrado!', suggestion:'✅ Sugestão enviada!' }
     },
     es: {
         appName:'UP Sistemas de Información', appSub:'Multi-Tenant · Acceso Seguro',
-        nav:{ client:'Agendar', manager:'Flujo', dentist:'Agenda', nps:'NPS', budgets:'Presupuestos', gestao:'Gestión', prontuario:'Historia', roadmap:'Roadmap', settings:'Ajustes' },
+        nav:{ client:'Agendar', manager:'Flujo', dentist:'Agenda', nps:'NPS', budgets:'Presupuestos', gestao:'Gestión', prontuario:'Historia', financeiro:'Financiero', roadmap:'Roadmap', settings:'Ajustes' },
         login:{ user:'Usuario', pass:'Contraseña', next:'SIGUIENTE', enter:'INGRESAR AL SISTEMA', step1:'Bienvenido de nuevo', step1sub:'Ingresa tu usuario para identificar tu clínica', step2:'¿En qué clínica trabajarás?', step3:'Escribe tu contraseña', step4:'Cargando...', identified:'IDENTIFICADO', secureNote:'Datos 100% aislados por clínica · LGPD' },
         roadmap:{ title:'Roadmap de Sugerencias', newBtn:'+ Nueva Sugerencia', col1:'💡 Sugerencias', col2:'🔍 En Análisis', col3:'📋 Planificado', col4:'✅ Entregado', voteBtn:'Votar', votes:'votos', modalTitle:'Nueva Sugerencia', titleLabel:'Título', descLabel:'Descripción', catLabel:'Categoría', submitBtn:'Enviar Sugerencia', categories:['Funcionalidad','Mejora','Corrección','Integración','Reporte','Otro'], profileLabel:'Perfil', byLabel:'por', addComment:'Agregar comentario...', saveComment:'Comentar', keyUsers:'Probado por usuarios clave', markDelivered:'Marcar como Entregado', moveTo:'Mover a', filterAll:'Todos los perfiles', filterCat:'Todas las categorías', searchPlaceholder:'Buscar sugerencias...' },
         toast:{ saved:'✅ Guardado!', error:'❌ Error', noClinic:'Clínica no encontrada', denied:'⛔ Acceso denegado', vote:'✅ Voto registrado!', suggestion:'✅ Sugerencia enviada!' }
     },
     en: {
         appName:'UP Information Systems', appSub:'Multi-Tenant · Secure Access',
-        nav:{ client:'Schedule', manager:'Flow', dentist:'Agenda', nps:'NPS', budgets:'Budgets', gestao:'Management', prontuario:'Records', roadmap:'Roadmap', settings:'Settings' },
+        nav:{ client:'Schedule', manager:'Flow', dentist:'Agenda', nps:'NPS', budgets:'Budgets', gestao:'Management', prontuario:'Records', financeiro:'Financial', roadmap:'Roadmap', settings:'Settings' },
         login:{ user:'Username', pass:'Password', next:'NEXT', enter:'ENTER SYSTEM', step1:'Welcome back', step1sub:'Enter your username to identify your clinic', step2:'Which clinic will you work in?', step3:'Enter your password', step4:'Loading...', identified:'IDENTIFIED', secureNote:'Data 100% isolated per clinic · LGPD' },
         roadmap:{ title:'Suggestions Roadmap', newBtn:'+ New Suggestion', col1:'💡 Suggestions', col2:'🔍 Under Review', col3:'📋 Planned', col4:'✅ Delivered', voteBtn:'Vote', votes:'votes', modalTitle:'New Suggestion', titleLabel:'Title', descLabel:'Description', catLabel:'Category', submitBtn:'Submit Suggestion', categories:['Feature','Improvement','Bug Fix','Integration','Report','Other'], profileLabel:'Profile', byLabel:'by', addComment:'Add a comment...', saveComment:'Comment', keyUsers:'Tested by key users', markDelivered:'Mark as Delivered', moveTo:'Move to', filterAll:'All profiles', filterCat:'All categories', searchPlaceholder:'Search suggestions...' },
         toast:{ saved:'✅ Saved!', error:'❌ Error', noClinic:'Clinic not found', denied:'⛔ Access denied', vote:'✅ Vote registered!', suggestion:'✅ Suggestion submitted!' }
@@ -1213,17 +1433,17 @@ function applyI18n() {
 }
 
 const DEFAULT_PERMISSIONS = {
-    super_admin: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, roadmap:true, settings:true,
+    super_admin: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, financeiro:true, roadmap:true, settings:true,
         actions:{agendar:true,mover_cards:true,ver_agenda:true,bloquear_horarios:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:true,gerenciar_procedimentos:true,fazer_orcamento:true,gerenciar_grupos:true,gerenciar_clinicas:true,trocar_clinica:true,editar_minha_clinica:true,mover_roadmap:true}},
-    group_admin: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, roadmap:true, settings:true,
+    group_admin: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, financeiro:true, roadmap:true, settings:true,
         actions:{mover_cards:true,ver_agenda:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:false,gerenciar_procedimentos:true,fazer_orcamento:false,gerenciar_grupos:false,gerenciar_clinicas:true,trocar_clinica:true,editar_minha_clinica:true,mover_roadmap:true}},
-    owner: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, roadmap:true, settings:true,
+    owner: { client:true, manager:true, dentist:true, nps:true, budgets:true, gestao:true, prontuario:true, financeiro:true, roadmap:true, settings:true,
         actions:{agendar:true,mover_cards:true,ver_agenda:true,bloquear_horarios:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:true,gerenciar_procedimentos:true,fazer_orcamento:true,gerenciar_grupos:false,gerenciar_clinicas:false,trocar_clinica:false,editar_minha_clinica:true,mover_roadmap:true}},
-    manager: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:false, prontuario:true, roadmap:true, settings:true,
+    manager: { client:false, manager:true, dentist:true, nps:true, budgets:true, gestao:false, prontuario:true, financeiro:true, roadmap:true, settings:true,
         actions:{mover_cards:true,ver_agenda:true,ver_grafico:true,consultar_orcamentos:true,gerenciar_usuarios:true,configurar_whatsapp:true,configurar_permissoes:false,gerenciar_procedimentos:false,fazer_orcamento:false,mover_roadmap:true}},
-    dentist: { client:false, manager:false, dentist:true, nps:false, budgets:false, gestao:false, prontuario:true, roadmap:true, settings:false,
+    dentist: { client:false, manager:false, dentist:true, nps:false, budgets:false, gestao:false, prontuario:true, financeiro:false, roadmap:true, settings:false,
         actions:{ver_agenda:true,bloquear_horarios:true,fazer_orcamento:true,mover_roadmap:false}},
-    client:  { client:true, manager:false, dentist:false, nps:false, budgets:false, gestao:false, roadmap:true, settings:false,
+    client:  { client:true, manager:false, dentist:false, nps:false, budgets:false, gestao:false, financeiro:false, roadmap:true, settings:false,
         actions:{agendar:true,mover_roadmap:false}}
 };
 
@@ -2661,6 +2881,7 @@ function switchTab(tabId){
     if(tabId==='gestao') loadGestaoSection();
     if(tabId==='prontuario') { initProntuario(); checkProntuarioSetup(); }
     if(tabId==='roadmap') initRoadmap();
+    if(tabId==='financeiro') initFinanceiro();
     if(tabId==='settings'){renderPermissionsTree();loadUsersTable();renderProcedimentosList();}
     applyUIPermissions();
 }
@@ -3982,6 +4203,455 @@ function _rmFormatDate(iso) {
         return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) +
                ' ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     } catch(e) { return ''; }
+}
+
+// ==================== MÓDULO FINANCEIRO ====================
+
+// ── Estado
+let _finTab = 'kanban';
+let _finComprovanteCtx = null; // { pagId, tipo:'pagamento'|'repasse' }
+let _finCameraStream = null;
+
+// ── Inicializar módulo
+function initFinanceiro() {
+    // Sincronizar pagamentos com orçamentos efetivados
+    _sincronizarPagamentos();
+    switchFinTab(_finTab);
+}
+
+// ── Garantir que todo orçamento efetivado tenha entrada em db.pagamentos
+function _sincronizarPagamentos() {
+    if (!db.pagamentos) db.pagamentos = [];
+    const efetivados = db.orcamentos.filter(o => o.status === 'efetivado');
+    efetivados.forEach(orc => {
+        const existe = db.pagamentos.find(p => p.orcamentoId === orc.id);
+        if (!existe) {
+            db.pagamentos.push({
+                id: 'pag_' + orc.id,
+                orcamentoId: orc.id,
+                etapa: 'finalizados', // finalizados | aguardando | pagos | repasse | repasse_ok
+                comprovantePagamento: null,   // base64 ou url
+                comprovanteRepasse:   null,
+                dataPagamento:        null,
+                dataRepasse:          null,
+                obs: ''
+            });
+        }
+    });
+    saveLocalCache();
+}
+
+// ── Alternar entre tabs internas
+function switchFinTab(tab) {
+    _finTab = tab;
+    document.getElementById('fin-panel-kanban').classList.toggle('hidden', tab !== 'kanban');
+    document.getElementById('fin-panel-relatorios').classList.toggle('hidden', tab !== 'relatorios');
+    document.getElementById('fin-tab-kanban').classList.toggle('active', tab === 'kanban');
+    document.getElementById('fin-tab-relatorios').classList.toggle('active', tab === 'relatorios');
+    if (tab === 'kanban') renderFinKanban();
+    if (tab === 'relatorios') prepararFiltrosRelatorio();
+}
+
+// ── Renderizar colunas do kanban
+function renderFinKanban() {
+    _sincronizarPagamentos();
+    const etapas = ['finalizados','aguardando','pagos','repasse','repasse_ok'];
+    const counts = { finalizados:0, aguardando:0, pagos:0, repasse:0, repasse_ok:0 };
+
+    etapas.forEach(e => {
+        const el = document.getElementById('fin-lane-' + e);
+        if (el) el.innerHTML = '';
+    });
+
+    db.pagamentos.forEach(pag => {
+        const orc = db.orcamentos.find(o => o.id === pag.orcamentoId);
+        if (!orc) return;
+        const total = (orc.itens || []).reduce((s, i) => s + parseFloat(i.valor || 0), 0);
+        const etapa = pag.etapa || 'finalizados';
+        if (!counts[etapa] !== undefined) counts[etapa] = (counts[etapa] || 0) + 1;
+        counts[etapa] = (counts[etapa] || 0) + 1;
+
+        const lane = document.getElementById('fin-lane-' + etapa);
+        if (!lane) return;
+
+        const card = document.createElement('div');
+        card.className = 'fin-card';
+        card.innerHTML = _finCardHTML(pag, orc, total, etapa);
+        lane.appendChild(card);
+    });
+
+    // Atualizar contagens
+    document.getElementById('fin-count-finalizados').textContent = counts.finalizados;
+    document.getElementById('fin-count-aguardando').textContent = counts.aguardando;
+    document.getElementById('fin-count-pagos').textContent = counts.pagos;
+    document.getElementById('fin-count-repasse').textContent = counts.repasse;
+    document.getElementById('fin-count-repasse-ok').textContent = counts.repasse_ok;
+}
+
+function _finCardHTML(pag, orc, total, etapa) {
+    const nome = orc.pacienteNome || orc.paciente_nome || '—';
+    const dentista = orc.dentistaNome || orc.dentista_nome || '—';
+    const data = orc.data || '—';
+    const valorFmt = `R$ ${total.toFixed(2)}`;
+
+    let acoes = '';
+
+    if (etapa === 'finalizados') {
+        acoes = `<button onclick="moverParaAguardando('${pag.id}')" class="w-full mt-2 bg-amber-500 text-white text-xs font-bold py-1.5 rounded-lg">
+            <i class="fas fa-arrow-right mr-1"></i>Enviar p/ Pagamento
+        </button>`;
+    } else if (etapa === 'aguardando') {
+        acoes = `<div class="mt-2 space-y-1">
+            <button onclick="abrirModalComprovante('${pag.id}','pagamento')" class="w-full bg-emerald-600 text-white text-xs font-bold py-1.5 rounded-lg">
+                <i class="fas fa-upload mr-1"></i>Anexar Comprovante
+            </button>
+            <button onclick="abrirModalComprovante('${pag.id}','pagamento')" class="w-full border border-blue-400 text-blue-600 text-xs font-bold py-1.5 rounded-lg">
+                <i class="fas fa-camera mr-1"></i>Foto p/ Câmera
+            </button>
+        </div>`;
+    } else if (etapa === 'pagos') {
+        const thumb = pag.comprovantePagamento ? `<img src="${pag.comprovantePagamento}" class="w-8 h-8 object-cover rounded-lg border cursor-pointer mr-1 inline" onclick="verComprovante('${pag.id}','pagamento')">` : '';
+        acoes = `<div class="mt-2">
+            <div class="flex items-center gap-1 mb-1">${thumb}<span class="text-xs text-emerald-600 font-bold">✅ Pgto confirmado</span></div>
+            <button onclick="moverParaRepasse('${pag.id}')" class="w-full bg-purple-600 text-white text-xs font-bold py-1.5 rounded-lg">
+                <i class="fas fa-share-alt mr-1"></i>Iniciar Repasse
+            </button>
+        </div>`;
+    } else if (etapa === 'repasse') {
+        acoes = `<div class="mt-2 space-y-1">
+            <p class="text-xs text-purple-600 font-bold">🔄 Aguardando comprovante de repasse</p>
+            <button onclick="abrirModalComprovante('${pag.id}','repasse')" class="w-full bg-purple-600 text-white text-xs font-bold py-1.5 rounded-lg">
+                <i class="fas fa-upload mr-1"></i>Anexar Comp. Repasse
+            </button>
+            <button onclick="abrirModalComprovante('${pag.id}','repasse')" class="w-full border border-purple-400 text-purple-600 text-xs font-bold py-1.5 rounded-lg">
+                <i class="fas fa-camera mr-1"></i>Foto p/ Câmera
+            </button>
+        </div>`;
+    } else if (etapa === 'repasse_ok') {
+        const thumbR = pag.comprovanteRepasse ? `<img src="${pag.comprovanteRepasse}" class="w-8 h-8 object-cover rounded-lg border cursor-pointer" onclick="verComprovante('${pag.id}','repasse')">` : '';
+        acoes = `<div class="mt-2 flex items-center gap-2">
+            ${thumbR}
+            <span class="text-xs text-green-700 font-bold">🏁 Repasse finalizado</span>
+        </div>`;
+    }
+
+    const dataPgto = pag.dataPagamento ? `<span class="text-xs text-slate-400">Pago em ${new Date(pag.dataPagamento).toLocaleDateString('pt-BR')}</span>` : '';
+    const dataRep  = pag.dataRepasse   ? `<span class="text-xs text-slate-400">Repasse em ${new Date(pag.dataRepasse).toLocaleDateString('pt-BR')}</span>` : '';
+
+    return `
+        <div>
+            <div class="flex justify-between items-start mb-1">
+                <span class="font-black text-blue-700 text-sm">#${orc.numero}</span>
+                <span class="font-black text-emerald-700 text-sm">${valorFmt}</span>
+            </div>
+            <p class="text-xs font-bold text-slate-700 truncate">${nome}</p>
+            <p class="text-[11px] text-slate-400">${dentista}</p>
+            <p class="text-[11px] text-slate-400">${data}</p>
+            ${dataPgto}${dataRep}
+            ${acoes}
+        </div>`;
+}
+
+// ── Ações de movimentação
+function moverParaAguardando(pagId) {
+    const pag = db.pagamentos.find(p => p.id === pagId);
+    if (!pag) return;
+    pag.etapa = 'aguardando';
+    saveLocalCache();
+    renderFinKanban();
+    showToast('Card movido para Em Processo de Pagamento', 'info');
+}
+
+function moverParaRepasse(pagId) {
+    const pag = db.pagamentos.find(p => p.id === pagId);
+    if (!pag) return;
+    pag.etapa = 'repasse';
+    saveLocalCache();
+    renderFinKanban();
+    showToast('Card movido para Em Processo de Repasse', 'info');
+}
+
+// ── Modal de comprovante
+function abrirModalComprovante(pagId, tipo) {
+    _finComprovanteCtx = { pagId, tipo };
+    const isPgto = tipo === 'pagamento';
+    document.getElementById('fin-modal-title').textContent = isPgto ? '💳 Comprovante de Pagamento' : '🔄 Comprovante de Repasse';
+    document.getElementById('fin-modal-desc').textContent = isPgto
+        ? 'Após confirmar o comprovante, o card será movido automaticamente para PAGOS.'
+        : 'Após confirmar o comprovante, o card será movido automaticamente para REPASSE FINALIZADO.';
+    document.getElementById('fin-preview-area').classList.add('hidden');
+    document.getElementById('fin-camera-section').classList.add('hidden');
+    document.getElementById('fin-camera-btn').classList.remove('hidden');
+    document.getElementById('fin-comprovante-modal').classList.remove('hidden');
+    finStopCamera();
+}
+
+function closeComprovanteModal() {
+    finStopCamera();
+    document.getElementById('fin-comprovante-modal').classList.add('hidden');
+    _finComprovanteCtx = null;
+}
+
+function handleComprovanteUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        _finMostrarPreview(e.target.result, file.type);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+}
+
+function _finMostrarPreview(base64, type) {
+    const isPDF = type === 'application/pdf';
+    document.getElementById('fin-preview-img').src = isPDF ? '' : base64;
+    document.getElementById('fin-preview-img').classList.toggle('hidden', isPDF);
+    document.getElementById('fin-preview-pdf').classList.toggle('hidden', !isPDF);
+    if (isPDF) document.getElementById('fin-preview-pdf-name').textContent = 'Arquivo PDF carregado';
+    document.getElementById('fin-preview-area').classList.remove('hidden');
+    document.getElementById('fin-preview-area').dataset.base64 = base64;
+}
+
+function finConfirmarComprovante() {
+    const base64 = document.getElementById('fin-preview-area').dataset.base64;
+    if (!base64 || !_finComprovanteCtx) return;
+    const { pagId, tipo } = _finComprovanteCtx;
+    const pag = db.pagamentos.find(p => p.id === pagId);
+    if (!pag) return;
+
+    if (tipo === 'pagamento') {
+        pag.comprovantePagamento = base64;
+        pag.dataPagamento = new Date().toISOString();
+        pag.etapa = 'pagos'; // avança automaticamente
+        showToast('✅ Comprovante confirmado! Card movido para PAGOS.');
+    } else {
+        pag.comprovanteRepasse = base64;
+        pag.dataRepasse = new Date().toISOString();
+        pag.etapa = 'repasse_ok'; // avança automaticamente
+        showToast('✅ Repasse confirmado! Card movido para REPASSE FINALIZADO.');
+    }
+
+    saveLocalCache();
+    closeComprovanteModal();
+    renderFinKanban();
+}
+
+// ── Câmera no modal financeiro
+function finStartCamera() {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+            _finCameraStream = stream;
+            const vid = document.getElementById('fin-camera-video');
+            vid.srcObject = stream;
+            document.getElementById('fin-camera-section').classList.remove('hidden');
+            document.getElementById('fin-camera-btn').classList.add('hidden');
+        })
+        .catch(() => showToast('Câmera não disponível', 'error'));
+}
+
+function finStopCamera() {
+    if (_finCameraStream) {
+        _finCameraStream.getTracks().forEach(t => t.stop());
+        _finCameraStream = null;
+    }
+    document.getElementById('fin-camera-section')?.classList.add('hidden');
+    document.getElementById('fin-camera-btn')?.classList.remove('hidden');
+}
+
+function finCapturePhoto() {
+    const vid = document.getElementById('fin-camera-video');
+    const canvas = document.getElementById('fin-camera-canvas');
+    canvas.width = vid.videoWidth;
+    canvas.height = vid.videoHeight;
+    canvas.getContext('2d').drawImage(vid, 0, 0);
+    const base64 = canvas.toDataURL('image/jpeg', 0.85);
+    finStopCamera();
+    _finMostrarPreview(base64, 'image/jpeg');
+}
+
+// ── Visualizar comprovante
+function verComprovante(pagId, tipo) {
+    const pag = db.pagamentos.find(p => p.id === pagId);
+    if (!pag) return;
+    const src = tipo === 'pagamento' ? pag.comprovantePagamento : pag.comprovanteRepasse;
+    if (!src) return;
+    const win = window.open();
+    win.document.write(`<img src="${src}" style="max-width:100%;display:block;margin:auto">`);
+}
+
+// ── Relatórios Financeiros
+function prepararFiltrosRelatorio() {
+    const sel = document.getElementById('fin-rel-dentista');
+    if (!sel) return;
+    const dentistas = [...new Set(db.orcamentos.map(o => o.dentistaNome || o.dentista_nome).filter(Boolean))];
+    sel.innerHTML = '<option value="">Todos os dentistas</option>' +
+        dentistas.map(d => `<option value="${d}">${d}</option>`).join('');
+
+    // Datas padrão: mês atual
+    const hoje = new Date();
+    const y = hoje.getFullYear();
+    const m = String(hoje.getMonth() + 1).padStart(2, '0');
+    document.getElementById('fin-rel-start').value = `${y}-${m}-01`;
+    document.getElementById('fin-rel-end').value = `${y}-${m}-${new Date(y, hoje.getMonth()+1, 0).getDate().toString().padStart(2,'0')}`;
+}
+
+function gerarRelatorioFinanceiro() {
+    const start = document.getElementById('fin-rel-start').value;
+    const end   = document.getElementById('fin-rel-end').value;
+    const dent  = document.getElementById('fin-rel-dentista').value;
+
+    // Filtrar orçamentos pelo período
+    let orcs = db.orcamentos.filter(o => {
+        const d = o.data || '';
+        if (start && d < start) return false;
+        if (end   && d > end)   return false;
+        if (dent && (o.dentistaNome || o.dentista_nome) !== dent) return false;
+        return true;
+    });
+
+    let totalGeral = 0, totalPago = 0, totalRepasse = 0, totalPendente = 0;
+
+    const rows = orcs.map(orc => {
+        const pag = db.pagamentos.find(p => p.orcamentoId === orc.id);
+        const valor = (orc.itens || []).reduce((s, i) => s + parseFloat(i.valor || 0), 0);
+        totalGeral += valor;
+
+        const etapa = pag?.etapa || '—';
+        const pago  = ['pagos','repasse','repasse_ok'].includes(etapa);
+        const repas = ['repasse','repasse_ok'].includes(etapa);
+        if (pago)  totalPago    += valor;
+        if (repas) totalRepasse += valor;
+        if (!pago) totalPendente += valor;
+
+        const etapaLabel = {
+            finalizados:'📋 Finalizado', aguardando:'⏳ Aguard. Pgto',
+            pagos:'✅ Pago', repasse:'🔄 Em Repasse', repasse_ok:'🏁 Repasse OK', '—':'—'
+        }[etapa] || etapa;
+
+        const compPgto = pag?.comprovantePagamento
+            ? `<button onclick="verComprovante('${pag.id}','pagamento')" class="text-blue-500 text-xs font-bold"><i class="fas fa-image mr-1"></i>Ver</button>` : '—';
+        const repFmt = repas ? `✅ R$ ${valor.toFixed(2)}` : '—';
+        const compRep = pag?.comprovanteRepasse
+            ? `<button onclick="verComprovante('${pag.id}','repasse')" class="text-purple-500 text-xs font-bold"><i class="fas fa-image mr-1"></i>Ver</button>` : '—';
+
+        return `<tr>
+            <td class="font-bold text-blue-600">#${orc.numero}</td>
+            <td>${orc.data || '—'}</td>
+            <td>${orc.pacienteNome || orc.paciente_nome || '—'}</td>
+            <td>${orc.dentistaNome || orc.dentista_nome || '—'}</td>
+            <td class="font-bold text-emerald-600">R$ ${valor.toFixed(2)}</td>
+            <td>${etapaLabel}</td>
+            <td>${compPgto}</td>
+            <td>${repFmt}</td>
+            <td>${compRep}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('fin-rel-tbody').innerHTML = rows || '<tr><td colspan="9" class="text-center text-slate-400 py-6">Nenhum registro encontrado no período</td></tr>';
+
+    // Atualizar totais
+    document.getElementById('rel-total-geral').textContent   = `R$ ${totalGeral.toFixed(2)}`;
+    document.getElementById('rel-total-pago').textContent    = `R$ ${totalPago.toFixed(2)}`;
+    document.getElementById('rel-total-repasse').textContent = `R$ ${totalRepasse.toFixed(2)}`;
+    document.getElementById('rel-total-pendente').textContent= `R$ ${totalPendente.toFixed(2)}`;
+
+    // Resumo por dentista
+    const porDentista = {};
+    orcs.forEach(orc => {
+        const d = orc.dentistaNome || orc.dentista_nome || 'Não informado';
+        const pag = db.pagamentos.find(p => p.orcamentoId === orc.id);
+        const val = (orc.itens || []).reduce((s, i) => s + parseFloat(i.valor || 0), 0);
+        if (!porDentista[d]) porDentista[d] = { total:0, pago:0, repasse:0 };
+        porDentista[d].total += val;
+        if (['pagos','repasse','repasse_ok'].includes(pag?.etapa)) porDentista[d].pago += val;
+        if (['repasse','repasse_ok'].includes(pag?.etapa)) porDentista[d].repasse += val;
+    });
+
+    const dentHTML = Object.entries(porDentista).map(([nome, v]) => `
+        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+            <div>
+                <p class="font-bold text-sm text-slate-700">${nome}</p>
+                <p class="text-xs text-slate-400">Emitido: R$ ${v.total.toFixed(2)}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-xs font-bold text-emerald-600">Recebido: R$ ${v.pago.toFixed(2)}</p>
+                <p class="text-xs font-bold text-purple-600">Repassado: R$ ${v.repasse.toFixed(2)}</p>
+            </div>
+        </div>`).join('');
+
+    document.getElementById('fin-rel-por-dentista').innerHTML = dentHTML || '<p class="text-xs text-slate-400 text-center py-4">Nenhum registro</p>';
+}
+
+async function exportarRelatorioFinanceiroPDF() {
+    gerarRelatorioFinanceiro();
+    const start = document.getElementById('fin-rel-start').value;
+    const end   = document.getElementById('fin-rel-end').value;
+    const clinica = db.clinicaAtiva?.nome || currentUser?.clinica || 'Clínica';
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(`${clinica} — Prestação de Contas Financeira`, 14, 16);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Período: ${start || 'início'} a ${end || 'fim'} | Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 14, 22);
+
+    // Totais
+    const tg = document.getElementById('rel-total-geral').textContent;
+    const tp = document.getElementById('rel-total-pago').textContent;
+    const tr = document.getElementById('rel-total-repasse').textContent;
+    const tpend = document.getElementById('rel-total-pendente').textContent;
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total Emitido: ${tg}   Recebido: ${tp}   Repassado: ${tr}   Pendente: ${tpend}`, 14, 30);
+
+    // Tabela
+    const tbody = document.getElementById('fin-rel-tbody');
+    const rows  = tbody.querySelectorAll('tr');
+    const tableData = [];
+    rows.forEach(tr => {
+        const cells = [...tr.querySelectorAll('td')];
+        tableData.push(cells.map(td => td.textContent.trim()));
+    });
+
+    if (typeof doc.autoTable === 'function') {
+        doc.autoTable({
+            head: [['Nº','Data','Paciente','Dentista','Valor','Status Pgto','Comp.Pgto','Repasse','Comp.Rep.']],
+            body: tableData,
+            startY: 36,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [37, 99, 235] }
+        });
+    } else {
+        doc.setFontSize(8);
+        let y = 38;
+        tableData.forEach(row => {
+            doc.text(row.join(' | '), 14, y);
+            y += 6;
+            if (y > 190) { doc.addPage(); y = 16; }
+        });
+    }
+
+    doc.save(`Prestacao_Contas_${start}_${end}.pdf`);
+    showToast('📄 PDF de prestação de contas gerado!');
+}
+
+// ── Hook saveLocalCache: persistir pagamentos
+const _origSaveLocalCache = window.saveLocalCache || function(){};
+if (!window._finHookInstalled) {
+    window._finHookInstalled = true;
+    const _origSave = window.saveLocalCache;
+    window.saveLocalCache = function() {
+        if (typeof _origSave === 'function') _origSave();
+        try { localStorage.setItem('up_pagamentos', JSON.stringify(db.pagamentos || [])); } catch(e) {}
+    };
+    // Restaurar pagamentos salvos
+    try {
+        const saved = localStorage.getItem('up_pagamentos');
+        if (saved) db.pagamentos = JSON.parse(saved);
+    } catch(e) {}
 }
 
 // ── Hook no applyI18n para atualizar roadmap se estiver aberto
