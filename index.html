@@ -678,6 +678,92 @@
                     <button class="fin-tab-btn" id="fin-tab-relatorios" onclick="switchFinTab('relatorios')">
                         <i class="fas fa-chart-bar mr-1"></i>Relatórios
                     </button>
+                    <button class="fin-tab-btn" id="fin-tab-politica" onclick="switchFinTab('politica')">
+                        <i class="fas fa-shield-alt mr-1"></i>Política
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── PAINEL POLÍTICA DE COMPROVANTES ── -->
+        <div id="fin-panel-politica" class="hidden space-y-4">
+
+            <!-- Card principal -->
+            <div class="rel-card">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-shield-alt text-red-600 text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-sm text-slate-800">Política de Comprovantes — Claude Vision</h3>
+                        <p class="text-xs text-slate-500">Itens identificados pela IA que <strong>não serão aceitos</strong> como comprovante válido.</p>
+                    </div>
+                </div>
+
+                <!-- Adicionar item proibido -->
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="politica-novo-item" placeholder="Ex: Bebida alcoólica, Cigarro, Cassino..." 
+                           class="flex-1 p-2.5 border rounded-xl text-sm focus:border-blue-400 outline-none"
+                           onkeydown="if(event.key==='Enter') adicionarItemPolitica()">
+                    <button onclick="adicionarItemPolitica()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex-shrink-0">
+                        <i class="fas fa-plus mr-1"></i>Adicionar
+                    </button>
+                </div>
+
+                <!-- Lista de itens proibidos -->
+                <div id="politica-lista" class="space-y-2 mb-4">
+                    <p class="text-xs text-slate-400 text-center py-4">Nenhum item cadastrado ainda</p>
+                </div>
+
+                <!-- Itens sugeridos -->
+                <div class="border-t pt-4">
+                    <p class="text-xs font-bold text-slate-500 mb-2">💡 SUGESTÕES RÁPIDAS</p>
+                    <div class="flex flex-wrap gap-2" id="politica-sugestoes">
+                        <button onclick="adicionarSugestao('Bebida alcoólica')" class="text-xs bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded-full font-bold transition-colors">🍺 Bebida alcoólica</button>
+                        <button onclick="adicionarSugestao('Cigarros e tabaco')" class="text-xs bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded-full font-bold transition-colors">🚬 Cigarros e tabaco</button>
+                        <button onclick="adicionarSugestao('Apostas e jogos de azar')" class="text-xs bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded-full font-bold transition-colors">🎲 Apostas e jogos</button>
+                        <button onclick="adicionarSugestao('Entretenimento noturno')" class="text-xs bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded-full font-bold transition-colors">🎭 Entretenimento noturno</button>
+                        <button onclick="adicionarSugestao('Produtos de beleza pessoal')" class="text-xs bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded-full font-bold transition-colors">💄 Beleza pessoal</button>
+                        <button onclick="adicionarSugestao('Roupas e acessórios')" class="text-xs bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded-full font-bold transition-colors">👗 Roupas</button>
+                        <button onclick="adicionarSugestao('Viagens e passagens aéreas particulares')" class="text-xs bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded-full font-bold transition-colors">✈️ Viagens particulares</button>
+                        <button onclick="adicionarSugestao('Farmácias sem receita médica')" class="text-xs bg-slate-100 hover:bg-red-100 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded-full font-bold transition-colors">💊 Farmácia sem receita</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuração de aviso -->
+            <div class="rel-card">
+                <h3 class="font-black text-sm mb-3 flex items-center gap-2">
+                    <i class="fas fa-cog text-slate-400"></i> Comportamento ao detectar item proibido
+                </h3>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer">
+                        <input type="radio" name="politica-acao" value="avisar" id="pol-avisar" checked class="accent-blue-600">
+                        <div>
+                            <p class="text-sm font-bold text-slate-700">⚠️ Apenas avisar</p>
+                            <p class="text-xs text-slate-500">Exibe alerta mas permite continuar</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer">
+                        <input type="radio" name="politica-acao" value="bloquear" id="pol-bloquear" class="accent-red-600">
+                        <div>
+                            <p class="text-sm font-bold text-slate-700">🚫 Bloquear comprovante</p>
+                            <p class="text-xs text-slate-500">Impede o envio do comprovante inválido</p>
+                        </div>
+                    </label>
+                </div>
+                <button onclick="salvarPolitica()" class="w-full mt-4 bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm">
+                    <i class="fas fa-save mr-2"></i>Salvar Política
+                </button>
+            </div>
+
+            <!-- Histórico de análises -->
+            <div class="rel-card">
+                <h3 class="font-black text-sm mb-3 flex items-center gap-2">
+                    <i class="fas fa-history text-slate-400"></i> Histórico de Análises OCR
+                </h3>
+                <div id="politica-historico" class="space-y-2">
+                    <p class="text-xs text-slate-400 text-center py-4">Nenhuma análise realizada ainda</p>
                 </div>
             </div>
         </div>
@@ -854,13 +940,51 @@
             <!-- Preview do comprovante -->
             <div id="fin-preview-area" class="hidden mb-4">
                 <label class="text-xs font-bold text-emerald-600 block mb-1">✅ COMPROVANTE CARREGADO</label>
-                <img id="fin-preview-img" class="w-full max-h-40 object-contain rounded-xl border border-emerald-300 bg-emerald-50">
+                <img id="fin-preview-img" class="w-full max-h-48 object-contain rounded-xl border border-emerald-300 bg-emerald-50">
                 <div id="fin-preview-pdf" class="hidden bg-emerald-50 border border-emerald-300 rounded-xl p-3 text-sm text-emerald-700 flex items-center gap-2">
                     <i class="fas fa-file-pdf text-xl"></i><span id="fin-preview-pdf-name"></span>
                 </div>
-                <button onclick="finConfirmarComprovante()" class="w-full mt-3 bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm">
-                    <i class="fas fa-check-circle mr-1"></i>Confirmar e Avançar
+
+                <!-- Botão analisar com IA -->
+                <button onclick="analisarComprovanteIA()" id="btn-analisar-ia"
+                    class="w-full mt-3 bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
+                    <i class="fas fa-robot"></i>Analisar com Claude Vision (OCR + Política)
                 </button>
+
+                <!-- Loading IA -->
+                <div id="fin-ia-loading" class="hidden mt-3 bg-violet-50 border border-violet-200 rounded-xl p-4 text-center">
+                    <p class="text-xs font-bold text-violet-700 flex items-center justify-center gap-2">
+                        <span class="inline-block w-4 h-4 border-2 border-violet-300 border-t-violet-600 rounded-full animate-spin"></span>
+                        Claude Vision analisando comprovante...
+                    </p>
+                    <p class="text-[10px] text-violet-500 mt-1">Lendo texto e verificando política da empresa</p>
+                </div>
+
+                <!-- Resultado da análise IA -->
+                <div id="fin-ia-resultado" class="hidden mt-3 rounded-xl overflow-hidden border">
+                    <div id="fin-ia-resultado-header" class="px-4 py-3 flex items-center gap-2 text-sm font-bold"></div>
+                    <div class="bg-white px-4 py-3 space-y-3">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-500 mb-1">📄 TEXTO EXTRAÍDO (OCR)</p>
+                            <div id="fin-ia-ocr-texto" class="text-xs text-slate-700 bg-slate-50 rounded-lg p-2 max-h-28 overflow-y-auto leading-relaxed whitespace-pre-wrap font-mono"></div>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-slate-500 mb-1">🧾 RESUMO DO COMPROVANTE</p>
+                            <div id="fin-ia-resumo" class="text-xs text-slate-700 bg-slate-50 rounded-lg p-2"></div>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-slate-500 mb-1">🔍 VERIFICAÇÃO DE POLÍTICA</p>
+                            <div id="fin-ia-politica-resultado" class="text-xs rounded-lg p-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-3">
+                    <button onclick="finConfirmarComprovante()" id="btn-confirmar-comp"
+                        class="flex-1 bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm">
+                        <i class="fas fa-check-circle mr-1"></i>Confirmar e Avançar
+                    </button>
+                </div>
             </div>
 
             <canvas id="fin-camera-canvas" class="hidden"></canvas>
@@ -4246,10 +4370,13 @@ function switchFinTab(tab) {
     _finTab = tab;
     document.getElementById('fin-panel-kanban').classList.toggle('hidden', tab !== 'kanban');
     document.getElementById('fin-panel-relatorios').classList.toggle('hidden', tab !== 'relatorios');
+    document.getElementById('fin-panel-politica').classList.toggle('hidden', tab !== 'politica');
     document.getElementById('fin-tab-kanban').classList.toggle('active', tab === 'kanban');
     document.getElementById('fin-tab-relatorios').classList.toggle('active', tab === 'relatorios');
+    document.getElementById('fin-tab-politica').classList.toggle('active', tab === 'politica');
     if (tab === 'kanban') renderFinKanban();
     if (tab === 'relatorios') prepararFiltrosRelatorio();
+    if (tab === 'politica') renderPoliticaLista();
 }
 
 // ── Renderizar colunas do kanban
@@ -4873,6 +5000,272 @@ window.applyI18n = function() {
     });
 };
 
+
+// ==================== POLÍTICA DE COMPROVANTES + CLAUDE VISION ====================
+
+// Inicializar política no db
+if (!db.politicaComprovantes) db.politicaComprovantes = [];
+if (!db.politicaAcao) db.politicaAcao = 'avisar';
+if (!db.ocrHistorico) db.ocrHistorico = [];
+
+// Carregar política do localStorage
+try {
+    const savedPol = localStorage.getItem('up_politica');
+    if (savedPol) {
+        const p = JSON.parse(savedPol);
+        db.politicaComprovantes = p.itens || [];
+        db.politicaAcao = p.acao || 'avisar';
+    }
+} catch(e) {}
+try {
+    const savedHist = localStorage.getItem('up_ocr_historico');
+    if (savedHist) db.ocrHistorico = JSON.parse(savedHist);
+} catch(e) {}
+
+function salvarPoliticaStorage() {
+    try {
+        localStorage.setItem('up_politica', JSON.stringify({
+            itens: db.politicaComprovantes,
+            acao: db.politicaAcao
+        }));
+    } catch(e) {}
+}
+
+function salvarOcrHistorico() {
+    try {
+        localStorage.setItem('up_ocr_historico', JSON.stringify((db.ocrHistorico || []).slice(-50)));
+    } catch(e) {}
+}
+
+function renderPoliticaLista() {
+    const lista = document.getElementById('politica-lista');
+    if (!lista) return;
+    const itens = db.politicaComprovantes || [];
+    if (itens.length === 0) {
+        lista.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Nenhum item proibido cadastrado ainda</p>';
+    } else {
+        lista.innerHTML = itens.map((item, idx) => `
+            <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <span class="flex-1 text-sm font-bold text-red-800">${item}</span>
+                <button onclick="removerItemPolitica(${idx})"
+                    class="text-red-400 hover:text-red-700 text-lg leading-none font-bold transition-colors" title="Remover">&times;</button>
+            </div>`).join('');
+    }
+    // Atualizar radio
+    const acao = db.politicaAcao || 'avisar';
+    const radios = document.querySelectorAll('input[name="politica-acao"]');
+    radios.forEach(r => { r.checked = r.value === acao; });
+
+    // Histórico
+    renderOcrHistorico();
+}
+
+function adicionarItemPolitica() {
+    const input = document.getElementById('politica-novo-item');
+    const val = input.value.trim();
+    if (!val) return showToast('Digite um item para adicionar', 'error');
+    if (!db.politicaComprovantes) db.politicaComprovantes = [];
+    if (db.politicaComprovantes.includes(val)) return showToast('Item já cadastrado', 'error');
+    db.politicaComprovantes.push(val);
+    salvarPoliticaStorage();
+    input.value = '';
+    renderPoliticaLista();
+    showToast('✅ Item adicionado à política!');
+}
+
+function adicionarSugestao(item) {
+    if (!db.politicaComprovantes) db.politicaComprovantes = [];
+    if (db.politicaComprovantes.includes(item)) return showToast('Item já está na política', 'error');
+    db.politicaComprovantes.push(item);
+    salvarPoliticaStorage();
+    renderPoliticaLista();
+    showToast('✅ ' + item + ' adicionado!');
+}
+
+function removerItemPolitica(idx) {
+    db.politicaComprovantes.splice(idx, 1);
+    salvarPoliticaStorage();
+    renderPoliticaLista();
+    showToast('Item removido da política');
+}
+
+function salvarPolitica() {
+    const acao = document.querySelector('input[name="politica-acao"]:checked')?.value || 'avisar';
+    db.politicaAcao = acao;
+    salvarPoliticaStorage();
+    showToast('💾 Política salva com sucesso!');
+}
+
+function renderOcrHistorico() {
+    const el = document.getElementById('politica-historico');
+    if (!el) return;
+    const hist = (db.ocrHistorico || []).slice().reverse().slice(0, 20);
+    if (hist.length === 0) {
+        el.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Nenhuma análise realizada ainda</p>';
+        return;
+    }
+    el.innerHTML = hist.map(h => {
+        const ok = h.violacoes && h.violacoes.length === 0;
+        const cor = ok ? 'emerald' : 'red';
+        const icon = ok ? 'check-circle' : 'exclamation-triangle';
+        return `<div class="p-3 bg-${cor}-50 border border-${cor}-200 rounded-xl">
+            <div class="flex items-start gap-2">
+                <i class="fas fa-${icon} text-${cor}-600 mt-0.5"></i>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-slate-800">${h.resumo || 'Comprovante analisado'}</p>
+                    ${h.violacoes && h.violacoes.length > 0
+                        ? `<p class="text-[10px] text-red-600 mt-0.5">⚠️ Violação: ${h.violacoes.join(', ')}</p>`
+                        : `<p class="text-[10px] text-emerald-600 mt-0.5">✅ Sem violações</p>`}
+                    <p class="text-[10px] text-slate-400 mt-0.5">${h.data || ''}</p>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ── Claude Vision: analisar comprovante com OCR + verificação de política
+async function analisarComprovanteIA() {
+    const base64full = document.getElementById('fin-preview-area').dataset.base64;
+    if (!base64full) return showToast('Carregue um comprovante primeiro', 'error');
+
+    // Só suporta imagem (não PDF)
+    if (!base64full.startsWith('data:image')) {
+        showToast('⚠️ OCR disponível apenas para imagens (JPG/PNG)', 'error');
+        return;
+    }
+
+    // Extrair base64 puro e media type
+    const [meta, imgData] = base64full.split(',');
+    const mediaType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
+
+    // Mostrar loading
+    document.getElementById('fin-ia-loading').classList.remove('hidden');
+    document.getElementById('fin-ia-resultado').classList.add('hidden');
+    document.getElementById('btn-analisar-ia').disabled = true;
+
+    const itensProibidos = db.politicaComprovantes || [];
+    const politicaTxt = itensProibidos.length > 0
+        ? `A política da empresa NÃO aceita comprovantes que contenham: ${itensProibidos.join(', ')}.`
+        : 'Não há itens proibidos cadastrados na política da empresa.';
+
+    try {
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 1000,
+                messages: [{
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'image',
+                            source: { type: 'base64', media_type: mediaType, data: imgData }
+                        },
+                        {
+                            type: 'text',
+                            text: `Você é um assistente de análise de comprovantes financeiros para uma clínica odontológica.
+
+Analise esta imagem de comprovante/nota fiscal e responda APENAS em JSON válido, sem markdown, sem explicação extra, com esta estrutura exata:
+
+{
+  "ocr": "todo o texto que você consegue ler na imagem, fiel ao original",
+  "resumo": "resumo em 1-2 frases do que é este comprovante (tipo, estabelecimento, valor, data se visível)",
+  "itens_detectados": ["lista de produtos/serviços identificados no comprovante"],
+  "violacoes": ["itens detectados que violam a política, ou lista vazia se nenhum"],
+  "aprovado": true ou false
+}
+
+${politicaTxt}
+
+Se não conseguir ler nada, retorne ocr como "Imagem ilegível ou sem texto".`
+                        }
+                    ]
+                }]
+            })
+        });
+
+        const data = await resp.json();
+        const rawText = data.content?.find(b => b.type === 'text')?.text || '{}';
+
+        let resultado;
+        try {
+            const clean = rawText.replace(/```json|```/g, '').trim();
+            resultado = JSON.parse(clean);
+        } catch(e) {
+            resultado = { ocr: rawText, resumo: 'Não foi possível interpretar a resposta.', itens_detectados: [], violacoes: [], aprovado: true };
+        }
+
+        // Exibir resultado
+        document.getElementById('fin-ia-loading').classList.add('hidden');
+        const resDiv = document.getElementById('fin-ia-resultado');
+        resDiv.classList.remove('hidden');
+
+        const header = document.getElementById('fin-ia-resultado-header');
+        const temViolacao = resultado.violacoes && resultado.violacoes.length > 0;
+        if (temViolacao) {
+            header.className = 'px-4 py-3 flex items-center gap-2 text-sm font-bold bg-red-50 text-red-700';
+            header.innerHTML = '<i class="fas fa-exclamation-triangle"></i> VIOLAÇÃO DE POLÍTICA DETECTADA';
+        } else {
+            header.className = 'px-4 py-3 flex items-center gap-2 text-sm font-bold bg-emerald-50 text-emerald-700';
+            header.innerHTML = '<i class="fas fa-check-circle"></i> COMPROVANTE APROVADO PELA POLÍTICA';
+        }
+
+        document.getElementById('fin-ia-ocr-texto').textContent = resultado.ocr || '—';
+        document.getElementById('fin-ia-resumo').textContent = resultado.resumo || '—';
+
+        const polEl = document.getElementById('fin-ia-politica-resultado');
+        if (temViolacao) {
+            polEl.className = 'text-xs rounded-lg p-2 bg-red-50 text-red-700';
+            polEl.innerHTML = `<strong>⚠️ Itens proibidos detectados:</strong><ul class="mt-1 space-y-1">${resultado.violacoes.map(v => `<li>• ${v}</li>`).join('')}</ul>`;
+            // Bloquear botão confirmar se ação = bloquear
+            const btnConf = document.getElementById('btn-confirmar-comp');
+            if (db.politicaAcao === 'bloquear') {
+                btnConf.disabled = true;
+                btnConf.className = 'flex-1 bg-slate-300 text-slate-500 font-bold py-2.5 rounded-xl text-sm cursor-not-allowed';
+                btnConf.innerHTML = '<i class="fas fa-ban mr-1"></i>Bloqueado pela Política';
+            }
+        } else {
+            polEl.className = 'text-xs rounded-lg p-2 bg-emerald-50 text-emerald-700';
+            polEl.innerHTML = itensProibidos.length > 0
+                ? `✅ Nenhum item proibido detectado. Comprovante em conformidade com a política.`
+                : '✅ Nenhuma política ativa. Comprovante aceito.';
+        }
+
+        // Salvar no histórico
+        if (!db.ocrHistorico) db.ocrHistorico = [];
+        db.ocrHistorico.push({
+            data: new Date().toLocaleString('pt-BR'),
+            resumo: resultado.resumo,
+            violacoes: resultado.violacoes || [],
+            aprovado: !temViolacao
+        });
+        salvarOcrHistorico();
+
+    } catch(err) {
+        document.getElementById('fin-ia-loading').classList.add('hidden');
+        showToast('Erro ao chamar Claude Vision: ' + err.message, 'error');
+    } finally {
+        document.getElementById('btn-analisar-ia').disabled = false;
+    }
+}
+
+// Resetar resultado IA ao fechar modal
+const _origClose = window.closeComprovanteModal;
+window.closeComprovanteModal = function() {
+    if (typeof _origClose === 'function') _origClose();
+    document.getElementById('fin-ia-resultado')?.classList.add('hidden');
+    document.getElementById('fin-ia-loading')?.classList.add('hidden');
+    // Restaurar botão confirmar
+    const btnConf = document.getElementById('btn-confirmar-comp');
+    if (btnConf) {
+        btnConf.disabled = false;
+        btnConf.className = 'flex-1 bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm';
+        btnConf.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Confirmar e Avançar';
+    }
+};
+
+// ==================== END POLÍTICA ====================
 // ==================== INIT ====================
 window.addEventListener('DOMContentLoaded', () => {
     loadFromSupabase();
